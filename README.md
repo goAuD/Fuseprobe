@@ -5,10 +5,12 @@
 Fuseprobe is a lightweight, privacy-focused API testing tool. No cloud, no bloat, just requests.
 
 ![Python](https://img.shields.io/badge/Made%20with-Python-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial-orange)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
 ![Fuseprobe Screenshot](assets/fuseprobe.png)
+
+Source-available for noncommercial use. Commercial use requires permission.
 
 ## Features
 
@@ -104,6 +106,7 @@ Fuseprobe/
 ├── main.py              # Entry point
 ├── version.py           # Version definition
 ├── fuseprobe_theme.py   # Fuseprobe theme module
+├── COMMERCIAL-USE.md    # Commercial licensing note
 ├── requirements.txt     # Dependencies
 ├── src/
 │   ├── __init__.py
@@ -166,5 +169,11 @@ python -m pytest tests/ -v
 
 ## License
 
-MIT License
+Current branch and future versions are licensed under PolyForm Noncommercial 1.0.0.
+
+`v2.1.0` and earlier released tags remain under their original MIT license terms.
+
+See `COMMERCIAL-USE.md` for the commercial-use note.
+
+For commercial licensing or exceptions, open a GitHub issue.
 

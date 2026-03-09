@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Changed
+- License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development
+- README now states the project is source-available for noncommercial use and points commercial exceptions to GitHub issues
+
+---
+
 ## [2.1.0] - 2026-03-09
 
 ### Added
