@@ -1,14 +1,14 @@
-# NanoMan
+# Fuseprobe
 
 **Offline API Testing Client**
 
-NanoMan is a lightweight, privacy-focused API testing tool. No cloud, no bloat, just requests. Part of the **Nano Product Family**.
+Fuseprobe is a lightweight, privacy-focused API testing tool. No cloud, no bloat, just requests.
 
 ![Python](https://img.shields.io/badge/Made%20with-Python-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
-![NanoMan Screenshot](nanoman.png)
+![Fuseprobe Screenshot](assets/fuseprobe.png)
 
 ## Features
 
@@ -48,8 +48,8 @@ NanoMan is a lightweight, privacy-focused API testing tool. No cloud, no bloat, 
 
 ```bash
 # Clone repository
-git clone https://github.com/goAuD/NanoMan.git
-cd NanoMan
+git clone https://github.com/goAuD/Fuseprobe.git
+cd Fuseprobe
 
 # Install dependencies
 pip install -r requirements.txt
@@ -57,6 +57,8 @@ pip install -r requirements.txt
 # Run
 python main.py
 ```
+
+On Windows, prefer `python main.py` if `py` points to a different interpreter than the one where you installed dependencies.
 
 ## Usage
 
@@ -93,10 +95,15 @@ The Presets tab provides quick access to:
 ## Project Structure
 
 ```
-NanoMan/
+Fuseprobe/
+├── assets/
+│   ├── fuseprobe.png         # App screenshot
+│   └── fuseprobe_social.png  # Social preview image
+├── docs/
+│   └── release-v2.1.0.md     # Public release notes
 ├── main.py              # Entry point
 ├── version.py           # Version definition
-├── nano_theme.py        # Nano Design System
+├── fuseprobe_theme.py   # Fuseprobe theme module
 ├── requirements.txt     # Dependencies
 ├── src/
 │   ├── __init__.py
@@ -111,8 +118,10 @@ NanoMan/
 ## Data Storage
 
 Request history is stored in your user config directory:
-- **Windows:** `%USERPROFILE%\.nanoman\history.json`
-- **Linux/macOS:** `~/.nanoman/history.json`
+- **Windows:** `%USERPROFILE%\.fuseprobe\history.json`
+- **Linux/macOS:** `~/.fuseprobe/history.json`
+
+Fuseprobe also reads legacy NanoMan history from `.nanoman/history.json` if present, so older request history is carried forward automatically.
 
 **Security:** Only method, URL, status code, and timing are saved. Headers and request body are never persisted to prevent leaking sensitive data.
 
@@ -140,7 +149,8 @@ Request history is stored in your user config directory:
 - Verify network connection
 
 ### JSON not formatted
-- Response must have `Content-Type: application/json`
+- Response must use a JSON media type such as `application/json` or `application/problem+json`
+- Very large formatted responses fall back to plain view after 1000 lines to keep the UI responsive
 - If plain text, it will display as-is
 
 ### Connection refused
@@ -153,10 +163,6 @@ Request history is stored in your user config directory:
 ```bash
 python -m pytest tests/ -v
 ```
-
-## Part of Nano Product Family
-
-This tool uses the [Nano Design System](https://github.com/goAuD/NanoServer/blob/main/DESIGN_SYSTEM.md) for consistent styling across lightweight developer tools.
 
 ## License
 

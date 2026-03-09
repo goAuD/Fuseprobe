@@ -1,11 +1,11 @@
 """
-NanoMan Unit Tests
+Fuseprobe Unit Tests
 Tests for URL validation, JSON formatting, and request handling.
 Run with: python -m pytest tests/ -v
 """
 
 import unittest
-from src.logic import validate_url, format_json, parse_headers
+from src.logic import validate_url, format_json, parse_headers, is_json_content_type
 
 
 class TestURLValidation(unittest.TestCase):
@@ -31,6 +31,7 @@ class TestURLValidation(unittest.TestCase):
             "http://localhost:8000",
             "http://127.0.0.1:5000/api",
             "http://example.com",
+            "https://api.example.com?query=value",
         ]
         for url in valid_urls:
             with self.subTest(url=url):
@@ -71,6 +72,8 @@ class TestURLValidation(unittest.TestCase):
             "://missing-protocol.com",
             "https://",
             "http://",
+            "https://api.example.com:99999/test",
+            "https://bad host.example.com",
             None,
         ]
         for url in bad_urls:
@@ -119,6 +122,23 @@ class TestHeaderParsing(unittest.TestCase):
         self.assertEqual(parse_headers(""), {})
         self.assertEqual(parse_headers(None), {})
         self.assertEqual(parse_headers("   "), {})
+
+
+class TestContentTypes(unittest.TestCase):
+    """Tests for JSON media type detection."""
+
+    def test_detects_standard_json(self):
+        self.assertTrue(is_json_content_type("application/json"))
+        self.assertTrue(is_json_content_type("application/json; charset=utf-8"))
+
+    def test_detects_json_suffix_types(self):
+        self.assertTrue(is_json_content_type("application/problem+json"))
+        self.assertTrue(is_json_content_type("application/hal+json; charset=utf-8"))
+
+    def test_rejects_non_json_types(self):
+        self.assertFalse(is_json_content_type("text/plain"))
+        self.assertFalse(is_json_content_type(""))
+        self.assertFalse(is_json_content_type(None))
 
 
 if __name__ == "__main__":

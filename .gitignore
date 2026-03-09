@@ -22,7 +22,20 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+.pytest_cache/
 
 # App data
 history.json
 INTERNAL_ENGINEERING_LOG.md
+docs/internal-*.md
+docs/private-*.md
+
+# Sensitive local files
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer

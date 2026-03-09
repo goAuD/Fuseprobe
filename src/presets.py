@@ -1,9 +1,7 @@
 """
-NanoMan - API Presets & Templates
+Fuseprobe - API Presets & Templates
 Local templates for common APIs and auth patterns.
 No cloud integration - just convenience presets.
-
-Part of the Nano Product Family.
 """
 
 # === Auth Presets ===

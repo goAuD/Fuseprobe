@@ -1,7 +1,9 @@
 """
-NanoMan - Version
-Single source of truth for version string.
-Part of the Nano Product Family.
+Fuseprobe - Version
+Central branding and version metadata.
 """
 
-VERSION = "1.2.2"
+APP_NAME = "Fuseprobe"
+APP_TAGLINE = "No Cloud. No Bloat. Just Requests."
+APP_LABEL = "Offline API Client"
+VERSION = "2.1.0"

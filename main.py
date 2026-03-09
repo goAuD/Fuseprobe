@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-NanoMan - Offline API Testing Client
-Part of the Nano Product Family
+Fuseprobe - Offline API Testing Client
 
 A lightweight, privacy-focused API testing tool.
 No cloud, no bloat, just requests.

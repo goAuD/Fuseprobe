@@ -1,7 +1,6 @@
 """
-NanoMan - Logic Module
+Fuseprobe - Logic Module
 Business logic for API testing, URL validation, and request handling.
-Part of the Nano Product Family.
 
 Security Focus:
 - Only HTTP/HTTPS URLs allowed (prevents XSS, javascript: exploits)
@@ -10,11 +9,13 @@ Security Focus:
 - Proper JSON parsing with error handling
 """
 
-import requests
 import json
-import re
+import ipaddress
 import logging
+from urllib.parse import urlsplit
 from typing import Optional, Dict, Any
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -38,24 +39,49 @@ def validate_url(url: str) -> bool:
         return False
     
     url = url.strip()
-    
-    # Relaxed regex: allows http:// or https:// with various host formats
-    # - Domain with TLD (example.com)
-    # - Hostname without TLD (intranet, server1)
-    # - localhost
-    # - IPv4 addresses
-    pattern = re.compile(
-        r'^https?://'  # http:// or https:// ONLY
-        r'(?:'
-            r'(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)*[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?'  # Any hostname
-            r'|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'  # or IPv4
-        r')'
-        r'(?::\d{1,5})?'  # Optional port
-        r'(?:/[^\s]*)?$',  # Optional path
-        re.IGNORECASE
-    )
-    
-    return bool(pattern.match(url))
+
+    if any(char.isspace() for char in url):
+        return False
+
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return False
+
+    if parsed.scheme.lower() not in {"http", "https"}:
+        return False
+
+    if not parsed.netloc or not parsed.hostname:
+        return False
+
+    try:
+        parsed.port
+    except ValueError:
+        return False
+
+    host = parsed.hostname
+    if host.lower() == "localhost":
+        return True
+
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        pass
+
+    labels = host.split(".")
+    if any(not label for label in labels):
+        return False
+
+    for label in labels:
+        if len(label) > 63:
+            return False
+        if label.startswith("-") or label.endswith("-"):
+            return False
+        if not label.replace("-", "").isalnum():
+            return False
+
+    return True
 
 
 def format_json(text: str) -> str:
@@ -98,6 +124,22 @@ def parse_headers(headers_text: str) -> Dict[str, str]:
             headers[key.strip()] = value.strip()
     
     return headers
+
+
+def is_json_content_type(content_type: str) -> bool:
+    """
+    Return True for JSON and JSON-based media types.
+
+    Examples:
+    - application/json
+    - application/problem+json
+    - application/hal+json
+    """
+    if not content_type:
+        return False
+
+    mime_type = content_type.split(";", 1)[0].strip().lower()
+    return mime_type == "application/json" or mime_type.endswith("+json")
 
 
 def send_api_request(
@@ -151,7 +193,7 @@ def send_api_request(
         
         # Determine if response is JSON
         content_type = response.headers.get("Content-Type", "")
-        is_json = "application/json" in content_type
+        is_json = is_json_content_type(content_type)
         
         # Format response body
         body = response.text
