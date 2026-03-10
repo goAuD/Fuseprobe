@@ -41,6 +41,8 @@ The next work should improve safety, maintainability, and responsiveness before 
 - Removed the old unused `send_api_request(...)` path from `src/logic.py`
 - Expanded the automated test suite with high-level request, history, redaction, and formatter coverage
 - Started reducing `src/ui.py` request-result complexity with smaller status/render helpers
+- Added service injection points for the app constructor to make UI smoke tests safe and isolated
+- Added thin UI smoke tests for startup, history clear, and success-result history updates
 
 ### Current P1 State
 
@@ -51,7 +53,7 @@ The first architecture split is now in place. Request policy and persistence are
 ### Next Planned P1 Work
 
 - continue shrinking the remaining result/status/history logic inside `src/ui.py`
-- decide whether the next small slice should be light UI smoke tests or another UI-layer extraction
+- decide whether the next small slice should focus on deeper UI extraction or on request/header hardening details
 - continue dead code removal only after the service-driven paths are stable
 - keep this document updated after every completed work round
 

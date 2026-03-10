@@ -84,7 +84,7 @@ LAYOUT = {
 class FuseprobeApp(ctk.CTk):
     """Main application window for the Fuseprobe API client."""
     
-    def __init__(self):
+    def __init__(self, history_store: HistoryStore | None = None, request_service: RequestService | None = None):
         super().__init__()
         apply_fuseprobe_theme(self)
         
@@ -95,8 +95,8 @@ class FuseprobeApp(ctk.CTk):
         self.configure(fg_color=COLORS["bg_primary"])
         
         # History storage
-        self.history_store = HistoryStore()
-        self.request_service = RequestService()
+        self.history_store = history_store or HistoryStore()
+        self.request_service = request_service or RequestService()
         self.history = self.history_store.load()
         
         # Current tab
