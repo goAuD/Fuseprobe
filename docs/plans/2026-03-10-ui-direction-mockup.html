@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuseprobe — UI Redesign Mockup</title>
+<style>
+/* ============================================================
+   FUSEPROBE UI REDESIGN MOCKUP
+   Offline API Testing Client — Dark Tech Interface
+   
+   Design principles:
+   - Offline-first, security-first
+   - 2-3 accent tones: arctic blue, soft white, graphite
+   - Dot-grid tech background
+   - Fully responsive: %, em, clamp(), min/max
+   - No frameworks, no CDN, zero dependencies
+   ============================================================ */
+
+/* === Reset & Foundation === */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* — Backgrounds — */
+  --bg-void:        #07080a;
+  --bg-primary:     #0c0d10;
+  --bg-surface:     #111318;
+  --bg-elevated:    #181b21;
+  --bg-hover:       #1f232b;
+  --bg-inset:       #0a0b0e;
+
+  /* — Accents — */
+  --accent:         #7aafdf;
+  --accent-bright:  #a0cbef;
+  --accent-dim:     #4a7da8;
+  --accent-ghost:   rgba(122, 175, 223, 0.08);
+  --accent-glow:    rgba(122, 175, 223, 0.15);
+
+  /* — Semantic — */
+  --success:        #3ec97a;
+  --success-dim:    rgba(62, 201, 122, 0.12);
+  --warning:        #e8a84c;
+  --warning-dim:    rgba(232, 168, 76, 0.12);
+  --danger:         #ef5f6e;
+  --danger-dim:     rgba(239, 95, 110, 0.12);
+
+  /* — Text — */
+  --text-primary:   #e8eaed;
+  --text-secondary: #9ea4b0;
+  --text-muted:     #5c6270;
+  --text-on-accent: #0a0c10;
+
+  /* — Borders — */
+  --border:         #1e2128;
+  --border-hover:   #2a2f38;
+  --border-accent:  rgba(122, 175, 223, 0.2);
+
+  /* — Dot grid — */
+  --dot-color:      rgba(122, 175, 223, 0.04);
+  --dot-size:       1px;
+  --dot-gap:        28px;
+
+  /* — Sizing — */
+  --radius-sm:      0.2em;
+  --radius-md:      0.3em;
+  --radius-lg:      0.4em;
+  --radius-xl:      0.55em;
+
+  /* — Transitions — */
+  --ease:           cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --speed:          140ms;
+}
+
+html {
+  font-size: clamp(14px, 1.1vw, 17px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimeLegibility;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-void);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(circle, var(--dot-color) var(--dot-size), transparent var(--dot-size));
+  background-size: var(--dot-gap) var(--dot-gap);
+  background-position: 0 0;
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* === Focus ring === */
+:focus-visible {
+  outline: 2px solid var(--accent-dim);
+  outline-offset: 2px;
+}
+
+/* === Selection === */
+::selection {
+  background: var(--accent-ghost);
+  color: var(--accent-bright);
+}
+
+/* === Shell === */
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 82em;
+  margin: 0 auto;
+  padding: clamp(0.75em, 2vw, 1.5em);
+  gap: clamp(0.5em, 1vw, 0.875em);
+}
+
+/* === Header === */
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 1em;
+  padding: 0.25em 0;
+  flex-wrap: wrap;
+}
+
+.header__logo {
+  font-size: 1.4em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.header__logo span {
+  color: var(--accent);
+}
+
+.header__tagline {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.header__badge {
+  margin-left: auto;
+  font-size: 0.68em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-dim);
+  border: 1px solid var(--border);
+  padding: 0.25em 0.65em;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* === Control Bar === */
+.control-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-height: 3.2em;
+}
+
+.method-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-elevated);
+  color: var(--accent);
+  border: none;
+  border-right: 1px solid var(--border);
+  padding: 0 1.25em 0 1em;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.82em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  min-width: 7em;
+  text-align: center;
+  transition: background var(--speed) var(--ease);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235c6270'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 0.75em) center;
+  padding-right: 2.2em;
+}
+
+.method-select:hover {
+  background-color: var(--bg-hover);
+}
+
+.method-select option {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.url-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.82em;
+  padding: 0 1em;
+  min-width: 0;
+}
+
+.url-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.btn-send {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: none;
+  padding: 0 2em;
+  font-family: inherit;
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background var(--speed) var(--ease), transform 60ms ease;
+  white-space: nowrap;
+}
+
+.btn-send:hover {
+  background: var(--accent-bright);
+}
+
+.btn-send:active {
+  transform: scale(0.97);
+}
+
+.btn-clear {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-left: 1px solid var(--border);
+  padding: 0 1.2em;
+  font-family: inherit;
+  font-size: 0.72em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color var(--speed) var(--ease);
+  white-space: nowrap;
+}
+
+.btn-clear:hover {
+  color: var(--text-secondary);
+}
+
+/* === Tab Navigation === */
+.tab-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.35em 0.5em;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.tab-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0.45em 1.1em;
+  font-family: inherit;
+  font-size: 0.78em;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition:
+    background var(--speed) var(--ease),
+    color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.tab-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.tab-spacer {
+  flex: 1;
+  min-width: 1em;
+}
+
+.tab-btn.secondary {
+  color: var(--text-muted);
+  font-size: 0.74em;
+}
+
+.tab-btn.secondary:hover {
+  color: var(--text-secondary);
+}
+
+.tab-btn.secondary.active {
+  background: var(--accent-dim);
+  color: var(--text-primary);
+}
+
+/* === Content Panels === */
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-height: 20em;
+  overflow: hidden;
+}
+
+.tab-panel {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  padding: clamp(0.75em, 1.5vw, 1.25em);
+  overflow: auto;
+}
+
+.tab-panel.active {
+  display: flex;
+}
+
+/* — Response Panel — */
+.response-output {
+  flex: 1;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.8em;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1em 1.25em;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  resize: vertical;
+  min-height: 12em;
+  overflow: auto;
+  position: relative;
+}
+
+/* Resize grip (bottom-right drag handle) */
+.response-output::-webkit-resizer {
+  background:
+    linear-gradient(135deg, transparent 40%, var(--border-hover) 40%, var(--border-hover) 50%, transparent 50%, transparent 70%, var(--border-hover) 70%, var(--border-hover) 80%, transparent 80%);
+  border-radius: var(--radius-sm);
+}
+
+.response-output::after {
+  content: '';
+  position: absolute;
+  bottom: 0.35em;
+  right: 0.35em;
+  width: 0.75em;
+  height: 0.75em;
+  pointer-events: none;
+  background-image:
+    linear-gradient(135deg,
+      transparent 30%,
+      var(--text-muted) 30%, var(--text-muted) 35%,
+      transparent 35%,
+      transparent 55%,
+      var(--text-muted) 55%, var(--text-muted) 60%,
+      transparent 60%,
+      transparent 80%,
+      var(--text-muted) 80%, var(--text-muted) 85%,
+      transparent 85%);
+  opacity: 0.4;
+}
+
+/* JSON highlighting */
+.json-key { color: var(--accent); }
+.json-str { color: #b8c7d8; }
+.json-num { color: var(--accent-bright); }
+.json-bool { color: var(--warning); }
+.json-null { color: var(--text-muted); }
+.json-brace { color: var(--text-muted); opacity: 0.6; }
+
+/* — Editor Textarea — */
+.code-editor {
+  flex: 1;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.8em;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1em 1.25em;
+  resize: vertical;
+  min-height: 8em;
+  transition: border-color var(--speed) var(--ease);
+}
+
+.code-editor:focus {
+  border-color: var(--accent-dim);
+}
+
+.code-editor::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* === Presets Panel === */
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20em), 1fr));
+  gap: clamp(0.5em, 1vw, 1em);
+}
+
+.preset-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: clamp(1em, 2vw, 1.5em);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+
+.preset-card__title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.01em;
+}
+
+.preset-card__desc {
+  font-size: 0.76em;
+  color: var(--text-muted);
+}
+
+/* — Auth Dropdown — */
+.auth-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  background: var(--bg-inset);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6em 2.2em 0.6em 0.85em;
+  font-family: inherit;
+  font-size: 0.82em;
+  cursor: pointer;
+  transition: border-color var(--speed) var(--ease);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235c6270'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 0.75em) center;
+}
+
+.auth-select:hover,
+.auth-select:focus {
+  border-color: var(--border-hover);
+}
+
+.auth-select option {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.auth-hint {
+  font-size: 0.72em;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* — Template Buttons — */
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+}
+
+.template-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  width: 100%;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55em 0.85em;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.78em;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1;
+  transition:
+    background var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.template-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.template-btn__icon {
+  color: var(--accent-dim);
+  font-size: 0.9em;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.template-btn__name {
+  font-weight: 500;
+}
+
+.template-btn__type {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.88em;
+}
+
+/* — Example Endpoints — */
+.examples-section {
+  margin-top: 0.75em;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: clamp(0.75em, 1.5vw, 1.25em);
+}
+
+.examples-section__title {
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75em;
+}
+
+.example-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.4em 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.example-row:last-child {
+  border-bottom: none;
+}
+
+.method-badge {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.2em 0.55em;
+  border-radius: var(--radius-sm);
+  min-width: 3.6em;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.method-badge.get    { color: var(--accent); background: var(--accent-ghost); }
+.method-badge.post   { color: var(--success); background: var(--success-dim); }
+.method-badge.put    { color: var(--warning); background: var(--warning-dim); }
+.method-badge.patch  { color: var(--warning); background: var(--warning-dim); }
+.method-badge.delete { color: var(--danger); background: var(--danger-dim); }
+
+.example-path {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.76em;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color var(--speed) var(--ease);
+}
+
+.example-path:hover {
+  color: var(--accent);
+}
+
+.example-desc {
+  margin-left: auto;
+  font-size: 0.72em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* === History Panel === */
+.history-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75em;
+}
+
+.history-toolbar__title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  padding: 0.35em 0.8em;
+  font-family: inherit;
+  font-size: 0.72em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition:
+    color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.btn-ghost:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-hover);
+}
+
+.btn-ghost.danger:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.6em 1em;
+  transition:
+    background var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.history-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.history-item__method {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.72em;
+  font-weight: 600;
+  min-width: 3.2em;
+  text-align: center;
+}
+
+.history-item__url {
+  flex: 1;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.76em;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.history-item__status {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.72em;
+  font-weight: 600;
+}
+
+.history-item__status.ok      { color: var(--success); }
+.history-item__status.warn    { color: var(--warning); }
+.history-item__status.err     { color: var(--danger); }
+
+.history-item__meta {
+  font-size: 0.7em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.history-item__actions {
+  display: flex;
+  gap: 0.35em;
+  flex-shrink: 0;
+}
+
+/* === Status Bar === */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.15em 0.25em;
+  gap: 1em;
+  flex-wrap: wrap;
+}
+
+.status-bar__message {
+  font-size: 0.76em;
+  color: var(--text-secondary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-bar__info {
+  display: flex;
+  align-items: center;
+  gap: 1.2em;
+  flex-shrink: 0;
+}
+
+.status-bar__item {
+  font-size: 0.7em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.status-bar__dot {
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  border-radius: 50%;
+  margin-right: 0.4em;
+  vertical-align: middle;
+}
+
+.status-bar__dot.online   { background: var(--success); box-shadow: 0 0 4px var(--success); }
+.status-bar__dot.offline  { background: var(--text-muted); }
+
+/* === Responsive === */
+
+/* Phones */
+@media (max-width: 40em) {
+  .header {
+    flex-direction: column;
+    gap: 0.35em;
+  }
+  .header__badge {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+  .control-bar {
+    flex-wrap: wrap;
+    border-radius: var(--radius-md);
+  }
+  .method-select {
+    min-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 0.7em 1em;
+  }
+  .url-input {
+    min-width: 100%;
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+  }
+  .btn-send {
+    flex: 1;
+    padding: 0.8em;
+  }
+  .btn-clear {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    flex: 0;
+    padding: 0.8em 1em;
+  }
+  .tab-btn {
+    padding: 0.4em 0.8em;
+    font-size: 0.72em;
+  }
+  .presets-grid {
+    grid-template-columns: 1fr;
+  }
+  .history-item {
+    flex-wrap: wrap;
+    gap: 0.4em;
+  }
+  .history-item__url {
+    flex-basis: 100%;
+    order: 3;
+  }
+  .history-item__actions {
+    margin-left: auto;
+  }
+  .example-desc {
+    display: none;
+  }
+}
+
+/* Tablets */
+@media (min-width: 40.01em) and (max-width: 64em) {
+  .shell {
+    max-width: 95%;
+  }
+  .presets-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Ultrawide */
+@media (min-width: 100em) {
+  .shell {
+    max-width: 88em;
+  }
+}
+
+/* === Utility === */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* === Offline indicator pulse === */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-bar__dot.online {
+  animation: pulse-soft 2.5s ease-in-out infinite;
+}
+
+/* === Watermark tag (mockup only) === */
+.mockup-tag {
+  position: fixed;
+  bottom: 0.75em;
+  right: 0.75em;
+  font-size: 0.6em;
+  color: var(--text-muted);
+  opacity: 0.35;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  z-index: 999;
+}
+</style>
+</head>
+<body>
+
+<div class="mockup-tag">MOCKUP — Fuseprobe UI Redesign</div>
+
+<div class="shell">
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="header" role="banner">
+    <div class="header__logo">Fuse<span>probe</span></div>
+    <div class="header__tagline">No Cloud. No Bloat. Just Requests.</div>
+    <div class="header__badge">Offline API Client · v2.1.0</div>
+  </header>
+
+  <!-- ==================== CONTROL BAR ==================== -->
+  <div class="control-bar" role="search">
+    <label for="method-select" class="sr-only">HTTP Method</label>
+    <select id="method-select" class="method-select">
+      <option value="GET">GET</option>
+      <option value="POST">POST</option>
+      <option value="PUT">PUT</option>
+      <option value="PATCH">PATCH</option>
+      <option value="DELETE">DELETE</option>
+    </select>
+
+    <label for="url-input" class="sr-only">API URL</label>
+    <input
+      id="url-input"
+      class="url-input"
+      type="text"
+      placeholder="http://localhost:8080/api/health"
+      spellcheck="false"
+      autocomplete="off"
+    >
+
+    <button class="btn-send" id="btn-send">Send</button>
+    <button class="btn-clear" id="btn-clear">Clear</button>
+  </div>
+
+  <!-- ==================== TAB NAV ==================== -->
+  <nav class="tab-nav" role="tablist" aria-label="Request panels">
+    <button class="tab-btn active" role="tab" aria-selected="true" data-tab="response">Response</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="body">Request Body</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="headers">Headers</button>
+    <div class="tab-spacer"></div>
+    <button class="tab-btn secondary" role="tab" aria-selected="false" data-tab="presets">Presets</button>
+    <button class="tab-btn secondary" role="tab" aria-selected="false" data-tab="history">History</button>
+  </nav>
+
+  <!-- ==================== CONTENT AREA ==================== -->
+  <main class="content-area">
+
+    <!-- Response Tab -->
+    <div class="tab-panel active" id="panel-response" role="tabpanel">
+      <div class="response-output" id="response-output">{
+  <span class="json-key">"status"</span>: <span class="json-str">"ok"</span>,
+  <span class="json-key">"message"</span>: <span class="json-str">"Fuseprobe is ready"</span>,
+  <span class="json-key">"version"</span>: <span class="json-str">"2.1.0"</span>,
+  <span class="json-key">"uptime"</span>: <span class="json-num">14832</span>,
+  <span class="json-key">"connected"</span>: <span class="json-bool">true</span>,
+  <span class="json-key">"cloud_dependency"</span>: <span class="json-null">null</span>,
+  <span class="json-key">"endpoints"</span>: <span class="json-brace">[</span>
+    <span class="json-brace">{</span>
+      <span class="json-key">"path"</span>: <span class="json-str">"/api/health"</span>,
+      <span class="json-key">"method"</span>: <span class="json-str">"GET"</span>,
+      <span class="json-key">"latency_ms"</span>: <span class="json-num">2</span>
+    <span class="json-brace">}</span>,
+    <span class="json-brace">{</span>
+      <span class="json-key">"path"</span>: <span class="json-str">"/api/v1/users"</span>,
+      <span class="json-key">"method"</span>: <span class="json-str">"GET"</span>,
+      <span class="json-key">"latency_ms"</span>: <span class="json-num">18</span>
+    <span class="json-brace">}</span>
+  <span class="json-brace">]</span>
+}</div>
+    </div>
+
+    <!-- Request Body Tab -->
+    <div class="tab-panel" id="panel-body" role="tabpanel">
+      <textarea class="code-editor" spellcheck="false" placeholder='{ "key": "value" }'>{
+    "name": "test-endpoint",
+    "method": "POST",
+    "payload": {
+        "user_id": 42,
+        "action": "validate"
+    }
+}</textarea>
+    </div>
+
+    <!-- Headers Tab -->
+    <div class="tab-panel" id="panel-headers" role="tabpanel">
+      <textarea class="code-editor" spellcheck="false" placeholder="Header-Name: value">Content-Type: application/json
+Authorization: Bearer &lt;YOUR_TOKEN&gt;
+X-Request-ID: fp-29a1c3</textarea>
+    </div>
+
+    <!-- Presets Tab -->
+    <div class="tab-panel" id="panel-presets" role="tabpanel">
+      <div class="presets-grid">
+
+        <!-- Auth Presets -->
+        <div class="preset-card">
+          <div class="preset-card__title">Auth Presets</div>
+          <div class="preset-card__desc">Select an auth method to apply headers</div>
+          <label for="auth-select" class="sr-only">Auth Method</label>
+          <select id="auth-select" class="auth-select">
+            <option>No Auth</option>
+            <option>Bearer Token</option>
+            <option>Basic Auth</option>
+            <option>API Key (Header)</option>
+            <option>API Key (Authorization)</option>
+          </select>
+          <div class="auth-hint">JWT or OAuth2 bearer token authentication</div>
+        </div>
+
+        <!-- API Templates -->
+        <div class="preset-card">
+          <div class="preset-card__title">API Templates</div>
+          <div class="preset-card__desc">Click to load template URL and auth</div>
+          <div class="template-list">
+            <button class="template-btn">
+              <span class="template-btn__icon">&#9679;</span>
+              <span class="template-btn__name">Localhost</span>
+              <span class="template-btn__type">:8080</span>
+            </button>
+            <button class="template-btn">
+              <span class="template-btn__icon">&#9679;</span>
+              <span class="template-btn__name">Microsoft Graph</span>
+              <span class="template-btn__type">OAuth</span>
+            </button>
+            <button class="template-btn">
+              <span class="template-btn__icon">&#9679;</span>
+              <span class="template-btn__name">GitHub API</span>
+              <span class="template-btn__type">Token</span>
+            </button>
+            <button class="template-btn">
+              <span class="template-btn__icon">&#9679;</span>
+              <span class="template-btn__name">HTTPBin</span>
+              <span class="template-btn__type">Public</span>
+            </button>
+            <button class="template-btn">
+              <span class="template-btn__icon">&#9679;</span>
+              <span class="template-btn__name">JSONPlaceholder</span>
+              <span class="template-btn__type">Public</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Example Endpoints -->
+      <div class="examples-section">
+        <div class="examples-section__title">Localhost — Example Endpoints</div>
+        <div class="example-row">
+          <span class="method-badge get">GET</span>
+          <span class="example-path">/api/health</span>
+          <span class="example-desc">Health check</span>
+        </div>
+        <div class="example-row">
+          <span class="method-badge get">GET</span>
+          <span class="example-path">/api/status</span>
+          <span class="example-desc">Status endpoint</span>
+        </div>
+        <div class="example-row">
+          <span class="method-badge get">GET</span>
+          <span class="example-path">/api/v1/users</span>
+          <span class="example-desc">List users</span>
+        </div>
+        <div class="example-row">
+          <span class="method-badge post">POST</span>
+          <span class="example-path">/api/v1/users</span>
+          <span class="example-desc">Create user</span>
+        </div>
+        <div class="example-row">
+          <span class="method-badge delete">DEL</span>
+          <span class="example-path">/api/v1/users/42</span>
+          <span class="example-desc">Delete user</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Tab -->
+    <div class="tab-panel" id="panel-history" role="tabpanel">
+      <div class="history-toolbar">
+        <div class="history-toolbar__title">Recent Requests</div>
+        <button class="btn-ghost danger">Clear History</button>
+      </div>
+      <div class="history-list">
+        <div class="history-item">
+          <span class="history-item__method" style="color: var(--accent);">GET</span>
+          <span class="history-item__url">http://localhost:8080/api/health</span>
+          <span class="history-item__status ok">200</span>
+          <span class="history-item__meta">09:14 · 0.02s</span>
+          <div class="history-item__actions">
+            <button class="btn-ghost">Load</button>
+            <button class="btn-ghost danger">Del</button>
+          </div>
+        </div>
+        <div class="history-item">
+          <span class="history-item__method" style="color: var(--success);">POST</span>
+          <span class="history-item__url">http://localhost:8080/api/v1/users</span>
+          <span class="history-item__status ok">201</span>
+          <span class="history-item__meta">09:12 · 0.14s</span>
+          <div class="history-item__actions">
+            <button class="btn-ghost">Load</button>
+            <button class="btn-ghost danger">Del</button>
+          </div>
+        </div>
+        <div class="history-item">
+          <span class="history-item__method" style="color: var(--accent);">GET</span>
+          <span class="history-item__url">https://jsonplaceholder.typicode.com/posts/1</span>
+          <span class="history-item__status ok">200</span>
+          <span class="history-item__meta">09:08 · 0.31s</span>
+          <div class="history-item__actions">
+            <button class="btn-ghost">Load</button>
+            <button class="btn-ghost danger">Del</button>
+          </div>
+        </div>
+        <div class="history-item">
+          <span class="history-item__method" style="color: var(--accent);">GET</span>
+          <span class="history-item__url">http://localhost:8080/api/v1/nonexistent</span>
+          <span class="history-item__status err">404</span>
+          <span class="history-item__meta">09:05 · 0.04s</span>
+          <div class="history-item__actions">
+            <button class="btn-ghost">Load</button>
+            <button class="btn-ghost danger">Del</button>
+          </div>
+        </div>
+        <div class="history-item">
+          <span class="history-item__method" style="color: var(--warning);">PUT</span>
+          <span class="history-item__url">http://localhost:8080/api/v1/users/42</span>
+          <span class="history-item__status ok">200</span>
+          <span class="history-item__meta">08:59 · 0.09s</span>
+          <div class="history-item__actions">
+            <button class="btn-ghost">Load</button>
+            <button class="btn-ghost danger">Del</button>
+          </div>
+        </div>
+        <div class="history-item">
+          <span class="history-item__method" style="color: var(--danger);">DEL</span>
+          <span class="history-item__url">https://graph.microsoft.com/v1.0/me/messages/aX29</span>
+          <span class="history-item__status warn">401</span>
+          <span class="history-item__meta">08:52 · 0.87s</span>
+          <div class="history-item__actions">
+            <button class="btn-ghost">Load</button>
+            <button class="btn-ghost danger">Del</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== STATUS BAR ==================== -->
+  <footer class="status-bar" role="contentinfo">
+    <div class="status-bar__message">GET http://localhost:8080/api/health — 200 OK · 0.02s</div>
+    <div class="status-bar__info">
+      <span class="status-bar__item">
+        <span class="status-bar__dot online"></span>Ready
+      </span>
+      <span class="status-bar__item">6 requests</span>
+      <span class="status-bar__item">Offline Mode</span>
+    </div>
+  </footer>
+
+</div>
+
+<!-- ==================== INTERACTIVITY ==================== -->
+<script>
+(function () {
+  'use strict';
+
+  /* ---- Tab switching ---- */
+  var tabs = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.tab-panel');
+
+  function activateTab(key) {
+    tabs.forEach(function (t) {
+      var isActive = t.getAttribute('data-tab') === key;
+      t.classList.toggle('active', isActive);
+      t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    panels.forEach(function (p) {
+      p.classList.toggle('active', p.id === 'panel-' + key);
+    });
+  }
+
+  tabs.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      activateTab(btn.getAttribute('data-tab'));
+    });
+  });
+
+  /* ---- Keyboard: Enter sends ---- */
+  var urlInput = document.getElementById('url-input');
+  urlInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('btn-send').click();
+    }
+  });
+
+  /* ---- Mock send feedback ---- */
+  var sendBtn = document.getElementById('btn-send');
+  sendBtn.addEventListener('click', function () {
+    var msg = document.querySelector('.status-bar__message');
+    var method = document.getElementById('method-select').value;
+    var url = urlInput.value || 'http://localhost:8080/api/health';
+    sendBtn.textContent = '···';
+    sendBtn.disabled = true;
+    setTimeout(function () {
+      sendBtn.textContent = 'Send';
+      sendBtn.disabled = false;
+      msg.textContent = method + ' ' + url + ' — 200 OK · 0.03s';
+      activateTab('response');
+    }, 400);
+  });
+
+  /* ---- Clear ---- */
+  document.getElementById('btn-clear').addEventListener('click', function () {
+    document.getElementById('response-output').textContent = '// Cleared';
+    document.querySelector('.status-bar__message').textContent = 'Response cleared.';
+  });
+
+  /* ---- Template click ---- */
+  var templateBtns = document.querySelectorAll('.template-btn');
+  templateBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var name = btn.querySelector('.template-btn__name').textContent;
+      document.querySelector('.status-bar__message').textContent = 'Loaded template: ' + name;
+    });
+  });
+
+  /* ---- History load ---- */
+  document.querySelectorAll('.history-item .btn-ghost:not(.danger)').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var item = btn.closest('.history-item');
+      var method = item.querySelector('.history-item__method').textContent.trim();
+      var url = item.querySelector('.history-item__url').textContent.trim();
+      document.getElementById('method-select').value = method === 'DEL' ? 'DELETE' : method;
+      urlInput.value = url;
+      activateTab('response');
+      document.querySelector('.status-bar__message').textContent = 'Loaded from history: ' + method + ' ' + url;
+    });
+  });
+
+  /* ---- Example endpoint click ---- */
+  document.querySelectorAll('.example-path').forEach(function (el) {
+    el.addEventListener('click', function () {
+      urlInput.value = 'http://localhost:8080' + el.textContent;
+      var badge = el.previousElementSibling;
+      if (badge) {
+        var m = badge.textContent.trim();
+        document.getElementById('method-select').value = m === 'DEL' ? 'DELETE' : m;
+      }
+      activateTab('response');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

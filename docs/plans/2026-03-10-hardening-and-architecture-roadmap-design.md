@@ -25,6 +25,12 @@ Fuseprobe should continue to be:
 
 The next work should improve safety, maintainability, and responsiveness before adding more visible features.
 
+## Design Reference
+
+A tracked UI direction mockup now exists at `docs/plans/2026-03-10-ui-direction-mockup.html`.
+
+This is a reference artifact for the later UI/UX refinement sprint, not an implementation contract. Its main value is preserving a concrete visual direction so the later P3 work does not restart from a blank slate.
+
 ## Progress Log
 
 ### Completed So Far
@@ -343,6 +349,8 @@ When P1 and the critical P2 tasks are complete, the next UI sprint should focus 
 - more explicit history actions
 - cleaner information hierarchy
 - a help menu with concise guidance
+
+The tracked mockup in `docs/plans/2026-03-10-ui-direction-mockup.html` should be used as a visual input during that sprint, then adapted to the actual desktop constraints and the hardened architecture rather than copied literally.
 
 The UI sprint should be informed by the hardened and simplified backend structure, not happen in parallel with major architecture work.
 
