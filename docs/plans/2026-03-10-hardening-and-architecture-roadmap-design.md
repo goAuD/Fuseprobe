@@ -38,6 +38,9 @@ The next work should improve safety, maintainability, and responsiveness before 
 - Added single-item history delete and clear-all history actions
 - Added URL redaction for persisted history and log-safe display
 - Added request-exception redaction so sensitive URL values are not echoed back in error strings
+- Rejected URLs with embedded credentials such as `user:pass@host`
+- Hardened request header parsing so malformed or suspicious header lines are rejected before network execution
+- Moved request-input snapshotting onto the UI thread before the worker starts, removing background reads from Tk widgets
 - Removed the old unused `send_api_request(...)` path from `src/logic.py`
 - Expanded the automated test suite with high-level request, history, redaction, and formatter coverage
 - Started reducing `src/ui.py` request-result complexity with smaller status/render helpers
@@ -53,7 +56,8 @@ The first architecture split is now in place. Request policy and persistence are
 ### Next Planned P1 Work
 
 - continue shrinking the remaining result/status/history logic inside `src/ui.py`
-- decide whether the next small slice should focus on deeper UI extraction or on request/header hardening details
+- continue request-boundary tightening only where it improves real safety without hurting local/offline API workflows
+- decide whether the next small slice should focus on deeper UI extraction or on another request/response edge-case hardening detail
 - continue dead code removal only after the service-driven paths are stable
 - keep this document updated after every completed work round
 

@@ -4,6 +4,7 @@ import tempfile
 import tkinter
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from src.services.history_store import HistoryStore
 from src.services.request_service import RequestResult
@@ -72,6 +73,31 @@ class TestFuseprobeAppSmoke(unittest.TestCase):
             self.assertEqual(len(app.history), 1)
             self.assertIn("Status: 200 OK", app.lbl_status.cget("text"))
             self.assertIn("token=%2A%2A%2A", app.history[0]["url"])
+            app.destroy()
+
+    def test_send_request_thread_snapshots_widget_input_before_worker_start(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_store = HistoryStore(
+                history_file=Path(temp_dir) / "history.json",
+                legacy_history_file=Path(temp_dir) / "legacy.json",
+            )
+            app = self.create_app(history_store=history_store)
+            app.method_var.set("POST")
+            app.entry_url.delete(0, "end")
+            app.entry_url.insert(0, "https://example.com/data?token=secret")
+            app.txt_body.delete("0.0", "end")
+            app.txt_body.insert("0.0", '{"name":"fuseprobe"}')
+            app.txt_headers.delete("0.0", "end")
+            app.txt_headers.insert("0.0", "Content-Type: application/json")
+
+            with patch("src.ui.threading.Thread") as thread_mock:
+                app.send_request_thread()
+
+            _, kwargs = thread_mock.call_args
+            self.assertEqual(kwargs["args"], ("POST", "https://example.com/data?token=secret", '{"name":"fuseprobe"}', "Content-Type: application/json"))
+            self.assertTrue(kwargs["daemon"])
+            self.assertEqual(app.lbl_status.cget("text"), "Sending request...")
+            thread_mock.return_value.start.assert_called_once()
             app.destroy()
 
 

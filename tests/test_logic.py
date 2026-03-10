@@ -78,6 +78,8 @@ class TestURLValidation(unittest.TestCase):
             "://missing-protocol.com",
             "https://",
             "http://",
+            "https://user:pass@example.com/api",
+            "https://user@example.com/api",
             "https://api.example.com:99999/test",
             "https://bad host.example.com",
             None,
@@ -145,6 +147,26 @@ class TestHeaderParsing(unittest.TestCase):
         self.assertEqual(parse_headers(""), {})
         self.assertEqual(parse_headers(None), {})
         self.assertEqual(parse_headers("   "), {})
+
+    def test_parse_headers_supports_crlf_line_endings(self):
+        """Windows-friendly CRLF header input should still parse correctly."""
+        headers_text = "Content-Type: application/json\r\nX-Test: ok"
+        result = parse_headers(headers_text)
+
+        self.assertEqual(result["Content-Type"], "application/json")
+        self.assertEqual(result["X-Test"], "ok")
+
+    def test_parse_headers_rejects_missing_colon(self):
+        with self.assertRaisesRegex(ValueError, "expected 'Name: Value'"):
+            parse_headers("Authorization Bearer token123")
+
+    def test_parse_headers_rejects_invalid_header_names(self):
+        with self.assertRaisesRegex(ValueError, "unsupported header name"):
+            parse_headers("Bad Header: value")
+
+    def test_parse_headers_rejects_control_characters_in_values(self):
+        with self.assertRaisesRegex(ValueError, "control characters"):
+            parse_headers("X-Test: ok\0injected")
 
 
 class TestContentTypes(unittest.TestCase):

@@ -95,6 +95,16 @@ class TestRequestService(unittest.TestCase):
         self.assertIn("Invalid JSON", result.error)
         request_mock.assert_not_called()
 
+    def test_invalid_headers_return_error_without_network_call(self):
+        service = RequestService()
+
+        with patch("src.services.request_service.requests.request") as request_mock:
+            result = service.send("GET", "https://example.com/data", "", "Authorization Bearer token123")
+
+        self.assertFalse(result.success)
+        self.assertIn("expected 'Name: Value'", result.error)
+        request_mock.assert_not_called()
+
     def test_request_errors_redact_sensitive_urls(self):
         service = RequestService()
         url = "https://example.com/data?token=secret-value"

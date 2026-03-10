@@ -56,7 +56,10 @@ class RequestService:
         except json.JSONDecodeError as exc:
             return RequestResult(success=False, error=f"Invalid JSON in request body: {exc}")
 
-        headers = parse_headers(headers_text)
+        try:
+            headers = parse_headers(headers_text)
+        except ValueError as exc:
+            return RequestResult(success=False, error=str(exc))
 
         try:
             response = requests.request(

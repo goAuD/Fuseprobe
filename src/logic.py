@@ -11,6 +11,7 @@ Security Focus:
 import json
 import ipaddress
 import logging
+import re
 from typing import Dict
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -28,6 +29,8 @@ SENSITIVE_QUERY_KEYS = {
     "signature",
     "token",
 }
+
+HEADER_NAME_PATTERN = re.compile(r"^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$")
 
 
 def redact_sensitive_url(url: str) -> str:
@@ -95,6 +98,9 @@ def validate_url(url: str) -> bool:
     if not parsed.netloc or not parsed.hostname:
         return False
 
+    if parsed.username is not None or parsed.password is not None:
+        return False
+
     try:
         parsed.port
     except ValueError:
@@ -158,12 +164,30 @@ def parse_headers(headers_text: str) -> Dict[str, str]:
     headers = {}
     if not headers_text or not headers_text.strip():
         return headers
-    
-    for line in headers_text.strip().split('\n'):
-        if ':' in line:
-            key, value = line.split(':', 1)
-            headers[key.strip()] = value.strip()
-    
+
+    for line_number, raw_line in enumerate(headers_text.splitlines(), start=1):
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        if ":" not in line:
+            raise ValueError(f"Invalid header on line {line_number}: expected 'Name: Value'")
+
+        key, value = line.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+
+        if not key:
+            raise ValueError(f"Invalid header on line {line_number}: header name cannot be empty")
+
+        if not HEADER_NAME_PATTERN.fullmatch(key):
+            raise ValueError(f"Invalid header on line {line_number}: unsupported header name '{key}'")
+
+        if any(char in value for char in ("\r", "\n", "\0")):
+            raise ValueError(f"Invalid header on line {line_number}: header value contains control characters")
+
+        headers[key] = value
+
     return headers
 
 

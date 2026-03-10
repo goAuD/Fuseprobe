@@ -989,17 +989,22 @@ class FuseprobeApp(ctk.CTk):
     
     def send_request_thread(self):
         """Start request in a separate thread to avoid UI freeze."""
+        request_args = self._collect_request_inputs()
         self._set_status("Sending request...", COLORS["primary"])
         self.btn_send.configure(state="disabled", text="...")
-        threading.Thread(target=self._execute_request, daemon=True).start()
-    
-    def _execute_request(self):
-        """Execute the API request (runs in background thread)."""
-        method = self.method_var.get()
-        url = self.entry_url.get().strip()
-        payload = self.txt_body.get("0.0", "end").strip()
-        headers_text = self.txt_headers.get("0.0", "end").strip()
+        threading.Thread(target=self._execute_request, args=request_args, daemon=True).start()
 
+    def _collect_request_inputs(self) -> tuple[str, str, str, str]:
+        """Snapshot request inputs on the UI thread before background execution."""
+        return (
+            self.method_var.get(),
+            self.entry_url.get().strip(),
+            self.txt_body.get("0.0", "end").strip(),
+            self.txt_headers.get("0.0", "end").strip(),
+        )
+
+    def _execute_request(self, method: str, url: str, payload: str, headers_text: str):
+        """Execute the API request (runs in background thread)."""
         result = self.request_service.send(method, url, payload, headers_text)
         
         # Update UI (thread-safe via after)
