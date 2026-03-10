@@ -8,6 +8,7 @@ import threading
 import logging
 import re
 import time
+import tkinter
 
 from src.presets import (
     AUTH_PRESETS,
@@ -98,6 +99,8 @@ class FuseprobeApp(ctk.CTk):
         self.history_store = history_store or HistoryStore()
         self.request_service = request_service or RequestService()
         self.history = self.history_store.load()
+        self._active_request_id = 0
+        self._is_closing = False
         
         # Current tab
         self.current_tab = "response"
@@ -989,10 +992,16 @@ class FuseprobeApp(ctk.CTk):
     
     def send_request_thread(self):
         """Start request in a separate thread to avoid UI freeze."""
+        request_id = self._next_request_id()
         request_args = self._collect_request_inputs()
         self._set_status("Sending request...", COLORS["primary"])
         self.btn_send.configure(state="disabled", text="...")
-        threading.Thread(target=self._execute_request, args=request_args, daemon=True).start()
+        threading.Thread(target=self._execute_request, args=(request_id, *request_args), daemon=True).start()
+
+    def _next_request_id(self) -> int:
+        """Return a monotonically increasing request id for async result coordination."""
+        self._active_request_id += 1
+        return self._active_request_id
 
     def _collect_request_inputs(self) -> tuple[str, str, str, str]:
         """Snapshot request inputs on the UI thread before background execution."""
@@ -1003,15 +1012,28 @@ class FuseprobeApp(ctk.CTk):
             self.txt_headers.get("0.0", "end").strip(),
         )
 
-    def _execute_request(self, method: str, url: str, payload: str, headers_text: str):
+    def _execute_request(self, request_id: int, method: str, url: str, payload: str, headers_text: str):
         """Execute the API request (runs in background thread)."""
         result = self.request_service.send(method, url, payload, headers_text)
-        
-        # Update UI (thread-safe via after)
-        self.after(0, lambda: self._update_ui(result, method, url))
-    
-    def _update_ui(self, result, method: str, url: str):
-        """Update UI with request result."""
+
+        self._schedule_request_result(request_id, result, method, url)
+
+    def _schedule_request_result(self, request_id: int, result, method: str, url: str):
+        """Safely schedule a request result update back onto the UI thread."""
+        try:
+            self.after(0, lambda: self._apply_request_result(request_id, result, method, url))
+        except (RuntimeError, tkinter.TclError):
+            logger.info("Skipped request result update because the window is closing.")
+
+    def _should_ignore_request_result(self, request_id: int) -> bool:
+        """Return True when an async request result should not mutate current UI state."""
+        return self._is_closing or request_id != self._active_request_id
+
+    def _apply_request_result(self, request_id: int, result, method: str, url: str):
+        """Apply the active request result if it still matches current UI state."""
+        if self._should_ignore_request_result(request_id):
+            return
+
         self.btn_send.configure(state="normal", text="SEND")
 
         if result.success:
@@ -1019,6 +1041,10 @@ class FuseprobeApp(ctk.CTk):
             return
 
         self._render_error_result(result)
+
+    def _update_ui(self, result, method: str, url: str):
+        """Backward-compatible wrapper for tests and direct synchronous UI updates."""
+        self._apply_request_result(self._active_request_id, result, method, url)
 
     def _render_response_body(self, result) -> list[str]:
         """Render the response body and return status suffixes for the status bar."""
@@ -1063,6 +1089,7 @@ class FuseprobeApp(ctk.CTk):
     
     def on_close(self):
         """Handle window close event."""
+        self._is_closing = True
         self.save_history()
         self.destroy()
 

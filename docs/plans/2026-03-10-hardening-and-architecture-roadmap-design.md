@@ -41,6 +41,8 @@ The next work should improve safety, maintainability, and responsiveness before 
 - Rejected URLs with embedded credentials such as `user:pass@host`
 - Hardened request header parsing so malformed or suspicious header lines are rejected before network execution
 - Moved request-input snapshotting onto the UI thread before the worker starts, removing background reads from Tk widgets
+- Hardened history normalization so malformed or manually edited history items fall back safely instead of crashing load/save paths
+- Added request-id based async UI coordination so stale background results do not overwrite the current view state
 - Removed the old unused `send_api_request(...)` path from `src/logic.py`
 - Expanded the automated test suite with high-level request, history, redaction, and formatter coverage
 - Started reducing `src/ui.py` request-result complexity with smaller status/render helpers
@@ -49,17 +51,24 @@ The next work should improve safety, maintainability, and responsiveness before 
 
 ### Current P1 State
 
-The first architecture split is now in place. Request policy and persistence are no longer primarily UI-driven, and the response path already has protective limits for redirect handling, large payloads, binary bodies, and malformed history files.
+The first architecture split is now in place. Request policy, history persistence, and response classification are no longer primarily UI-driven, and the request lifecycle now has explicit safeguards for redirects, large payloads, binary bodies, malformed history files, and stale async callbacks.
 
-`src/ui.py` is still large, but the riskier backend-facing responsibilities have already moved out, and the request result rendering path is now beginning to break into smaller internal helpers.
+`src/ui.py` is still a large file, but the remaining size is now much more about widget construction and interaction wiring than about request policy or persistence policy. That is an acceptable stopping point for P1.
 
-### Next Planned P1 Work
+### P1 Close-Out
 
-- continue shrinking the remaining result/status/history logic inside `src/ui.py`
-- continue request-boundary tightening only where it improves real safety without hurting local/offline API workflows
-- decide whether the next small slice should focus on deeper UI extraction or on another request/response edge-case hardening detail
-- continue dead code removal only after the service-driven paths are stable
-- keep this document updated after every completed work round
+P1 can now be considered complete.
+
+Reason:
+
+- the request path is service-driven rather than UI-driven
+- history persistence is isolated and hardened
+- large and hostile responses have protective limits
+- sensitive URL material is redacted across history and request-error paths
+- malformed history state no longer threatens startup stability
+- high-level regression coverage now protects the critical request/history workflows
+
+The next active workstream should move to P2: cleanup, stability, and performance.
 
 ## Priorities
 

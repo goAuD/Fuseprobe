@@ -78,6 +78,33 @@ class TestHistoryStore(unittest.TestCase):
 
             self.assertEqual(store.load(), [])
 
+    def test_load_normalizes_malformed_history_items_without_crashing(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_file = Path(temp_dir) / "history.json"
+            history_file.write_text(
+                json.dumps(
+                    {
+                        "history": [
+                            {"method": None, "url": None, "status": "bad", "elapsed": "oops", "time": None},
+                            ["not-a-dict"],
+                            {"method": "post", "url": "https://api.example.com?token=secret", "status": "201", "elapsed": "0.42"},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            store = HistoryStore(history_file=history_file, legacy_history_file=Path(temp_dir) / "missing.json")
+            history = store.load()
+
+            self.assertEqual(len(history), 3)
+            self.assertEqual(history[0], {"method": "GET", "url": "", "status": 0, "elapsed": 0.0, "time": "--:--:--"})
+            self.assertEqual(history[1], {"method": "GET", "url": "", "status": 0, "elapsed": 0.0, "time": "--:--:--"})
+            self.assertEqual(history[2]["method"], "POST")
+            self.assertEqual(history[2]["status"], 201)
+            self.assertEqual(history[2]["elapsed"], 0.42)
+            self.assertIn("token=%2A%2A%2A", history[2]["url"])
+
     def test_save_and_load_round_trip(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             history_file = Path(temp_dir) / "history.json"
@@ -91,6 +118,17 @@ class TestHistoryStore(unittest.TestCase):
 
             self.assertEqual(len(loaded), 1)
             self.assertIn("token=%2A%2A%2A", loaded[0]["url"])
+
+    def test_save_normalizes_non_string_values(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_file = Path(temp_dir) / "history.json"
+            store = HistoryStore(history_file=history_file, legacy_history_file=Path(temp_dir) / "missing.json")
+
+            history = [{"method": 123, "url": 456, "status": "500", "elapsed": "1.25", "time": 789}]
+            store.save(history)
+            loaded = store.load()
+
+            self.assertEqual(loaded, [{"method": "123", "url": "456", "status": 500, "elapsed": 1.25, "time": "789"}])
 
 
 if __name__ == "__main__":

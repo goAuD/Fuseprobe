@@ -81,7 +81,7 @@ class HistoryStore:
                 temp_path = Path(temp_handle.name)
             temp_path.replace(self.history_file)
             logger.info("Saved %s history items", len(trimmed_history))
-        except OSError as exc:
+        except (OSError, TypeError, ValueError) as exc:
             logger.error("Could not save history: %s", exc)
 
     def add_entry(self, history: list[dict], method: str, url: str, status_code: int, elapsed: float) -> list[dict]:
@@ -113,11 +113,43 @@ class HistoryStore:
 
     def _normalize_item(self, item: dict) -> dict:
         """Normalize legacy or malformed history entries into the current shape."""
-        item = item or {}
+        item = item if isinstance(item, dict) else {}
         return {
-            "method": item.get("method", "GET"),
-            "url": redact_sensitive_url(item.get("url", "")),
-            "status": int(item.get("status", 0)),
-            "elapsed": float(item.get("elapsed", 0.0)),
-            "time": item.get("time", "--:--:--"),
+            "method": self._coerce_method(item.get("method")),
+            "url": redact_sensitive_url(self._coerce_text(item.get("url"))),
+            "status": self._coerce_int(item.get("status")),
+            "elapsed": self._coerce_float(item.get("elapsed")),
+            "time": self._coerce_time(item.get("time")),
         }
+
+    def _coerce_method(self, value) -> str:
+        """Return a safe method label for persisted history items."""
+        method = self._coerce_text(value).strip().upper()
+        return method or "GET"
+
+    def _coerce_text(self, value) -> str:
+        """Return a safe text representation for persisted fields."""
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        return str(value)
+
+    def _coerce_int(self, value, default: int = 0) -> int:
+        """Safely parse an integer-like persisted value."""
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _coerce_float(self, value, default: float = 0.0) -> float:
+        """Safely parse a float-like persisted value."""
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _coerce_time(self, value) -> str:
+        """Return a display-safe time string."""
+        text = self._coerce_text(value).strip()
+        return text or "--:--:--"

@@ -94,10 +94,36 @@ class TestFuseprobeAppSmoke(unittest.TestCase):
                 app.send_request_thread()
 
             _, kwargs = thread_mock.call_args
-            self.assertEqual(kwargs["args"], ("POST", "https://example.com/data?token=secret", '{"name":"fuseprobe"}', "Content-Type: application/json"))
+            self.assertEqual(kwargs["args"], (1, "POST", "https://example.com/data?token=secret", '{"name":"fuseprobe"}', "Content-Type: application/json"))
             self.assertTrue(kwargs["daemon"])
             self.assertEqual(app.lbl_status.cget("text"), "Sending request...")
             thread_mock.return_value.start.assert_called_once()
+            app.destroy()
+
+    def test_stale_request_result_is_ignored(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_store = HistoryStore(
+                history_file=Path(temp_dir) / "history.json",
+                legacy_history_file=Path(temp_dir) / "legacy.json",
+            )
+            app = self.create_app(history_store=history_store)
+            app._active_request_id = 2
+            app.btn_send.configure(state="disabled", text="...")
+
+            result = RequestResult(
+                success=True,
+                status_code=200,
+                reason="OK",
+                elapsed_seconds=0.111,
+                body='{"ok": true}',
+                is_json=True,
+            )
+
+            app._apply_request_result(1, result, "GET", "https://example.com/ignored")
+
+            self.assertEqual(app.history, [])
+            self.assertEqual(app.btn_send.cget("state"), "disabled")
+            self.assertNotIn("Status: 200 OK", app.lbl_status.cget("text"))
             app.destroy()
 
 
