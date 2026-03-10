@@ -1,11 +1,17 @@
 """
 Fuseprobe Unit Tests
-Tests for URL validation, JSON formatting, and request handling.
+Tests for URL validation, redaction, JSON formatting, and header parsing.
 Run with: python -m pytest tests/ -v
 """
 
 import unittest
-from src.logic import validate_url, format_json, parse_headers, is_json_content_type
+from src.logic import (
+    format_json,
+    is_json_content_type,
+    parse_headers,
+    redact_sensitive_url,
+    validate_url,
+)
 
 
 class TestURLValidation(unittest.TestCase):
@@ -104,6 +110,23 @@ class TestJSONFormatting(unittest.TestCase):
         """Test empty string handling."""
         self.assertEqual(format_json(""), "")
         self.assertEqual(format_json(None), None)
+
+
+class TestURLRedaction(unittest.TestCase):
+    """Tests for masking sensitive values in stored URLs."""
+
+    def test_redacts_sensitive_query_values(self):
+        redacted = redact_sensitive_url(
+            "https://api.example.com/items?token=abc123&name=fuseprobe&api_key=secret"
+        )
+
+        self.assertIn("token=%2A%2A%2A", redacted)
+        self.assertIn("api_key=%2A%2A%2A", redacted)
+        self.assertIn("name=fuseprobe", redacted)
+
+    def test_keeps_plain_urls_unchanged(self):
+        url = "https://api.example.com/items/1"
+        self.assertEqual(redact_sensitive_url(url), url)
 
 
 class TestHeaderParsing(unittest.TestCase):

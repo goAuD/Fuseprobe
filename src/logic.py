@@ -1,23 +1,64 @@
 """
 Fuseprobe - Logic Module
-Business logic for API testing, URL validation, and request handling.
+Business logic for URL validation, redaction, and lightweight text helpers.
 
 Security Focus:
 - Only HTTP/HTTPS URLs allowed (prevents XSS, javascript: exploits)
-- Strict URL validation with regex
-- Request timeout to prevent hanging
-- Proper JSON parsing with error handling
+- Sensitive query values can be redacted before logging or persistence
+- Proper JSON parsing helpers for text rendering
 """
 
 import json
 import ipaddress
 import logging
-from urllib.parse import urlsplit
-from typing import Optional, Dict, Any
-
-import requests
+from typing import Dict
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 logger = logging.getLogger(__name__)
+
+SENSITIVE_QUERY_KEYS = {
+    "access_token",
+    "api_key",
+    "apikey",
+    "auth",
+    "client_secret",
+    "key",
+    "password",
+    "secret",
+    "signature",
+    "token",
+}
+
+
+def redact_sensitive_url(url: str) -> str:
+    """Redact sensitive query parameter values for logs and persisted history."""
+    if not url or not isinstance(url, str):
+        return url
+
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return url
+
+    if not parsed.query:
+        return url
+
+    redacted_pairs = []
+    for key, value in parse_qsl(parsed.query, keep_blank_values=True):
+        if key.lower() in SENSITIVE_QUERY_KEYS:
+            redacted_pairs.append((key, "***"))
+        else:
+            redacted_pairs.append((key, value))
+
+    return urlunsplit(
+        (
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            urlencode(redacted_pairs, doseq=True),
+            parsed.fragment,
+        )
+    )
 
 
 def validate_url(url: str) -> bool:
@@ -140,88 +181,3 @@ def is_json_content_type(content_type: str) -> bool:
 
     mime_type = content_type.split(";", 1)[0].strip().lower()
     return mime_type == "application/json" or mime_type.endswith("+json")
-
-
-def send_api_request(
-    method: str, 
-    url: str, 
-    payload: Optional[str] = None,
-    headers: Optional[Dict[str, str]] = None,
-    timeout: int = 10
-) -> Dict[str, Any]:
-    """
-    Send an API request and return the result.
-    
-    Args:
-        method: HTTP method (GET, POST, PUT, DELETE, PATCH)
-        url: Target URL
-        payload: JSON payload for POST/PUT/PATCH
-        headers: Optional request headers
-        timeout: Request timeout in seconds
-        
-    Returns:
-        Dictionary with response data or error information
-    """
-    # Security: Validate URL first
-    if not validate_url(url):
-        logger.warning(f"Invalid URL rejected: {url[:50]}...")
-        return {
-            "success": False,
-            "error": "Invalid or unsafe URL. Only http:// and https:// are allowed."
-        }
-    
-    # Parse JSON payload if provided
-    json_data = None
-    if payload and payload.strip():
-        try:
-            json_data = json.loads(payload)
-        except json.JSONDecodeError as e:
-            return {
-                "success": False,
-                "error": f"Invalid JSON in request body: {str(e)}"
-            }
-    
-    # Send request
-    try:
-        response = requests.request(
-            method=method.upper(),
-            url=url,
-            json=json_data,
-            headers=headers or {},
-            timeout=timeout
-        )
-        
-        # Determine if response is JSON
-        content_type = response.headers.get("Content-Type", "")
-        is_json = is_json_content_type(content_type)
-        
-        # Format response body
-        body = response.text
-        if is_json:
-            body = format_json(body)
-        
-        return {
-            "success": True,
-            "status_code": response.status_code,
-            "reason": response.reason,
-            "elapsed_seconds": response.elapsed.total_seconds(),
-            "headers": dict(response.headers),
-            "body": body,
-            "is_json": is_json
-        }
-        
-    except requests.exceptions.Timeout:
-        return {
-            "success": False,
-            "error": f"Request timed out after {timeout} seconds"
-        }
-    except requests.exceptions.ConnectionError as e:
-        return {
-            "success": False,
-            "error": f"Connection failed: {str(e)}"
-        }
-    except requests.exceptions.RequestException as e:
-        return {
-            "success": False,
-            "error": f"Request failed: {str(e)}"
-        }

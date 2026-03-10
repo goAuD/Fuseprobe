@@ -6,19 +6,16 @@ CustomTkinter user interface for API testing.
 import customtkinter as ctk
 import threading
 import logging
-import json
 import re
-import os
 import time
-from datetime import datetime
-from pathlib import Path
 
-from src.logic import validate_url, send_api_request, format_json, parse_headers
 from src.presets import (
-    AUTH_PRESETS, API_TEMPLATES, 
+    AUTH_PRESETS,
     get_auth_preset_names, get_api_template_names,
     get_auth_preset_by_name, get_api_template_by_name,
 )
+from src.services.history_store import HistoryStore
+from src.services.request_service import RequestService
 from version import APP_LABEL, APP_NAME, APP_TAGLINE, VERSION
 
 # Import Fuseprobe theme
@@ -48,28 +45,6 @@ logger = logging.getLogger(__name__)
 
 # Constants
 MAX_HIGHLIGHT_LINES = 1000  # Performance limit for syntax highlighting
-MAX_HISTORY_ITEMS = 100  # Max items to persist
-
-
-def get_config_dir() -> Path:
-    """Get user config directory (~/.fuseprobe/)."""
-    if os.name == 'nt':  # Windows
-        config_dir = Path(os.environ.get('USERPROFILE', Path.home())) / '.fuseprobe'
-    else:  # Linux/Mac
-        config_dir = Path.home() / '.fuseprobe'
-    config_dir.mkdir(parents=True, exist_ok=True)
-    return config_dir
-
-
-def get_legacy_config_dir() -> Path:
-    """Get the legacy NanoMan config directory (~/.nanoman/)."""
-    if os.name == 'nt':  # Windows
-        return Path(os.environ.get('USERPROFILE', Path.home())) / '.nanoman'
-    return Path.home() / '.nanoman'
-
-
-HISTORY_FILE = get_config_dir() / "history.json"
-LEGACY_HISTORY_FILE = get_legacy_config_dir() / "history.json"
 
 # Theme colors (from fuseprobe_theme.py)
 COLORS = {
@@ -120,8 +95,9 @@ class FuseprobeApp(ctk.CTk):
         self.configure(fg_color=COLORS["bg_primary"])
         
         # History storage
-        self.history = []
-        self.load_history()  # Load from file
+        self.history_store = HistoryStore()
+        self.request_service = RequestService()
+        self.history = self.history_store.load()
         
         # Current tab
         self.current_tab = "response"
@@ -628,11 +604,8 @@ class FuseprobeApp(ctk.CTk):
             if preset.get("docs"):
                 desc += f"\nDocs: {preset['docs']}"
             self.auth_desc_label.configure(text=desc)
-            
-            self.lbl_status.configure(
-                text=f"Applied auth preset: {preset_name}",
-                text_color=COLORS["special"]
-            )
+
+            self._set_status(f"Applied auth preset: {preset_name}", COLORS["special"])
         else:
             self.auth_desc_label.configure(text="No authentication required")
     
@@ -667,10 +640,7 @@ class FuseprobeApp(ctk.CTk):
         # Update examples display
         self._show_template_examples(template)
         
-        self.lbl_status.configure(
-            text=f"Loaded template: {template.get('name', 'Unknown')}",
-            text_color=COLORS["special"]
-        )
+        self._set_status(f"Loaded template: {template.get('name', 'Unknown')}", COLORS["special"])
     
     def _show_template_examples(self, template: dict):
         """Show example endpoints for selected template."""
@@ -742,10 +712,7 @@ class FuseprobeApp(ctk.CTk):
         self.method_var.set(method)
         
         self.switch_tab("response")
-        self.lbl_status.configure(
-            text=f"Loaded: {method} {path}",
-            text_color=COLORS["primary"]
-        )
+        self._set_status(f"Loaded: {method} {path}", COLORS["primary"])
 
     
     def _create_history_content(self):
@@ -859,7 +826,11 @@ class FuseprobeApp(ctk.CTk):
         """Clear the response text."""
         self.txt_response.delete("0.0", "end")
         self.txt_response.insert("0.0", "// Cleared")
-        self.lbl_status.configure(text="Response cleared.", text_color=COLORS["muted"])
+        self._set_status("Response cleared.", COLORS["muted"])
+
+    def _set_status(self, text: str, color: str):
+        """Update the status bar through a single styling path."""
+        self.lbl_status.configure(text=text, text_color=color)
 
     def _status_color(self, status_code: int) -> str:
         """Return themed status color based on HTTP status code."""
@@ -877,14 +848,8 @@ class FuseprobeApp(ctk.CTk):
         Headers and request body are intentionally NOT persisted to prevent
         leaking sensitive data (Authorization tokens, API keys, etc.).
         """
-        self.history.append({
-            "method": method,
-            "url": url,
-            "status": status_code,
-            "elapsed": elapsed,
-            "time": datetime.now().strftime("%H:%M:%S")
-        })
-        self.history = self.history[-MAX_HISTORY_ITEMS:]
+        self.history = self.history_store.add_entry(self.history, method, url, status_code, elapsed)
+        self.save_history()
         self.refresh_history_view()
 
     def refresh_history_view(self):
@@ -902,12 +867,33 @@ class FuseprobeApp(ctk.CTk):
             self.lbl_history_empty.grid(row=0, column=0, pady=20)
         else:
             self.lbl_history_empty = None
-            for row, item in enumerate(self.history):
-                self._render_history_item(row, item)
+            toolbar = ctk.CTkFrame(self.history_frame, fg_color="transparent")
+            toolbar.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 12))
+            toolbar.grid_columnconfigure(0, weight=1)
+
+            ctk.CTkLabel(
+                toolbar,
+                text="Recent Requests",
+                font=FUSEPROBE_FONTS.get("heading_sm", ("Roboto", 14, "bold")),
+                text_color=COLORS["text_primary"],
+            ).grid(row=0, column=0, sticky="w")
+
+            clear_button = self._create_button(
+                toolbar,
+                text="Clear History",
+                style="ghost",
+                width=108,
+                font=FUSEPROBE_FONTS.get("body_small", ("Roboto", 11)),
+                command=self.clear_history,
+            )
+            clear_button.grid(row=0, column=1, sticky="e")
+
+            for row, item in enumerate(self.history, start=1):
+                self._render_history_item(row, row - 1, item)
 
         self.lbl_count.configure(text=f"{len(self.history)} requests")
 
-    def _render_history_item(self, row: int, item: dict):
+    def _render_history_item(self, row: int, history_index: int, item: dict):
         """Render a single history row."""
         method = item["method"]
         url = item["url"]
@@ -968,6 +954,16 @@ class FuseprobeApp(ctk.CTk):
             command=lambda u=url, m=method: self.load_from_history(m, u),
         )
         btn_load.grid(row=0, column=4, padx=(0, 12), pady=10)
+
+        btn_delete = self._create_button(
+            item_frame,
+            text="Delete",
+            style="ghost",
+            width=78,
+            font=FUSEPROBE_FONTS.get("body_small", ("Roboto", 11)),
+            command=lambda idx=history_index: self.delete_history_item(idx),
+        )
+        btn_delete.grid(row=0, column=5, padx=(0, 12), pady=10)
     
     def load_from_history(self, method: str, url: str):
         """Load a request from history."""
@@ -975,14 +971,25 @@ class FuseprobeApp(ctk.CTk):
         self.entry_url.delete(0, "end")
         self.entry_url.insert(0, url)
         self.switch_tab("response")
-        self.lbl_status.configure(
-            text=f"Loaded from history: {method} {url[:50]}...",
-            text_color=COLORS["primary"],
-        )
+        self._set_status(f"Loaded from history: {method} {url[:50]}...", COLORS["primary"])
+
+    def delete_history_item(self, index: int):
+        """Delete a single history entry and persist the change immediately."""
+        self.history = self.history_store.delete_entry(self.history, index)
+        self.save_history()
+        self.refresh_history_view()
+        self._set_status("History entry deleted.", COLORS["muted"])
+
+    def clear_history(self):
+        """Clear the full history and persist the empty state immediately."""
+        self.history = self.history_store.clear()
+        self.save_history()
+        self.refresh_history_view()
+        self._set_status("History cleared.", COLORS["muted"])
     
     def send_request_thread(self):
         """Start request in a separate thread to avoid UI freeze."""
-        self.lbl_status.configure(text="Sending request...", text_color=COLORS["primary"])
+        self._set_status("Sending request...", COLORS["primary"])
         self.btn_send.configure(state="disabled", text="...")
         threading.Thread(target=self._execute_request, daemon=True).start()
     
@@ -992,79 +999,62 @@ class FuseprobeApp(ctk.CTk):
         url = self.entry_url.get().strip()
         payload = self.txt_body.get("0.0", "end").strip()
         headers_text = self.txt_headers.get("0.0", "end").strip()
-        
-        # Parse headers
-        headers = parse_headers(headers_text)
-        
-        # Allow body for all methods (ElasticSearch uses GET with body)
-        # Trust the developer to know what they're doing
-        
-        # Make request
-        result = send_api_request(method, url, payload, headers)
+
+        result = self.request_service.send(method, url, payload, headers_text)
         
         # Update UI (thread-safe via after)
         self.after(0, lambda: self._update_ui(result, method, url))
     
-    def _update_ui(self, result: dict, method: str, url: str):
+    def _update_ui(self, result, method: str, url: str):
         """Update UI with request result."""
         self.btn_send.configure(state="normal", text="SEND")
-        
-        if result.get("success"):
-            status_code = result["status_code"]
-            reason = result["reason"]
-            elapsed = result["elapsed_seconds"]
-            is_json = result.get("is_json", False)
-            color = self._status_color(status_code)
-            status_text = f"Status: {status_code} {reason} | Time: {elapsed:.3f}s"
 
-            # Show response with syntax highlighting if JSON
-            if is_json:
-                highlighted = self.apply_json_highlighting(self.txt_response, result["body"])
-                if not highlighted:
-                    status_text += f" | Plain view (> {MAX_HIGHLIGHT_LINES} lines)"
-            else:
-                self.txt_response.delete("0.0", "end")
-                self.txt_response.insert("0.0", result["body"])
+        if result.success:
+            self._render_success_result(result, method, url)
+            return
 
-            self.lbl_status.configure(text=status_text, text_color=color)
-            
-            # Add to history
-            self.add_to_history(method, url, status_code, elapsed)
-            
-            # Switch to response tab
-            self.switch_tab("response")
+        self._render_error_result(result)
+
+    def _render_response_body(self, result) -> list[str]:
+        """Render the response body and return status suffixes for the status bar."""
+        suffixes = []
+
+        if result.is_json:
+            highlighted = self.apply_json_highlighting(self.txt_response, result.body)
+            if not highlighted:
+                suffixes.append(f"Plain view (> {MAX_HIGHLIGHT_LINES} lines)")
         else:
-            self.lbl_status.configure(
-                text=f"Error: {result['error'][:80]}...",
-                text_color=COLORS["danger"],
-            )
             self.txt_response.delete("0.0", "end")
-            self.txt_response.insert("0.0", f"Error:\n{result['error']}")
-            self.switch_tab("response")
-    
-    def load_history(self):
-        """Load history from JSON file."""
-        try:
-            history_path = HISTORY_FILE if HISTORY_FILE.exists() else LEGACY_HISTORY_FILE
-            if history_path.exists():
-                with open(history_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    self.history = data.get('history', [])[-MAX_HISTORY_ITEMS:]
-                    logger.info(f"Loaded {len(self.history)} history items from {history_path}")
-        except (json.JSONDecodeError, IOError) as e:
-            logger.warning(f"Could not load history: {e}")
-            self.history = []
+            self.txt_response.insert("0.0", result.body)
+
+        if result.truncated:
+            suffixes.append("Truncated")
+        if result.is_binary:
+            suffixes.append("Binary")
+
+        return suffixes
+
+    def _render_success_result(self, result, method: str, url: str):
+        """Render a successful request and synchronize status/history/UI state."""
+        status_text = f"Status: {result.status_code} {result.reason} | Time: {result.elapsed_seconds:.3f}s"
+        suffixes = self._render_response_body(result)
+        if suffixes:
+            status_text += " | " + " | ".join(suffixes)
+
+        self._set_status(status_text, self._status_color(result.status_code))
+        self.add_to_history(method, url, result.status_code, result.elapsed_seconds)
+        self.switch_tab("response")
+
+    def _render_error_result(self, result):
+        """Render a failed request without mutating request history."""
+        self._set_status(f"Error: {result.error[:80]}...", COLORS["danger"])
+        self.txt_response.delete("0.0", "end")
+        self.txt_response.insert("0.0", f"Error:\n{result.error}")
+        self.switch_tab("response")
     
     def save_history(self):
         """Save history to JSON file."""
-        try:
-            # Keep only last MAX_HISTORY_ITEMS
-            history_to_save = self.history[-MAX_HISTORY_ITEMS:]
-            with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
-                json.dump({'history': history_to_save}, f, indent=2, ensure_ascii=False)
-            logger.info(f"Saved {len(history_to_save)} history items")
-        except IOError as e:
-            logger.error(f"Could not save history: {e}")
+        self.history_store.save(self.history)
     
     def on_close(self):
         """Handle window close event."""

@@ -25,6 +25,36 @@ Fuseprobe should continue to be:
 
 The next work should improve safety, maintainability, and responsiveness before adding more visible features.
 
+## Progress Log
+
+### Completed So Far
+
+- Extracted request execution into `src/services/request_service.py`
+- Extracted history persistence into `src/services/history_store.py`
+- Extracted body classification and formatting into `src/services/response_formatter.py`
+- Disabled automatic redirect following in the new request path
+- Added streamed response reading with a size cap
+- Added safe binary-response fallback handling
+- Added single-item history delete and clear-all history actions
+- Added URL redaction for persisted history and log-safe display
+- Added request-exception redaction so sensitive URL values are not echoed back in error strings
+- Removed the old unused `send_api_request(...)` path from `src/logic.py`
+- Expanded the automated test suite with high-level request, history, redaction, and formatter coverage
+- Started reducing `src/ui.py` request-result complexity with smaller status/render helpers
+
+### Current P1 State
+
+The first architecture split is now in place. Request policy and persistence are no longer primarily UI-driven, and the response path already has protective limits for redirect handling, large payloads, binary bodies, and malformed history files.
+
+`src/ui.py` is still large, but the riskier backend-facing responsibilities have already moved out, and the request result rendering path is now beginning to break into smaller internal helpers.
+
+### Next Planned P1 Work
+
+- continue shrinking the remaining result/status/history logic inside `src/ui.py`
+- decide whether the next small slice should be light UI smoke tests or another UI-layer extraction
+- continue dead code removal only after the service-driven paths are stable
+- keep this document updated after every completed work round
+
 ## Priorities
 
 ### P1: Hardening, Architecture Split, and Test Expansion
