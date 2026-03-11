@@ -99,6 +99,7 @@ class FuseprobeApp(ctk.CTk):
         self.history_store = history_store or HistoryStore()
         self.request_service = request_service or RequestService()
         self.history = self.history_store.load()
+        self._history_dirty = False
         self._active_request_id = 0
         self._is_closing = False
         
@@ -865,9 +866,19 @@ class FuseprobeApp(ctk.CTk):
         Headers and request body are intentionally NOT persisted to prevent
         leaking sensitive data (Authorization tokens, API keys, etc.).
         """
-        self.history = self.history_store.add_entry(self.history, method, url, status_code, elapsed)
+        updated_history = self.history_store.add_entry(self.history, method, url, status_code, elapsed)
+        self._apply_history_change(updated_history)
+
+    def _apply_history_change(self, updated_history: list[dict]) -> bool:
+        """Persist and render history only when the content actually changed."""
+        if updated_history == self.history:
+            return False
+
+        self.history = updated_history
+        self._history_dirty = True
         self.save_history()
         self.refresh_history_view()
+        return True
 
     def refresh_history_view(self):
         """Rebuild the history list from persisted items."""
@@ -992,17 +1003,21 @@ class FuseprobeApp(ctk.CTk):
 
     def delete_history_item(self, index: int):
         """Delete a single history entry and persist the change immediately."""
-        self.history = self.history_store.delete_entry(self.history, index)
-        self.save_history()
-        self.refresh_history_view()
-        self._set_status("History entry deleted.", COLORS["muted"])
+        updated_history = self.history_store.delete_entry(self.history, index)
+        if self._apply_history_change(updated_history):
+            self._set_status("History entry deleted.", COLORS["muted"])
+            return
+
+        self._set_status("History entry not found.", COLORS["muted"])
 
     def clear_history(self):
         """Clear the full history and persist the empty state immediately."""
-        self.history = self.history_store.clear()
-        self.save_history()
-        self.refresh_history_view()
-        self._set_status("History cleared.", COLORS["muted"])
+        updated_history = self.history_store.clear()
+        if self._apply_history_change(updated_history):
+            self._set_status("History cleared.", COLORS["muted"])
+            return
+
+        self._set_status("History is already empty.", COLORS["muted"])
     
     def send_request_thread(self):
         """Start request in a separate thread to avoid UI freeze."""
@@ -1098,8 +1113,13 @@ class FuseprobeApp(ctk.CTk):
         self.switch_tab("response")
     
     def save_history(self):
-        """Save history to JSON file."""
+        """Save history to disk only when a mutation actually occurred."""
+        if not self._history_dirty:
+            return False
+
         self.history_store.save(self.history)
+        self._history_dirty = False
+        return True
     
     def on_close(self):
         """Handle window close event."""

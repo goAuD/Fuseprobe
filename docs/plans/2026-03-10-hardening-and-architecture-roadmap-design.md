@@ -56,6 +56,8 @@ This is a reference artifact for the later UI/UX refinement sprint, not an imple
 - Started reducing `src/ui.py` request-result complexity with smaller status/render helpers
 - Added service injection points for the app constructor to make UI smoke tests safe and isolated
 - Added thin UI smoke tests for startup, history clear, and success-result history updates
+- Started P2 by cleaning up history state handling so no-op deletes/clears no longer trigger redundant saves or misleading status messages
+- Added dirty-state based history persistence so close/no-op paths can skip unnecessary writes
 
 ### Current P1 State
 
@@ -96,6 +98,22 @@ Resolution:
 Updated verdict:
 
 - P1 is complete after the 2026-03-11 audit follow-up fixes
+
+### Early P2 Progress
+
+The first P2 cleanup slice is now in progress and focused on history state handling.
+
+What changed in this slice:
+
+- history mutations now flow through a single UI helper instead of repeating save-and-refresh logic in multiple places
+- delete/clear no-op operations now report accurate status text instead of pretending a mutation happened
+- history persistence now tracks whether the state is actually dirty before writing to disk
+
+Why this is a P2 improvement:
+
+- it reduces unnecessary disk writes
+- it reduces unnecessary UI work on no-op paths
+- it makes the history-related status flow easier to reason about
 
 ## Priorities
 

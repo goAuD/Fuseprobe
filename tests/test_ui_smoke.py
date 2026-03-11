@@ -63,6 +63,22 @@ class TestFuseprobeAppSmoke(unittest.TestCase):
             self.assertEqual(app.lbl_count.cget("text"), "0 requests")
             app.destroy()
 
+    def test_clear_history_noops_cleanly_when_already_empty(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_store = HistoryStore(
+                history_file=Path(temp_dir) / "history.json",
+                legacy_history_file=Path(temp_dir) / "legacy.json",
+            )
+            app = self.create_app(history_store=history_store)
+
+            with patch.object(app.history_store, "save") as save_mock:
+                app.clear_history()
+
+            self.assertEqual(app.history, [])
+            self.assertEqual(app.lbl_status.cget("text"), "History is already empty.")
+            save_mock.assert_not_called()
+            app.destroy()
+
     def test_success_result_adds_history_and_sets_status(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             history_store = HistoryStore(
@@ -137,6 +153,38 @@ class TestFuseprobeAppSmoke(unittest.TestCase):
             self.assertEqual(app.btn_send.cget("state"), "disabled")
             self.assertNotIn("Status: 200 OK", app.lbl_status.cget("text"))
             app.destroy()
+
+    def test_delete_invalid_history_item_does_not_save_or_mutate(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_store = HistoryStore(
+                history_file=Path(temp_dir) / "history.json",
+                legacy_history_file=Path(temp_dir) / "legacy.json",
+            )
+            seed_history = history_store.add_entry([], "GET", "https://example.com/items", 200, 0.1)
+            history_store.save(seed_history)
+            app = self.create_app(history_store=history_store)
+
+            with patch.object(app.history_store, "save") as save_mock:
+                app.delete_history_item(99)
+
+            self.assertEqual(len(app.history), 1)
+            self.assertEqual(app.lbl_status.cget("text"), "History entry not found.")
+            save_mock.assert_not_called()
+            app.destroy()
+
+    def test_on_close_skips_save_when_history_is_clean(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_store = HistoryStore(
+                history_file=Path(temp_dir) / "history.json",
+                legacy_history_file=Path(temp_dir) / "legacy.json",
+            )
+            app = self.create_app(history_store=history_store)
+
+            with patch.object(app.history_store, "save") as save_mock, patch.object(app, "destroy") as destroy_mock:
+                app.on_close()
+
+            save_mock.assert_not_called()
+            destroy_mock.assert_called_once()
 
 
 if __name__ == "__main__":
