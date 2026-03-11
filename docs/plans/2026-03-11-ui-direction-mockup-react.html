@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Fuseprobe — App Shell Concept (React/Vite)</title>
+<style>
+/*
+ * ═══════════════════════════════════════════════════════════
+ *  FUSEPROBE — Full App Shell Redesign
+ *  React 19 + Vite 6 + Zustand + CSS Modules concept
+ *
+ *  Layout: Top navbar + collapsible sidebar + main content
+ *  Architecture: sidebar-driven navigation, dashboard views
+ *  Zero external deps in this mockup
+ * ═══════════════════════════════════════════════════════════
+ */
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  /* depth layers */
+  --void:       #07080a;
+  --base:       #0c0d10;
+  --surface:    #111317;
+  --raised:     #181b20;
+  --raised2:    #1e2127;
+  --hover:      #252930;
+  --inset:      #0a0b0d;
+
+  /* glass */
+  --glass:       rgba(17, 19, 23, 0.72);
+  --glass-edge:  rgba(255,255,255,0.035);
+  --glass-blur:  20px;
+
+  /* brand */
+  --mint:        #00ff99;
+  --mint-h:      #33ffad;
+  --mint-d:      #00b36b;
+  --mint-50:     rgba(0,255,153,0.50);
+  --mint-20:     rgba(0,255,153,0.20);
+  --mint-10:     rgba(0,255,153,0.10);
+  --mint-06:     rgba(0,255,153,0.06);
+  --cream:       #f0ece4;
+  --cream-70:    rgba(240,236,228,0.70);
+  --cream-40:    rgba(240,236,228,0.40);
+
+  /* semantic */
+  --ok:          #00ff99;
+  --ok-bg:       rgba(0,255,153,0.08);
+  --warn:        #ffb347;
+  --warn-bg:     rgba(255,179,71,0.08);
+  --err:         #ff6b7a;
+  --err-bg:      rgba(255,107,122,0.08);
+  --info:        #64b5f6;
+  --info-bg:     rgba(100,181,246,0.08);
+
+  /* text */
+  --t1:          #eae8e3;
+  --t2:          #a8a5a0;
+  --t3:          #6b6863;
+  --t-on-mint:   #061a10;
+
+  /* borders */
+  --b1:          rgba(255,255,255,0.045);
+  --b2:          rgba(255,255,255,0.075);
+  --b-mint:      rgba(0,255,153,0.18);
+
+  /* sizing */
+  --r1: 1px;
+  --r2: 2px;
+  --r3: 3px;
+  --nav-h: 2.8rem;
+  --sb-w: 14rem;
+  --sb-w-collapsed: 2.8rem;
+  --pad: 0.65rem;
+
+  /* motion */
+  --ease:  cubic-bezier(0.22, 0.61, 0.36, 1);
+  --snap:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --fast:  120ms;
+  --med:   220ms;
+  --slow:  350ms;
+
+  /* type */
+  --sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+
+html {
+  font-size: clamp(13px, 0.85vw + 5px, 16px);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--void);
+  color: var(--t1);
+  line-height: 1.5;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--t3); }
+::selection { background: var(--mint-20); color: var(--cream); }
+:focus-visible { outline: 1.5px solid var(--mint-d); outline-offset: 2px; }
+
+/* ══════════════════════════
+   APP SHELL GRID
+   ══════════════════════════ */
+.app {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--sb-w) 1fr;
+  grid-template-rows: var(--nav-h) 1fr;
+  grid-template-areas:
+    "nav nav"
+    "sb  main";
+  height: 100vh;
+  height: 100dvh;
+  transition: grid-template-columns var(--slow) var(--ease);
+}
+
+.app[data-collapsed="true"] {
+  grid-template-columns: var(--sb-w-collapsed) 1fr;
+}
+
+/* ══════════════════════════
+   TOP NAVBAR
+   ══════════════════════════ */
+.nav {
+  grid-area: nav;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 1rem;
+  background: var(--glass);
+  border-bottom: 1px solid var(--glass-edge);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  z-index: 50;
+}
+
+/* hamburger / collapse toggle */
+.nav-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: none;
+  color: var(--t2);
+  cursor: pointer;
+  border-radius: var(--r2);
+  flex-shrink: 0;
+  transition: color var(--fast), background var(--fast);
+}
+.nav-toggle:hover {
+  color: var(--t1);
+  background: var(--hover);
+}
+.nav-toggle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* brand */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.nav-logo {
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: var(--r2);
+  background: var(--mint-10);
+  border: 1px solid var(--b-mint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mint);
+  font-weight: 800;
+  font-size: 0.75rem;
+  font-family: var(--mono);
+  line-height: 1;
+}
+
+.nav-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--cream);
+}
+.nav-name i {
+  font-style: normal;
+  color: var(--mint);
+}
+
+/* separator */
+.nav-sep {
+  width: 1px;
+  height: 1.2rem;
+  background: var(--b1);
+  margin: 0 0.3rem;
+  flex-shrink: 0;
+}
+
+/* page title in navbar */
+.nav-page {
+  font-size: 0.72rem;
+  color: var(--t3);
+  letter-spacing: 0.01em;
+}
+
+/* right side */
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-badge {
+  font-size: 0.52rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mint-d);
+  border: 1px solid var(--b-mint);
+  border-radius: var(--r2);
+  padding: 0.15em 0.5em;
+  white-space: nowrap;
+}
+
+.nav-status {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.6rem;
+  color: var(--t3);
+}
+.nav-dot {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 5px var(--mint-50);
+  animation: pulse 2.8s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* ══════════════════════════
+   SIDEBAR
+   ══════════════════════════ */
+.sb {
+  grid-area: sb;
+  display: flex;
+  flex-direction: column;
+  background: var(--base);
+  border-right: 1px solid var(--glass-edge);
+  padding: 0.35rem 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: width var(--slow) var(--ease);
+  z-index: 40;
+}
+
+/* nav item */
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.7rem;
+  margin: 0.05rem 0.35rem;
+  border-radius: var(--r2);
+  color: var(--t2);
+  font-size: 0.74rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  width: calc(100% - 0.7rem);
+  text-align: left;
+  font-family: var(--sans);
+  line-height: 1;
+  transition:
+    background var(--fast) var(--ease),
+    color var(--fast) var(--ease);
+}
+.sb-item:hover {
+  background: var(--hover);
+  color: var(--t1);
+}
+.sb-item[data-active="true"] {
+  background: var(--mint-10);
+  color: var(--mint);
+}
+.sb-item[data-active="true"]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 1.1rem;
+  background: var(--mint);
+  border-radius: 0 2px 2px 0;
+}
+
+.sb-item { position: relative; }
+
+.sb-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.sb-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sb-label {
+  opacity: 1;
+  transition: opacity var(--fast) var(--ease);
+  overflow: hidden;
+}
+
+/* collapsed state */
+[data-collapsed="true"] .sb-label {
+  display: none;
+}
+[data-collapsed="true"] .sb-item {
+  justify-content: center;
+  padding: 0.45rem 0;
+  margin: 0.1rem 0.2rem;
+  width: calc(100% - 0.4rem);
+  gap: 0;
+}
+
+/* section label in sidebar */
+.sb-section {
+  font-size: 0.54rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--t3);
+  padding: 0.7rem 0.85rem 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity var(--med) var(--ease);
+}
+[data-collapsed="true"] .sb-section {
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* spacer */
+.sb-space { flex: 1; }
+
+/* sidebar footer (version etc) */
+.sb-footer {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.58rem;
+  color: var(--t3);
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0.6;
+  transition: opacity var(--med);
+}
+[data-collapsed="true"] .sb-footer { opacity: 0; }
+
+/* ══════════════════════════
+   MAIN CONTENT
+   ══════════════════════════ */
+.main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--void);
+}
+
+/* page container — shared by all views */
+.page {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.page[data-visible="true"] {
+  display: flex;
+}
+
+/* ═════════ DASHBOARD PAGE ═════════ */
+
+/* control bar — DAW deck style */
+.ctl {
+  display: flex;
+  align-items: stretch;
+  margin: var(--pad);
+  margin-bottom: 0;
+  min-height: 2.5rem;
+  background: var(--raised);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  overflow: hidden;
+}
+
+.ctl-method {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--raised);
+  color: var(--mint);
+  border: none;
+  border-right: 1px solid var(--b1);
+  padding: 0 0.6rem 0 0.7rem;
+  padding-right: 1.7rem;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  min-width: 5.5rem;
+  text-align-last: center;
+  transition: background var(--fast);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236b6863'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 0.5rem) center;
+}
+.ctl-method:hover { background: var(--hover); }
+.ctl-method option { background: var(--raised); color: var(--t1); }
+
+.ctl-url {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--t1);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  padding: 0 0.8rem;
+  min-width: 0;
+}
+.ctl-url::placeholder { color: var(--t3); opacity: 0.55; }
+
+.ctl-send {
+  background: var(--mint);
+  color: var(--t-on-mint);
+  border: none;
+  padding: 0 1.5rem;
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background var(--fast), transform 50ms;
+}
+.ctl-send:hover { background: var(--mint-h); }
+.ctl-send:active { transform: scale(0.97); }
+.ctl-send[disabled] { opacity: 0.4; pointer-events: none; }
+
+.ctl-aux {
+  background: transparent;
+  color: var(--t3);
+  border: none;
+  border-left: 1px solid var(--b1);
+  padding: 0 0.85rem;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color var(--fast);
+}
+.ctl-aux:hover { color: var(--t2); }
+
+/* view switcher */
+.views {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.35rem var(--pad);
+  position: relative;
+}
+
+.view-btn {
+  position: relative;
+  background: transparent;
+  color: var(--t2);
+  border: none;
+  border-radius: var(--r2);
+  padding: 0.4rem 0.9rem;
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  z-index: 2;
+  transition: color var(--fast);
+}
+.view-btn:hover { color: var(--t1); }
+.view-btn[data-active="true"] {
+  color: var(--t-on-mint);
+  font-weight: 600;
+}
+
+/* sliding indicator behind active view btn */
+.view-indicator {
+  position: absolute;
+  top: 0.5rem;
+  height: calc(100% - 1rem);
+  background: var(--mint);
+  border-radius: var(--r2);
+  z-index: 1;
+  transition: left var(--med) var(--snap), width var(--med) var(--snap);
+  pointer-events: none;
+}
+
+/* view content panels */
+.view-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--pad) var(--pad);
+  overflow: hidden;
+  position: relative;
+}
+
+.view-panel {
+  position: absolute;
+  inset: 0;
+  padding: 0 var(--pad) var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity var(--med) var(--ease), transform var(--med) var(--ease);
+  pointer-events: none;
+  overflow: auto;
+}
+.view-panel[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  position: relative;
+}
+
+/* response meta row */
+.resp-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  font-size: 0.64rem;
+}
+
+.resp-tag {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.65rem;
+  padding: 0.15em 0.5em;
+  border-radius: var(--r1);
+  line-height: 1.2;
+}
+.resp-tag.ok   { color: var(--ok); background: var(--ok-bg); }
+.resp-tag.warn { color: var(--warn); background: var(--warn-bg); }
+.resp-tag.err  { color: var(--err); background: var(--err-bg); }
+
+.resp-info { color: var(--t3); font-family: var(--mono); font-size: 0.62rem; }
+
+.btn-icon {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  color: var(--t3);
+  font-size: 0.6rem;
+  padding: 0.22em 0.55em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  line-height: 1;
+  transition: color var(--fast), border-color var(--fast);
+  font-family: var(--sans);
+}
+.btn-icon:hover { color: var(--t1); border-color: var(--b2); }
+
+/* code output */
+.code-out {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.7;
+  color: var(--t2);
+  background: var(--inset);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 0.6rem 0.75rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  resize: vertical;
+  min-height: 8rem;
+}
+
+/* json tokens */
+.jk { color: var(--mint); }
+.js { color: var(--cream-70); }
+.jn { color: #8be9c9; }
+.jb { color: var(--warn); }
+.jnl { color: var(--t3); }
+.jp { color: var(--t3); opacity: 0.4; }
+
+/* textarea editor */
+.editor {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.65;
+  color: var(--t1);
+  background: var(--inset);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 0.75rem 0.9rem;
+  resize: vertical;
+  min-height: 6rem;
+  transition: border-color var(--fast);
+}
+.editor:focus { border-color: var(--b-mint); }
+.editor::placeholder { color: var(--t3); opacity: 0.35; }
+
+.ed-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  color: var(--t3);
+}
+.ed-hint kbd {
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  background: var(--raised);
+  border: 1px solid var(--b1);
+  border-radius: var(--r1);
+  padding: 0.08em 0.3em;
+  color: var(--t2);
+}
+
+/* ═════════ PRESETS PAGE ═════════ */
+.presets-wrap {
+  flex: 1;
+  overflow: auto;
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 0.55rem;
+}
+
+.card {
+  background: var(--raised);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.card-hd {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--mint);
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+}
+.card-hd svg { width: 0.85em; height: 0.85em; opacity: 0.7; }
+
+.card-sub { font-size: 0.62rem; color: var(--t3); }
+
+.sel {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  background: var(--inset);
+  color: var(--t1);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 0.45rem 2rem 0.45rem 0.65rem;
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: border-color var(--fast);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236b6863'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 0.6rem) center;
+}
+.sel:hover,.sel:focus { border-color: var(--b2); }
+.sel option { background: var(--raised); color: var(--t1); }
+
+.card-note { font-size: 0.58rem; color: var(--t3); font-style: italic; }
+
+.tpl-stack { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.tpl {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  background: var(--inset);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 0.4rem 0.65rem;
+  color: var(--t1);
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1;
+  transition: background var(--fast), border-color var(--fast);
+}
+.tpl:hover { background: var(--hover); border-color: var(--b2); }
+
+.tpl-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--mint-d); flex-shrink: 0; opacity: 0.5; }
+.tpl-name { font-weight: 500; }
+.tpl-tag { margin-left: auto; color: var(--t3); font-size: 0.6rem; }
+
+/* examples section */
+.ex-box {
+  background: var(--raised);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 0.65rem;
+}
+.ex-title { font-size: 0.72rem; font-weight: 600; color: var(--cream-70); margin-bottom: 0.4rem; }
+
+.ex-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--b1);
+  font-size: 0.66rem;
+}
+.ex-row:last-child { border-bottom: none; }
+
+.mbadge {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 0.12em 0.4em;
+  border-radius: var(--r1);
+  min-width: 2.5rem;
+  text-align: center;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+.mbadge.get    { color: var(--ok); background: var(--ok-bg); }
+.mbadge.post   { color: var(--info); background: var(--info-bg); }
+.mbadge.put    { color: var(--warn); background: var(--warn-bg); }
+.mbadge.patch  { color: var(--warn); background: var(--warn-bg); }
+.mbadge.delete { color: var(--err); background: var(--err-bg); }
+
+.ex-path { font-family: var(--mono); font-size: 0.64rem; color: var(--t2); cursor: pointer; transition: color var(--fast); }
+.ex-path:hover { color: var(--mint); }
+.ex-desc { margin-left: auto; font-size: 0.58rem; color: var(--t3); white-space: nowrap; }
+
+/* ═════════ HISTORY PAGE ═════════ */
+.hist-wrap {
+  flex: 1;
+  overflow: auto;
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.hist-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.hist-title { font-size: 0.76rem; font-weight: 600; color: var(--cream-70); }
+
+.btn-sm {
+  background: transparent;
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  color: var(--t3);
+  padding: 0.25rem 0.55rem;
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  gap: 0.25em;
+  transition: color var(--fast), border-color var(--fast);
+}
+.btn-sm:hover { color: var(--t2); border-color: var(--b2); }
+.btn-sm.red:hover { color: var(--err); border-color: var(--err); }
+
+.hist-list { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.hitem {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: var(--raised);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 0.45rem 0.7rem;
+  transition: background var(--fast), border-color var(--fast);
+}
+.hitem:hover { background: var(--hover); border-color: var(--b2); }
+
+.hitem-m { font-family: var(--mono); font-size: 0.62rem; font-weight: 700; min-width: 2.4rem; text-align: center; }
+.hitem-url { flex: 1; font-family: var(--mono); font-size: 0.64rem; color: var(--t1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.hitem-st { font-family: var(--mono); font-size: 0.62rem; font-weight: 700; }
+.hitem-st.ok { color: var(--ok); }
+.hitem-st.warn { color: var(--warn); }
+.hitem-st.err { color: var(--err); }
+.hitem-time { font-size: 0.58rem; color: var(--t3); white-space: nowrap; }
+.hitem-acts { display: flex; gap: 0.2rem; flex-shrink: 0; }
+
+/* ═════════ SETTINGS ═════════ */
+.settings-wrap {
+  flex: 1;
+  overflow: auto;
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.setting-group {
+  background: var(--raised);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 0.65rem;
+}
+.setting-group-title {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--cream-70);
+  margin-bottom: 0.5rem;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--b1);
+  gap: 1rem;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-size: 0.68rem; color: var(--t2); }
+.setting-val { font-size: 0.66rem; color: var(--t3); font-family: var(--mono); }
+
+/* toggle switch */
+.toggle {
+  width: 2.2rem;
+  height: 1.2rem;
+  background: var(--raised2);
+  border: 1px solid var(--b1);
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--fast);
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: calc(1.2rem - 6px);
+  height: calc(1.2rem - 6px);
+  border-radius: 50%;
+  background: var(--t3);
+  transition: transform var(--med) var(--snap), background var(--fast);
+}
+.toggle[data-on="true"] {
+  background: var(--mint-10);
+  border-color: var(--b-mint);
+}
+.toggle[data-on="true"]::after {
+  transform: translateX(1rem);
+  background: var(--mint);
+}
+
+/* ══════════════════════════
+   STATUS BAR (bottom of main)
+   ══════════════════════════ */
+.sbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2rem var(--pad);
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--b1);
+  background: var(--base);
+  flex-shrink: 0;
+}
+.sbar-msg { font-size: 0.62rem; color: var(--t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width:0; }
+.sbar-r { display: flex; align-items: center; gap: 0.8rem; flex-shrink: 0; }
+.sbar-item { font-size: 0.58rem; color: var(--t3); white-space: nowrap; }
+
+/* ══════════════════════════
+   MOBILE OVERLAY
+   ══════════════════════════ */
+.sb-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 35;
+  opacity: 0;
+  transition: opacity var(--med);
+}
+.sb-overlay.visible {
+  opacity: 1;
+}
+
+/* ══════════════════════════
+   RESPONSIVE
+   ══════════════════════════ */
+
+/* mobile */
+@media (max-width: 48rem) {
+  .app {
+    grid-template-columns: 0 1fr;
+  }
+  .app[data-collapsed="true"] {
+    grid-template-columns: 0 1fr;
+  }
+
+  .sb {
+    position: fixed;
+    top: var(--nav-h);
+    left: 0;
+    bottom: 0;
+    width: var(--sb-w);
+    transform: translateX(-100%);
+    transition: transform var(--slow) var(--ease);
+    z-index: 40;
+    background: var(--base);
+  }
+  .app[data-mobile-open="true"] .sb {
+    transform: translateX(0);
+  }
+  .app[data-mobile-open="true"] .sb-overlay {
+    display: block;
+    opacity: 1;
+  }
+
+  [data-collapsed] .sb-label { display: inline; opacity: 1; }
+  [data-collapsed] .sb-section { opacity: 1; height: auto; padding: 0.7rem 0.85rem 0.25rem; }
+  [data-collapsed] .sb-footer { opacity: 0.6; }
+  [data-collapsed] .sb-item { justify-content: flex-start; padding: 0.45rem 0.7rem; gap: 0.55rem; }
+
+  .ctl { margin: 0.45rem; flex-wrap: wrap; }
+  .ctl-method {
+    width: 100%; min-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--b1);
+    padding: 0.55rem 0.7rem;
+    text-align-last: left;
+  }
+  .ctl-url { width: 100%; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--b1); }
+  .ctl-send { flex: 1; padding: 0.6rem; }
+  .ctl-aux { border-left: none; border-top: 1px solid var(--b1); }
+
+  .presets-grid { grid-template-columns: 1fr; }
+
+  .hitem { flex-wrap: wrap; gap: 0.3rem; }
+  .hitem-url { flex-basis: 100%; order: 10; }
+  .ex-desc { display: none; }
+
+  .nav-page { display: none; }
+}
+
+/* tablet */
+@media (min-width: 48.01rem) and (max-width: 72rem) {
+  :root {
+    --sb-w: 13rem;
+  }
+}
+
+/* wide */
+@media (min-width: 100rem) {
+  .app { max-width: 96rem; margin: 0 auto; }
+}
+
+/* ══════════════════════════
+   UTILITIES
+   ══════════════════════════ */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+.wmark {
+  position: fixed;
+  bottom: 0.4rem;
+  right: 0.4rem;
+  font-size: 0.48rem;
+  color: var(--t3);
+  opacity: 0.2;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  z-index: 999;
+}
+</style>
+</head>
+<body>
+
+<div class="wmark">MOCKUP — Fuseprobe App Shell Concept (React/Vite)</div>
+
+<div class="app" id="app" data-collapsed="false" data-mobile-open="false">
+
+  <!-- overlay for mobile -->
+  <div class="sb-overlay" id="overlay"></div>
+
+  <!-- TOP NAVBAR -->
+  <header class="nav">
+    <button class="nav-toggle" id="toggleSb" aria-label="Toggle sidebar">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M3 5h14M3 10h14M3 15h14"/>
+      </svg>
+    </button>
+
+    <div class="nav-brand">
+      <div class="nav-logo">fp</div>
+      <div class="nav-name">Fuse<i>probe</i></div>
+    </div>
+
+    <div class="nav-sep"></div>
+    <div class="nav-page" id="navPage">Dashboard</div>
+
+    <div class="nav-right">
+      <div class="nav-badge">offline · v2.1.0</div>
+      <div class="nav-status">
+        <span class="nav-dot"></span>
+        Ready
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sb">
+    <div class="sb-section">Workspace</div>
+
+    <button class="sb-item" data-active="true" data-page="dashboard">
+      <span class="sb-icon">⊞</span>
+      <span class="sb-label">Dashboard</span>
+    </button>
+
+    <button class="sb-item" data-active="false" data-page="presets">
+      <span class="sb-icon">◎</span>
+      <span class="sb-label">Presets</span>
+    </button>
+
+    <button class="sb-item" data-active="false" data-page="history">
+      <span class="sb-icon">◷</span>
+      <span class="sb-label">History</span>
+    </button>
+
+    <div class="sb-section">Config</div>
+
+    <button class="sb-item" data-active="false" data-page="settings">
+      <span class="sb-icon">⚙</span>
+      <span class="sb-label">Settings</span>
+    </button>
+
+    <div class="sb-space"></div>
+
+    <div class="sb-footer">Fuseprobe v2.1.0 · Offline API Client</div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- Dashboard Page -->
+    <div class="page" id="pg-dashboard" data-visible="true">
+
+      <!-- control bar -->
+      <div class="ctl">
+        <label for="method" class="sr">HTTP Method</label>
+        <select id="method" class="ctl-method">
+          <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option>
+        </select>
+        <label for="url" class="sr">URL</label>
+        <input id="url" class="ctl-url" type="text" placeholder="http://localhost:8080/api/health" spellcheck="false" autocomplete="off">
+        <button class="ctl-send" id="sendBtn">Send</button>
+        <button class="ctl-aux" id="clrBtn">Clear</button>
+      </div>
+
+      <!-- view switcher with animated indicator -->
+      <div class="views" id="viewsBar">
+        <div class="view-indicator" id="viewInd"></div>
+        <button class="view-btn" data-view="response" data-active="true">Response</button>
+        <button class="view-btn" data-view="body" data-active="false">Body</button>
+        <button class="view-btn" data-view="headers" data-active="false">Headers</button>
+      </div>
+
+      <!-- view panels -->
+      <div class="view-body">
+
+        <!-- Response view -->
+        <div class="view-panel" id="vp-response" data-visible="true">
+          <div class="resp-meta">
+            <span class="resp-tag ok">200 OK</span>
+            <span class="resp-info">GET http://localhost:8080/api/health</span>
+            <span class="resp-info">18ms · 1.4 KB</span>
+            <button class="btn-icon" id="copyBtn">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 012 9.5v-6A1.5 1.5 0 013.5 2h6A1.5 1.5 0 0111 3.5V5"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="code-out" id="respBody">{
+  <span class="jk">"status"</span>: <span class="js">"ok"</span>,
+  <span class="jk">"service"</span>: <span class="js">"fuseprobe-api"</span>,
+  <span class="jk">"version"</span>: <span class="js">"2.1.0"</span>,
+  <span class="jk">"uptime_seconds"</span>: <span class="jn">84291</span>,
+  <span class="jk">"cloud_required"</span>: <span class="jb">false</span>,
+  <span class="jk">"telemetry"</span>: <span class="jnl">null</span>,
+  <span class="jk">"endpoints"</span>: <span class="jp">[</span>
+    <span class="jp">{</span>
+      <span class="jk">"path"</span>: <span class="js">"/api/health"</span>,
+      <span class="jk">"method"</span>: <span class="js">"GET"</span>,
+      <span class="jk">"avg_ms"</span>: <span class="jn">2</span>
+    <span class="jp">}</span>,
+    <span class="jp">{</span>
+      <span class="jk">"path"</span>: <span class="js">"/api/v1/users"</span>,
+      <span class="jk">"method"</span>: <span class="js">"GET"</span>,
+      <span class="jk">"avg_ms"</span>: <span class="jn">14</span>
+    <span class="jp">}</span>,
+    <span class="jp">{</span>
+      <span class="jk">"path"</span>: <span class="js">"/api/v1/auth"</span>,
+      <span class="jk">"method"</span>: <span class="js">"POST"</span>,
+      <span class="jk">"avg_ms"</span>: <span class="jn">38</span>
+    <span class="jp">}</span>
+  <span class="jp">]</span>,
+  <span class="jk">"timestamp"</span>: <span class="js">"2026-03-11T14:22:09Z"</span>
+}</div>
+        </div>
+
+        <!-- Body view -->
+        <div class="view-panel" id="vp-body">
+          <div class="ed-hint">
+            <span>Request payload (JSON)</span>
+            <span><kbd>Ctrl</kbd> + <kbd>Enter</kbd> sends</span>
+          </div>
+          <textarea class="editor" id="bodyEditor" spellcheck="false" placeholder='{ "key": "value" }'>{
+    "name": "integration-test",
+    "method": "POST",
+    "payload": {
+        "user_id": 42,
+        "action": "validate",
+        "scope": ["read", "write"]
+    }
+}</textarea>
+        </div>
+
+        <!-- Headers view -->
+        <div class="view-panel" id="vp-headers">
+          <div class="ed-hint">
+            <span>Custom headers (Key: Value)</span>
+            <span>One per line</span>
+          </div>
+          <textarea class="editor" spellcheck="false" placeholder="Header-Name: value">Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
+X-Request-ID: fp-c8a91e
+Accept: application/json</textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Presets Page -->
+    <div class="page" id="pg-presets">
+      <div class="presets-wrap">
+        <div class="presets-grid">
+          <div class="card">
+            <div class="card-hd">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 116 0v2"/></svg>
+              Auth Presets
+            </div>
+            <div class="card-sub">Apply auth headers to your request</div>
+            <select class="sel">
+              <option>No Auth</option>
+              <option>Bearer Token</option>
+              <option>Basic Auth</option>
+              <option>API Key (Header)</option>
+              <option>API Key (Authorization)</option>
+            </select>
+            <div class="card-note">JWT / OAuth2 bearer token — added to Authorization header</div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l6-2 6 2v4c0 3.5-2.5 5.5-6 7-3.5-1.5-6-3.5-6-7z"/></svg>
+              API Templates
+            </div>
+            <div class="card-sub">Load a template to populate URL and auth</div>
+            <div class="tpl-stack">
+              <button class="tpl"><span class="tpl-dot"></span><span class="tpl-name">Localhost</span><span class="tpl-tag">:8080</span></button>
+              <button class="tpl"><span class="tpl-dot"></span><span class="tpl-name">Microsoft Graph</span><span class="tpl-tag">OAuth</span></button>
+              <button class="tpl"><span class="tpl-dot"></span><span class="tpl-name">GitHub API</span><span class="tpl-tag">Token</span></button>
+              <button class="tpl"><span class="tpl-dot"></span><span class="tpl-name">HTTPBin</span><span class="tpl-tag">Public</span></button>
+              <button class="tpl"><span class="tpl-dot"></span><span class="tpl-name">JSONPlaceholder</span><span class="tpl-tag">Public</span></button>
+              <button class="tpl"><span class="tpl-dot"></span><span class="tpl-name">ReqRes</span><span class="tpl-tag">Public</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ex-box">
+          <div class="ex-title">Localhost — Example Endpoints</div>
+          <div class="ex-row"><span class="mbadge get">GET</span><span class="ex-path">/api/health</span><span class="ex-desc">Health check</span></div>
+          <div class="ex-row"><span class="mbadge get">GET</span><span class="ex-path">/api/status</span><span class="ex-desc">Status endpoint</span></div>
+          <div class="ex-row"><span class="mbadge get">GET</span><span class="ex-path">/api/v1/users</span><span class="ex-desc">List users</span></div>
+          <div class="ex-row"><span class="mbadge post">POST</span><span class="ex-path">/api/v1/users</span><span class="ex-desc">Create user</span></div>
+          <div class="ex-row"><span class="mbadge put">PUT</span><span class="ex-path">/api/v1/users/42</span><span class="ex-desc">Update user</span></div>
+          <div class="ex-row"><span class="mbadge delete">DEL</span><span class="ex-path">/api/v1/users/42</span><span class="ex-desc">Delete user</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Page -->
+    <div class="page" id="pg-history">
+      <div class="hist-wrap">
+        <div class="hist-bar">
+          <div class="hist-title">Recent Requests</div>
+          <button class="btn-sm red">Clear History</button>
+        </div>
+        <div class="hist-list">
+          <div class="hitem">
+            <span class="hitem-m" style="color:var(--ok)">GET</span>
+            <span class="hitem-url">http://localhost:8080/api/health</span>
+            <span class="hitem-st ok">200</span>
+            <span class="hitem-time">14:22 · 0.02s</span>
+            <div class="hitem-acts"><button class="btn-sm">Load</button><button class="btn-sm red">Del</button></div>
+          </div>
+          <div class="hitem">
+            <span class="hitem-m" style="color:var(--info)">POST</span>
+            <span class="hitem-url">http://localhost:8080/api/v1/users</span>
+            <span class="hitem-st ok">201</span>
+            <span class="hitem-time">14:19 · 0.11s</span>
+            <div class="hitem-acts"><button class="btn-sm">Load</button><button class="btn-sm red">Del</button></div>
+          </div>
+          <div class="hitem">
+            <span class="hitem-m" style="color:var(--ok)">GET</span>
+            <span class="hitem-url">https://jsonplaceholder.typicode.com/posts/1</span>
+            <span class="hitem-st ok">200</span>
+            <span class="hitem-time">14:15 · 0.31s</span>
+            <div class="hitem-acts"><button class="btn-sm">Load</button><button class="btn-sm red">Del</button></div>
+          </div>
+          <div class="hitem">
+            <span class="hitem-m" style="color:var(--warn)">PUT</span>
+            <span class="hitem-url">http://localhost:8080/api/v1/users/42</span>
+            <span class="hitem-st ok">200</span>
+            <span class="hitem-time">14:10 · 0.08s</span>
+            <div class="hitem-acts"><button class="btn-sm">Load</button><button class="btn-sm red">Del</button></div>
+          </div>
+          <div class="hitem">
+            <span class="hitem-m" style="color:var(--ok)">GET</span>
+            <span class="hitem-url">http://localhost:8080/api/v1/nonexistent</span>
+            <span class="hitem-st err">404</span>
+            <span class="hitem-time">14:06 · 0.03s</span>
+            <div class="hitem-acts"><button class="btn-sm">Load</button><button class="btn-sm red">Del</button></div>
+          </div>
+          <div class="hitem">
+            <span class="hitem-m" style="color:var(--err)">DEL</span>
+            <span class="hitem-url">https://graph.microsoft.com/v1.0/me/messages/aX29</span>
+            <span class="hitem-st warn">401</span>
+            <span class="hitem-time">13:58 · 0.91s</span>
+            <div class="hitem-acts"><button class="btn-sm">Load</button><button class="btn-sm red">Del</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div class="page" id="pg-settings">
+      <div class="settings-wrap">
+        <div class="setting-group">
+          <div class="setting-group-title">General</div>
+          <div class="setting-row">
+            <span class="setting-label">Auto-save history</span>
+            <div class="toggle" data-on="true" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">Syntax highlighting</span>
+            <div class="toggle" data-on="true" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">Max history entries</span>
+            <span class="setting-val">50</span>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-group-title">Security</div>
+          <div class="setting-row">
+            <span class="setting-label">Strip sensitive headers from history</span>
+            <div class="toggle" data-on="true" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">URL validation (strict)</span>
+            <div class="toggle" data-on="true" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">Allow only localhost when offline</span>
+            <div class="toggle" data-on="false" role="switch" aria-checked="false" tabindex="0"></div>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-group-title">About</div>
+          <div class="setting-row">
+            <span class="setting-label">Version</span>
+            <span class="setting-val">2.1.0</span>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">License</span>
+            <span class="setting-val">PolyForm Noncommercial</span>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">Storage</span>
+            <span class="setting-val">~/.fuseprobe/</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <footer class="sbar">
+      <div class="sbar-msg" id="sbarMsg">GET http://localhost:8080/api/health — 200 OK · 18ms</div>
+      <div class="sbar-r">
+        <span class="sbar-item">6 requests</span>
+        <span class="sbar-item">Offline</span>
+      </div>
+    </footer>
+
+  </div>
+
+</div>
+
+<!-- INTERACTIVITY -->
+<script>
+(function() {
+  'use strict';
+
+  var app = document.getElementById('app');
+  var isMobile = function() { return window.innerWidth <= 768; };
+
+  // Sidebar toggle
+  var toggleBtn = document.getElementById('toggleSb');
+  var overlay = document.getElementById('overlay');
+
+  toggleBtn.addEventListener('click', function() {
+    if (isMobile()) {
+      var open = app.getAttribute('data-mobile-open') === 'true';
+      app.setAttribute('data-mobile-open', open ? 'false' : 'true');
+    } else {
+      var col = app.getAttribute('data-collapsed') === 'true';
+      app.setAttribute('data-collapsed', col ? 'false' : 'true');
+    }
+  });
+
+  overlay.addEventListener('click', function() {
+    app.setAttribute('data-mobile-open', 'false');
+  });
+
+  // Sidebar page navigation
+  var sbItems = document.querySelectorAll('.sb-item[data-page]');
+  var pages = document.querySelectorAll('.page');
+  var navPage = document.getElementById('navPage');
+
+  function goPage(key) {
+    sbItems.forEach(function(it) {
+      it.setAttribute('data-active', it.getAttribute('data-page') === key ? 'true' : 'false');
+    });
+    pages.forEach(function(p) {
+      p.setAttribute('data-visible', p.id === 'pg-' + key ? 'true' : 'false');
+    });
+    var labels = { dashboard: 'Dashboard', presets: 'Presets', history: 'History', settings: 'Settings' };
+    navPage.textContent = labels[key] || key;
+    if (isMobile()) app.setAttribute('data-mobile-open', 'false');
+  }
+
+  sbItems.forEach(function(it) {
+    it.addEventListener('click', function() { goPage(it.getAttribute('data-page')); });
+  });
+
+  // View switcher (dashboard)
+  var viewBtns = document.querySelectorAll('.view-btn');
+  var viewPanels = document.querySelectorAll('.view-panel');
+  var viewInd = document.getElementById('viewInd');
+
+  function updateIndicator() {
+    var active = document.querySelector('.view-btn[data-active="true"]');
+    if (!active || !viewInd) return;
+    viewInd.style.left = active.offsetLeft + 'px';
+    viewInd.style.width = active.offsetWidth + 'px';
+  }
+
+  function switchView(key) {
+    viewBtns.forEach(function(b) {
+      b.setAttribute('data-active', b.getAttribute('data-view') === key ? 'true' : 'false');
+    });
+    viewPanels.forEach(function(p) {
+      p.setAttribute('data-visible', p.id === 'vp-' + key ? 'true' : 'false');
+    });
+    updateIndicator();
+  }
+
+  viewBtns.forEach(function(b) {
+    b.addEventListener('click', function() { switchView(b.getAttribute('data-view')); });
+  });
+
+  requestAnimationFrame(function() {
+    requestAnimationFrame(updateIndicator);
+  });
+  window.addEventListener('resize', updateIndicator);
+
+  // Send mock
+  var sendBtn = document.getElementById('sendBtn');
+  var urlInput = document.getElementById('url');
+  var sbarMsg = document.getElementById('sbarMsg');
+
+  sendBtn.addEventListener('click', function() {
+    var m = document.getElementById('method').value;
+    var u = urlInput.value || 'http://localhost:8080/api/health';
+    sendBtn.textContent = '\u00b7\u00b7\u00b7';
+    sendBtn.disabled = true;
+    setTimeout(function() {
+      sendBtn.textContent = 'Send';
+      sendBtn.disabled = false;
+      var ms = Math.floor(Math.random() * 80 + 5);
+      sbarMsg.textContent = m + ' ' + u + ' \u2014 200 OK \u00b7 ' + ms + 'ms';
+      goPage('dashboard');
+      switchView('response');
+    }, 350);
+  });
+
+  urlInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); sendBtn.click(); }
+  });
+
+  // Clear
+  document.getElementById('clrBtn').addEventListener('click', function() {
+    document.getElementById('respBody').textContent = '// Cleared';
+    sbarMsg.textContent = 'Response cleared.';
+  });
+
+  // Copy
+  document.getElementById('copyBtn').addEventListener('click', function() {
+    var txt = document.getElementById('respBody').textContent;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(txt).then(function() {
+        var btn = document.getElementById('copyBtn');
+        var orig = btn.innerHTML;
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.innerHTML = orig; }, 1200);
+      });
+    }
+  });
+
+  // Ctrl+Enter from body editor
+  document.getElementById('bodyEditor').addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); sendBtn.click(); }
+  });
+
+  // Template clicks
+  document.querySelectorAll('.tpl').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var n = btn.querySelector('.tpl-name').textContent;
+      sbarMsg.textContent = 'Loaded template: ' + n;
+    });
+  });
+
+  // History load
+  document.querySelectorAll('.hitem .btn-sm:not(.red)').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var row = btn.closest('.hitem');
+      var m = row.querySelector('.hitem-m').textContent.trim();
+      var u = row.querySelector('.hitem-url').textContent.trim();
+      document.getElementById('method').value = m === 'DEL' ? 'DELETE' : m;
+      urlInput.value = u;
+      goPage('dashboard');
+      switchView('response');
+      sbarMsg.textContent = 'Loaded: ' + m + ' ' + u;
+    });
+  });
+
+  // Example path clicks
+  document.querySelectorAll('.ex-path').forEach(function(el) {
+    el.addEventListener('click', function() {
+      urlInput.value = 'http://localhost:8080' + el.textContent;
+      var badge = el.previousElementSibling;
+      if (badge) {
+        var mm = badge.textContent.trim();
+        document.getElementById('method').value = mm === 'DEL' ? 'DELETE' : mm;
+      }
+      goPage('dashboard');
+      switchView('response');
+    });
+  });
+
+  // Toggle switches
+  document.querySelectorAll('.toggle').forEach(function(tog) {
+    tog.addEventListener('click', function() {
+      var on = tog.getAttribute('data-on') === 'true';
+      tog.setAttribute('data-on', on ? 'false' : 'true');
+      tog.setAttribute('aria-checked', on ? 'false' : 'true');
+    });
+    tog.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog.click(); }
+    });
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuseprobe - Tauri Workbench Direction</title>
+<style>
+  :root {
+    --bg: #050607;
+    --panel: #0d1012;
+    --panel-2: #13171b;
+    --panel-3: #191f24;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.14);
+    --text: #edf1ee;
+    --text-soft: #b7c0ba;
+    --text-dim: #75807b;
+    --mint: #00ff99;
+    --mint-soft: rgba(0, 255, 153, 0.14);
+    --mint-border: rgba(0, 255, 153, 0.22);
+    --mint-strong: #35ffad;
+    --warn: #ffb357;
+    --danger: #ff6b7b;
+    --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --sans: "Segoe UI Variable Display", "Aptos", "Trebuchet MS", sans-serif;
+    --mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle at top left, rgba(0, 255, 153, 0.08), transparent 26rem),
+      radial-gradient(circle at bottom right, rgba(0, 255, 153, 0.05), transparent 24rem),
+      linear-gradient(180deg, #040505 0%, #07090b 100%);
+    color: var(--text);
+    font-family: var(--sans);
+  }
+
+  .frame {
+    width: min(1380px, calc(100vw - 48px));
+    min-height: min(860px, calc(100vh - 48px));
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    background: rgba(8, 10, 12, 0.96);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(13, 16, 18, 0.92);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    border: 1px solid var(--mint-border);
+    background: linear-gradient(180deg, rgba(0, 255, 153, 0.18), rgba(0, 255, 153, 0.06));
+    color: var(--mint);
+    font: 700 14px/1 var(--mono);
+    letter-spacing: 0.08em;
+  }
+
+  .brand-copy strong {
+    display: block;
+    font-size: 18px;
+    letter-spacing: -0.03em;
+  }
+
+  .brand-copy span {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .requestbar {
+    display: grid;
+    grid-template-columns: 110px 1fr 120px;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .control,
+  .send {
+    height: 46px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    font-size: 14px;
+  }
+
+  .control.mint,
+  .send {
+    border-color: var(--mint-border);
+    background: linear-gradient(180deg, rgba(0, 255, 153, 0.18), rgba(0, 255, 153, 0.09));
+    color: #052014;
+    font-weight: 700;
+    justify-content: center;
+  }
+
+  .requestbar .url {
+    font-family: var(--mono);
+    color: var(--text-soft);
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 18px;
+    padding: 18px;
+    min-height: calc(100% - 71px);
+  }
+
+  .left,
+  .right {
+    display: grid;
+    gap: 18px;
+  }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(18, 22, 25, 0.96), rgba(12, 15, 17, 0.98));
+    overflow: hidden;
+  }
+
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .card-head h2 {
+    margin: 0;
+    font-size: 15px;
+    letter-spacing: -0.02em;
+  }
+
+  .card-head span {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    padding: 14px 18px 0;
+  }
+
+  .tab {
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    font-size: 12px;
+    background: transparent;
+  }
+
+  .tab.active {
+    color: var(--mint);
+    background: var(--mint-soft);
+    border-color: var(--mint-border);
+  }
+
+  .editor,
+  .history-list,
+  .response {
+    padding: 18px;
+  }
+
+  .editor-block,
+  .history-item,
+  .meta-chip,
+  .response-toolbar {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: var(--radius-md);
+  }
+
+  .editor-block {
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+
+  .editor-label {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .editor-code {
+    font: 13px/1.65 var(--mono);
+    color: var(--text-soft);
+    white-space: pre-wrap;
+  }
+
+  .history-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .history-item {
+    padding: 14px 15px;
+  }
+
+  .history-item strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .history-item span {
+    font: 12px/1.45 var(--mono);
+    color: var(--text-dim);
+  }
+
+  .response-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-soft);
+    font-size: 13px;
+  }
+
+  .status-badge {
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: var(--mint-soft);
+    border: 1px solid var(--mint-border);
+    color: var(--mint-strong);
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+
+  .meta {
+    display: flex;
+    gap: 8px;
+  }
+
+  .meta-chip {
+    padding: 7px 10px;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .response pre {
+    margin: 0;
+    padding: 20px;
+    border-radius: 18px;
+    border: 1px solid var(--line-strong);
+    background: #0a0c0e;
+    color: #dce6df;
+    font: 13px/1.72 var(--mono);
+    overflow: auto;
+  }
+
+  .k { color: #7ce8bb; }
+  .s { color: #eef6c8; }
+  .n { color: #7dd7ff; }
+  .b { color: #ffb357; }
+
+  .footer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 0 18px 18px;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 12px rgba(0, 255, 153, 0.55);
+  }
+
+  @media (max-width: 1100px) {
+    .requestbar {
+      grid-template-columns: 1fr;
+    }
+
+    .shell {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">FP</div>
+        <div class="brand-copy">
+          <strong>Fuseprobe</strong>
+          <span>Offline API Client · Tauri Workbench Direction</span>
+        </div>
+      </div>
+
+      <div class="requestbar">
+        <div class="control">GET</div>
+        <div class="control url">https://api.example.com/users?limit=20</div>
+        <div class="send">SEND</div>
+      </div>
+
+      <div class="meta">
+        <div class="meta-chip">history local</div>
+        <div class="meta-chip">no cloud</div>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="left">
+        <section class="card">
+          <div class="card-head">
+            <h2>Request</h2>
+            <span>body · headers · auth</span>
+          </div>
+          <div class="tabs">
+            <div class="tab active">Body</div>
+            <div class="tab">Headers</div>
+            <div class="tab">Auth</div>
+          </div>
+          <div class="editor">
+            <div class="editor-block">
+              <div class="editor-label">Request Body</div>
+              <div class="editor-code">{
+  "include": ["profile", "roles"],
+  "active": true
+}</div>
+            </div>
+            <div class="editor-block">
+              <div class="editor-label">Request Headers</div>
+              <div class="editor-code">Accept: application/json
+X-Workspace: local-dev</div>
+            </div>
+            <div class="editor-block">
+              <div class="editor-label">Auth Preset</div>
+              <div class="editor-code">Bearer Token · redacted in history and errors</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>History</h2>
+            <span>device only</span>
+          </div>
+          <div class="history-list">
+            <div class="history-item">
+              <strong>GET https://api.example.com/users</strong>
+              <span>200 OK · 412 ms · sanitized before persistence</span>
+            </div>
+            <div class="history-item">
+              <strong>POST https://api.example.com/audit/events</strong>
+              <span>401 Unauthorized · auth token masked</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="right">
+        <section class="card">
+          <div class="card-head">
+            <h2>Response</h2>
+            <span>formatted view first, raw when needed</span>
+          </div>
+          <div class="response">
+            <div class="response-toolbar">
+              <div class="status">
+                <div class="status-badge">200 OK</div>
+                <span>412 ms</span>
+                <span>3.2 KB</span>
+              </div>
+              <div class="meta">
+                <div class="meta-chip">application/json</div>
+                <div class="meta-chip">utf-8</div>
+                <div class="meta-chip">no redirects</div>
+              </div>
+            </div>
+            <div class="tabs" style="padding: 0 0 14px 0;">
+              <div class="tab active">Response</div>
+              <div class="tab">Headers</div>
+              <div class="tab">Raw</div>
+            </div>
+            <pre><span class="k">"users"</span>: [
+  {
+    <span class="k">"id"</span>: <span class="n">101</span>,
+    <span class="k">"email"</span>: <span class="s">"dana@example.com"</span>,
+    <span class="k">"active"</span>: <span class="b">true</span>
+  },
+  {
+    <span class="k">"id"</span>: <span class="n">102</span>,
+    <span class="k">"email"</span>: <span class="s">"simon@example.com"</span>,
+    <span class="k">"active"</span>: <span class="b">false</span>
+  }
+],
+<span class="k">"page"</span>: <span class="n">1</span>,
+<span class="k">"next"</span>: <span class="s">null</span></pre>
+          </div>
+        </section>
+
+        <div class="footer">
+          <div class="dot"></div>
+          <span>Focused request workbench, not a generic dashboard shell.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

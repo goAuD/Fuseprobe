@@ -10,7 +10,7 @@ Define the next development phases for Fuseprobe with the correct order of work:
 2. breaking down the current god class
 3. expanding high-level tests
 4. cleanup and stability work
-5. later UI/UX refinement and feature additions
+5. later platform migration, then UI/UX refinement and feature additions
 
 This roadmap is intentionally backend-first. Fuseprobe is already usable, but the current architecture puts request policy, persistence, rendering decisions, and widget orchestration too close together. That makes security changes riskier than they should be and slows future iteration.
 
@@ -27,9 +27,14 @@ The next work should improve safety, maintainability, and responsiveness before 
 
 ## Design Reference
 
-A tracked UI direction mockup now exists at `docs/plans/2026-03-10-ui-direction-mockup.html`.
+Tracked design references now exist at:
 
-This is a reference artifact for the later UI/UX refinement sprint, not an implementation contract. Its main value is preserving a concrete visual direction so the later P3 work does not restart from a blank slate.
+- `docs/plans/2026-03-10-ui-direction-mockup.html`
+- `docs/plans/2026-03-11-ui-direction-mockup-react.html`
+- `docs/plans/2026-03-11-tauri-workbench-direction-mockup.html`
+- `docs/plans/2026-03-11-tauri-react-rust-platform-migration-design.md`
+
+These are reference artifacts, not implementation contracts. Their role is to preserve the visual and architectural direction so the platform migration and the later UI refinement do not restart from a blank slate.
 
 ## Progress Log
 
@@ -114,7 +119,7 @@ Reason:
 - a small but real amount of repeated UI work was removed from the response highlighting and preset-render paths
 - the codebase remains lint-clean and the full automated verification still passes after the cleanup work
 
-This does not mean the UI is “done”. It means the cleanup, stability, and lightweight performance pass planned for P2 has been completed well enough that the next active workstream should move to P3.
+This does not mean the UI is “done”. It means the cleanup, stability, and lightweight performance pass planned for P2 has been completed well enough that the next active workstream can move away from Tkinter polish and into the new platform-migration design work.
 
 ## Priorities
 
@@ -140,15 +145,30 @@ After the first architecture split is in place:
 - reduce unnecessary redraws and wasteful response processing
 - improve startup and request-path consistency
 
-### P3: UI/UX Refinement
+### P3: Tauri/React/Rust Platform Migration
 
-Only after P1 and the critical part of P2:
+The old P3 "desktop polish" goal has been re-scoped.
+
+The next primary workstream is now:
+
+- treat the Tkinter app as the stable reference implementation
+- move the product shell to `Tauri + React/Vite`
+- rebuild the request, history, formatting, and redaction core in Rust
+- keep the product offline-first and cross-platform from the start
+- define the future CLI as a later consumer of the same Rust core, not as a separate architecture
+
+The first migration release should be an MVP shell, not a full parity rewrite in one step.
+
+### P4: UI/UX Refinement and Follow-On Features
+
+After the new platform shell exists and the MVP reaches stable feature parity on the core paths:
 
 - smaller and cleaner global button sizing
 - clearer menu logic and less ambiguity in presets/history flows
 - a help menu and short in-app guidance
 - better history management affordances
 - general polish toward a more elegant, less noisy desktop UX
+- later CLI work built on the Rust core
 
 ## Approaches Considered
 
