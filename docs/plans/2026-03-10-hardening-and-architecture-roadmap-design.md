@@ -58,6 +58,9 @@ This is a reference artifact for the later UI/UX refinement sprint, not an imple
 - Added thin UI smoke tests for startup, history clear, and success-result history updates
 - Started P2 by cleaning up history state handling so no-op deletes/clears no longer trigger redundant saves or misleading status messages
 - Added dirty-state based history persistence so close/no-op paths can skip unnecessary writes
+- Simplified the response/status render path with shared response text helpers and more consistent error status summaries
+- Simplified tab switching by moving content frames behind a single mapping instead of manual per-tab branching
+- Reduced avoidable UI work by configuring JSON highlight tags once and removing repeated preset-name lookups during preset rendering
 
 ### Current P1 State
 
@@ -99,21 +102,19 @@ Updated verdict:
 
 - P1 is complete after the 2026-03-11 audit follow-up fixes
 
-### Early P2 Progress
+### P2 Close-Out
 
-The first P2 cleanup slice is now in progress and focused on history state handling.
+P2 can now be considered complete for the current desktop baseline.
 
-What changed in this slice:
+Reason:
 
-- history mutations now flow through a single UI helper instead of repeating save-and-refresh logic in multiple places
-- delete/clear no-op operations now report accurate status text instead of pretending a mutation happened
-- history persistence now tracks whether the state is actually dirty before writing to disk
+- history mutations and persistence are now cleaner, with fewer redundant writes and fewer misleading no-op side effects
+- response rendering and status messaging are more centralized and easier to reason about
+- tab/content switching is less branch-heavy and has direct smoke coverage
+- a small but real amount of repeated UI work was removed from the response highlighting and preset-render paths
+- the codebase remains lint-clean and the full automated verification still passes after the cleanup work
 
-Why this is a P2 improvement:
-
-- it reduces unnecessary disk writes
-- it reduces unnecessary UI work on no-op paths
-- it makes the history-related status flow easier to reason about
+This does not mean the UI is “done”. It means the cleanup, stability, and lightweight performance pass planned for P2 has been completed well enough that the next active workstream should move to P3.
 
 ## Priorities
 

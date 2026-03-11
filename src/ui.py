@@ -46,6 +46,24 @@ logger = logging.getLogger(__name__)
 
 # Constants
 MAX_HIGHLIGHT_LINES = 1000  # Performance limit for syntax highlighting
+RESPONSE_PLACEHOLDER_TEXT = (
+    "// Response will appear here\n"
+    "// Press SEND or Enter to make a request\n\n"
+    "// Quick start:\n"
+    "// 1. Enter a URL or use Presets tab for templates\n"
+    "// 2. Select HTTP method\n"
+    "// 3. Press SEND or Enter\n\n"
+    "// Try these test APIs:\n"
+    "// https://httpbin.org/get\n"
+    "// https://jsonplaceholder.typicode.com/posts/1"
+)
+RESPONSE_CLEARED_TEXT = "// Cleared"
+ERROR_STATUS_LIMIT = 80
+JSON_KEY_PATTERN = re.compile(r'"([^"]+)"\s*:')
+JSON_STRING_PATTERN = re.compile(r':\s*"([^"]*)"')
+JSON_NUMBER_PATTERN = re.compile(r':\s*(-?\d+\.?\d*)')
+JSON_BOOLEAN_PATTERN = re.compile(r'\b(true|false)\b', re.IGNORECASE)
+JSON_NULL_PATTERN = re.compile(r'\bnull\b', re.IGNORECASE)
 
 # Theme colors (from fuseprobe_theme.py)
 COLORS = {
@@ -402,6 +420,13 @@ class FuseprobeApp(ctk.CTk):
         self._create_headers_content()
         self._create_presets_content()
         self._create_history_content()
+        self.content_frames = {
+            "response": self.response_frame,
+            "body": self.body_frame,
+            "headers": self.headers_frame,
+            "presets": self.presets_frame,
+            "history": self.history_frame,
+        }
 
         # 5. Status bar
         self.status_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -436,7 +461,7 @@ class FuseprobeApp(ctk.CTk):
 
         self.txt_response = self._create_textbox(self.response_frame, wrap="word")
         self.txt_response.grid(row=0, column=0, sticky="nsew", padx=12, pady=12)
-        self.txt_response.insert("0.0", "// Response will appear here\n// Press SEND or Enter to make a request\n\n// Quick start:\n// 1. Enter a URL or use Presets tab for templates\n// 2. Select HTTP method\n// 3. Press SEND or Enter\n\n// Try these test APIs:\n// https://httpbin.org/get\n// https://jsonplaceholder.typicode.com/posts/1")
+        self._set_response_text(RESPONSE_PLACEHOLDER_TEXT)
     
     def _create_body_content(self):
         """Create request body tab content."""
@@ -562,7 +587,8 @@ class FuseprobeApp(ctk.CTk):
         button_list.grid(row=2, column=0, padx=18, pady=(0, 18), sticky="ew")
         button_list.grid_columnconfigure(0, weight=1)
 
-        for index, name in enumerate(get_api_template_names()):
+        template_names = get_api_template_names()
+        for index, name in enumerate(template_names):
             template = get_api_template_by_name(name)
             btn = self._create_button(
                 button_list,
@@ -572,7 +598,7 @@ class FuseprobeApp(ctk.CTk):
                 font=FUSEPROBE_FONTS.get("body_small", ("Roboto", 11)),
                 command=lambda t=template: self._apply_api_template(t),
             )
-            btn.grid(row=index, column=0, pady=(0, 8 if index < len(get_api_template_names()) - 1 else 0), sticky="ew")
+            btn.grid(row=index, column=0, pady=(0, 8 if index < len(template_names) - 1 else 0), sticky="ew")
 
         self.template_examples_frame = self._create_panel(self.presets_frame)
         self.template_examples_frame.grid(
@@ -769,86 +795,86 @@ class FuseprobeApp(ctk.CTk):
                     border_color=COLORS["border"],
                 )
 
-        self.response_frame.grid_remove()
-        self.body_frame.grid_remove()
-        self.headers_frame.grid_remove()
-        self.presets_frame.grid_remove()
-        self.history_frame.grid_remove()
-
-        if tab_key == "response":
-            self.response_frame.grid()
-        elif tab_key == "body":
-            self.body_frame.grid()
-        elif tab_key == "headers":
-            self.headers_frame.grid()
-        elif tab_key == "presets":
-            self.presets_frame.grid()
-        elif tab_key == "history":
-            self.history_frame.grid()
+        for key, frame in self.content_frames.items():
+            if key == tab_key:
+                frame.grid()
+            else:
+                frame.grid_remove()
     
     def apply_json_highlighting(self, textbox: ctk.CTkTextbox, content: str) -> bool:
         """Apply basic JSON syntax highlighting with performance limit."""
         textbox.delete("0.0", "end")
         textbox.insert("0.0", content)
-        
-        lines = content.split('\n')
-        
+
+        lines = content.splitlines()
+
         # Performance limit: skip highlighting for large JSON
         if len(lines) > MAX_HIGHLIGHT_LINES:
             logger.info(f"Skipping highlighting: {len(lines)} lines exceeds limit of {MAX_HIGHLIGHT_LINES}")
             return False
-        
-        # Define tags (colors aligned with the app theme)
-        textbox._textbox.tag_configure("key", foreground=COLORS["warning"])
-        textbox._textbox.tag_configure("string", foreground=COLORS["string"])
-        textbox._textbox.tag_configure("number", foreground=COLORS["primary_hover"])
-        textbox._textbox.tag_configure("boolean", foreground=COLORS["danger"])
-        textbox._textbox.tag_configure("null", foreground=COLORS["special"])
-        
+
+        self._ensure_json_tags_configured(textbox)
+
         # Apply highlighting
-        lines = content.split('\n')
         for line_num, line in enumerate(lines, 1):
             # Keys (before colon)
-            for match in re.finditer(r'"([^"]+)"\s*:', line):
+            for match in JSON_KEY_PATTERN.finditer(line):
                 start = f"{line_num}.{match.start()}"
                 end = f"{line_num}.{match.end()-1}"
                 textbox._textbox.tag_add("key", start, end)
             
             # String values (after colon)
-            for match in re.finditer(r':\s*"([^"]*)"', line):
+            for match in JSON_STRING_PATTERN.finditer(line):
                 start = f"{line_num}.{match.start() + len(match.group(0)) - len(match.group(1)) - 1}"
                 end = f"{line_num}.{match.end()}"
                 textbox._textbox.tag_add("string", start, end)
             
             # Numbers
-            for match in re.finditer(r':\s*(-?\d+\.?\d*)', line):
+            for match in JSON_NUMBER_PATTERN.finditer(line):
                 start = f"{line_num}.{match.start(1)}"
                 end = f"{line_num}.{match.end(1)}"
                 textbox._textbox.tag_add("number", start, end)
             
             # Booleans
-            for match in re.finditer(r'\b(true|false)\b', line, re.IGNORECASE):
+            for match in JSON_BOOLEAN_PATTERN.finditer(line):
                 start = f"{line_num}.{match.start()}"
                 end = f"{line_num}.{match.end()}"
                 textbox._textbox.tag_add("boolean", start, end)
             
             # Null
-            for match in re.finditer(r'\bnull\b', line, re.IGNORECASE):
+            for match in JSON_NULL_PATTERN.finditer(line):
                 start = f"{line_num}.{match.start()}"
                 end = f"{line_num}.{match.end()}"
                 textbox._textbox.tag_add("null", start, end)
 
         return True
+
+    def _ensure_json_tags_configured(self, textbox: ctk.CTkTextbox):
+        """Configure syntax highlight tags once per textbox instead of on every render."""
+        if getattr(textbox, "_fuseprobe_json_tags_ready", False):
+            return
+
+        textbox._textbox.tag_configure("key", foreground=COLORS["warning"])
+        textbox._textbox.tag_configure("string", foreground=COLORS["string"])
+        textbox._textbox.tag_configure("number", foreground=COLORS["primary_hover"])
+        textbox._textbox.tag_configure("boolean", foreground=COLORS["danger"])
+        textbox._textbox.tag_configure("null", foreground=COLORS["special"])
+        textbox._fuseprobe_json_tags_ready = True
     
     def clear_response(self):
         """Clear the response text."""
-        self.txt_response.delete("0.0", "end")
-        self.txt_response.insert("0.0", "// Cleared")
+        self._set_response_text(RESPONSE_CLEARED_TEXT)
+        self.switch_tab("response")
         self._set_status("Response cleared.", COLORS["muted"])
 
     def _set_status(self, text: str, color: str):
         """Update the status bar through a single styling path."""
         self.lbl_status.configure(text=text, text_color=color)
+
+    def _set_response_text(self, text: str):
+        """Replace the response textbox content through a single code path."""
+        self.txt_response.delete("0.0", "end")
+        self.txt_response.insert("0.0", text)
 
     def _status_color(self, status_code: int) -> str:
         """Return themed status color based on HTTP status code."""
@@ -1084,8 +1110,7 @@ class FuseprobeApp(ctk.CTk):
             if not highlighted:
                 suffixes.append(f"Plain view (> {MAX_HIGHLIGHT_LINES} lines)")
         else:
-            self.txt_response.delete("0.0", "end")
-            self.txt_response.insert("0.0", result.body)
+            self._set_response_text(result.body)
 
         if result.truncated:
             suffixes.append("Truncated")
@@ -1094,22 +1119,32 @@ class FuseprobeApp(ctk.CTk):
 
         return suffixes
 
-    def _render_success_result(self, result, method: str, url: str):
-        """Render a successful request and synchronize status/history/UI state."""
+    def _build_success_status_text(self, result, suffixes: list[str]) -> str:
+        """Build the status line for successful requests."""
         status_text = f"Status: {result.status_code} {result.reason} | Time: {result.elapsed_seconds:.3f}s"
-        suffixes = self._render_response_body(result)
         if suffixes:
             status_text += " | " + " | ".join(suffixes)
+        return status_text
 
+    def _summarize_error_for_status(self, error: str) -> str:
+        """Return a short, stable error summary for the status bar."""
+        error = (error or "").strip()
+        if len(error) <= ERROR_STATUS_LIMIT:
+            return error
+        return f"{error[:ERROR_STATUS_LIMIT]}..."
+
+    def _render_success_result(self, result, method: str, url: str):
+        """Render a successful request and synchronize status/history/UI state."""
+        suffixes = self._render_response_body(result)
+        status_text = self._build_success_status_text(result, suffixes)
         self._set_status(status_text, self._status_color(result.status_code))
         self.add_to_history(method, url, result.status_code, result.elapsed_seconds)
         self.switch_tab("response")
 
     def _render_error_result(self, result):
         """Render a failed request without mutating request history."""
-        self._set_status(f"Error: {result.error[:80]}...", COLORS["danger"])
-        self.txt_response.delete("0.0", "end")
-        self.txt_response.insert("0.0", f"Error:\n{result.error}")
+        self._set_status(f"Error: {self._summarize_error_for_status(result.error)}", COLORS["danger"])
+        self._set_response_text(f"Error:\n{result.error}")
         self.switch_tab("response")
     
     def save_history(self):

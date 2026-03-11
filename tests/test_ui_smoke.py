@@ -103,6 +103,58 @@ class TestFuseprobeAppSmoke(unittest.TestCase):
             self.assertIn("token=%2A%2A%2A", app.history[0]["url"])
             app.destroy()
 
+    def test_error_result_sets_response_status_and_tab(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_store = HistoryStore(
+                history_file=Path(temp_dir) / "history.json",
+                legacy_history_file=Path(temp_dir) / "legacy.json",
+            )
+            app = self.create_app(history_store=history_store)
+            app.switch_tab("history")
+
+            result = RequestResult(success=False, error="Connection refused")
+            app._update_ui(result, "GET", "https://example.com/fail")
+
+            self.assertEqual(app.current_tab, "response")
+            self.assertEqual(app.lbl_status.cget("text"), "Error: Connection refused")
+            self.assertEqual(app.txt_response.get("0.0", "end").strip(), "Error:\nConnection refused")
+            app.destroy()
+
+    def test_clear_response_switches_to_response_tab(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_store = HistoryStore(
+                history_file=Path(temp_dir) / "history.json",
+                legacy_history_file=Path(temp_dir) / "legacy.json",
+            )
+            app = self.create_app(history_store=history_store)
+            app.switch_tab("history")
+
+            app.clear_response()
+
+            self.assertEqual(app.current_tab, "response")
+            self.assertEqual(app.txt_response.get("0.0", "end").strip(), "// Cleared")
+            self.assertEqual(app.lbl_status.cget("text"), "Response cleared.")
+            app.destroy()
+
+    def test_switch_tab_shows_only_requested_content_frame(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_store = HistoryStore(
+                history_file=Path(temp_dir) / "history.json",
+                legacy_history_file=Path(temp_dir) / "legacy.json",
+            )
+            app = self.create_app(history_store=history_store)
+
+            app.switch_tab("headers")
+            app.update_idletasks()
+
+            self.assertEqual(app.current_tab, "headers")
+            self.assertEqual(app.headers_frame.winfo_manager(), "grid")
+            self.assertEqual(app.response_frame.winfo_manager(), "")
+            self.assertEqual(app.body_frame.winfo_manager(), "")
+            self.assertEqual(app.tab_buttons["headers"].cget("fg_color"), "#c48a5a")
+            self.assertEqual(app.tab_buttons["response"].cget("fg_color"), "#2b2f36")
+            app.destroy()
+
     def test_send_request_thread_snapshots_widget_input_before_worker_start(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             history_store = HistoryStore(
