@@ -442,11 +442,18 @@ class FuseprobeApp(ctk.CTk):
         self.body_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
         self.body_frame.grid(row=0, column=0, sticky="nsew")
         self.body_frame.grid_columnconfigure(0, weight=1)
-        self.body_frame.grid_rowconfigure(0, weight=1)
+        self.body_frame.grid_rowconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            self.body_frame,
+            text="Optional request body. Leave empty unless this request needs one.",
+            font=FUSEPROBE_FONTS.get("body_small", ("Roboto", 11)),
+            text_color=COLORS["text_secondary"],
+            anchor="w",
+        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 0))
 
         self.txt_body = self._create_textbox(self.body_frame)
-        self.txt_body.grid(row=0, column=0, sticky="nsew", padx=12, pady=12)
-        self.txt_body.insert("0.0", '{\n    "key": "value"\n}')
+        self.txt_body.grid(row=1, column=0, sticky="nsew", padx=12, pady=12)
         
         self.body_frame.grid_remove()  # Hide initially
     
@@ -455,11 +462,18 @@ class FuseprobeApp(ctk.CTk):
         self.headers_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
         self.headers_frame.grid(row=0, column=0, sticky="nsew")
         self.headers_frame.grid_columnconfigure(0, weight=1)
-        self.headers_frame.grid_rowconfigure(0, weight=1)
+        self.headers_frame.grid_rowconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            self.headers_frame,
+            text="Optional request headers. Leave empty unless the target API requires them.",
+            font=FUSEPROBE_FONTS.get("body_small", ("Roboto", 11)),
+            text_color=COLORS["text_secondary"],
+            anchor="w",
+        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 0))
 
         self.txt_headers = self._create_textbox(self.headers_frame)
-        self.txt_headers.grid(row=0, column=0, sticky="nsew", padx=12, pady=12)
-        self.txt_headers.insert("0.0", "Content-Type: application/json")
+        self.txt_headers.grid(row=1, column=0, sticky="nsew", padx=12, pady=12)
         
         self.headers_frame.grid_remove()  # Hide initially
     

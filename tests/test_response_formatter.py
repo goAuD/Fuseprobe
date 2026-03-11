@@ -35,6 +35,12 @@ class TestResponseFormatter(unittest.TestCase):
         self.assertTrue(formatted.truncated)
         self.assertIn("Output truncated", formatted.body)
 
+    def test_falls_back_when_charset_is_unknown(self):
+        formatted = format_response_body("text/plain; charset=x-unknown-charset", "hello".encode("utf-8"))
+
+        self.assertFalse(formatted.is_binary)
+        self.assertEqual(formatted.body, "hello")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

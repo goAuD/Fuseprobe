@@ -33,6 +33,18 @@ class TestFuseprobeAppSmoke(unittest.TestCase):
             self.assertEqual(app.lbl_count.cget("text"), "0 requests")
             app.destroy()
 
+    def test_request_editors_start_empty_for_safe_defaults(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_store = HistoryStore(
+                history_file=Path(temp_dir) / "history.json",
+                legacy_history_file=Path(temp_dir) / "legacy.json",
+            )
+            app = self.create_app(history_store=history_store)
+
+            self.assertEqual(app.txt_body.get("0.0", "end").strip(), "")
+            self.assertEqual(app.txt_headers.get("0.0", "end").strip(), "")
+            app.destroy()
+
     def test_clear_history_updates_ui_state(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             history_store = HistoryStore(

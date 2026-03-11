@@ -49,6 +49,8 @@ This is a reference artifact for the later UI/UX refinement sprint, not an imple
 - Moved request-input snapshotting onto the UI thread before the worker starts, removing background reads from Tk widgets
 - Hardened history normalization so malformed or manually edited history items fall back safely instead of crashing load/save paths
 - Added request-id based async UI coordination so stale background results do not overwrite the current view state
+- Switched the request body and header editors to safe empty defaults instead of prefilled sample payloads
+- Added charset fallback decoding so invalid response charset declarations no longer crash rendering
 - Removed the old unused `send_api_request(...)` path from `src/logic.py`
 - Expanded the automated test suite with high-level request, history, redaction, and formatter coverage
 - Started reducing `src/ui.py` request-result complexity with smaller status/render helpers
@@ -63,7 +65,7 @@ The first architecture split is now in place. Request policy, history persistenc
 
 ### P1 Close-Out
 
-P1 can now be considered complete.
+The original close-out assessment marked P1 as complete, the 2026-03-11 audit re-opened that conclusion, and the follow-up fixes below closed the remaining gaps.
 
 Reason:
 
@@ -74,7 +76,26 @@ Reason:
 - malformed history state no longer threatens startup stability
 - high-level regression coverage now protects the critical request/history workflows
 
-The next active workstream should move to P2: cleanup, stability, and performance.
+The next active workstream can now move to P2: cleanup, stability, and performance.
+
+### 2026-03-11 Audit Notes
+
+The audit confirmed that the core architecture split, hardening layers, and test scaffolding landed correctly, but it also found two remaining P1-level issues that should be fixed before P2 starts.
+
+Audit findings:
+
+- fresh app state still seeds the request body editor with example JSON and the headers editor with `Content-Type: application/json`, so a default first `GET` request is sent with an unexpected JSON body unless the user clears it manually
+- the response formatter currently trusts any declared charset name, so a server that returns an unknown charset can still raise a `LookupError` during body decoding instead of falling back safely
+
+Resolution:
+
+- the request body and request header editors now start empty, with helper copy instead of implicit payloads
+- the response formatter now falls back safely when a server declares an unknown charset
+- both issues are covered by regression tests
+
+Updated verdict:
+
+- P1 is complete after the 2026-03-11 audit follow-up fixes
 
 ## Priorities
 

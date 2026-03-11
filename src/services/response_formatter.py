@@ -1,8 +1,12 @@
 """Helpers for classifying and safely formatting HTTP response bodies."""
 
+import logging
+
 from dataclasses import dataclass
 
 from src.logic import format_json, is_json_content_type
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_MAX_RESPONSE_BYTES = 1024 * 1024  # 1 MiB keeps the UI responsive on large payloads.
 
@@ -67,6 +71,17 @@ def _is_probably_text(raw_body: bytes) -> bool:
         return False
 
 
+def _decode_text_body(raw_body: bytes, content_type: str) -> str:
+    """Decode textual content with a safe fallback for invalid charset declarations."""
+    encoding = _extract_charset(content_type)
+
+    try:
+        return raw_body.decode(encoding, errors="replace")
+    except LookupError:
+        logger.warning("Unknown response charset %r, falling back to utf-8", encoding)
+        return raw_body.decode("utf-8", errors="replace")
+
+
 def format_response_body(content_type: str, raw_body: bytes, truncated: bool = False) -> FormattedResponse:
     """Convert raw bytes into a renderable response body."""
     raw_body = raw_body or b""
@@ -85,8 +100,7 @@ def format_response_body(content_type: str, raw_body: bytes, truncated: bool = F
             byte_count=len(raw_body),
         )
 
-    encoding = _extract_charset(content_type)
-    text_body = raw_body.decode(encoding, errors="replace")
+    text_body = _decode_text_body(raw_body, content_type)
     rendered_body = format_json(text_body) if is_json else text_body
 
     if truncated:
