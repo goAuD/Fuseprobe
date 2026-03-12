@@ -35,6 +35,24 @@ function buildMockResponse(payload: SendRequestPayload): SendRequestResult {
     contentType: "application/json",
     charset: "utf-8",
     responseText,
+    rawResponseText: JSON.stringify(
+      {
+        request: {
+          method: payload.method,
+          url: payload.url,
+          hasBody: payload.body.trim().length > 0,
+          hasHeaders: payload.headers.trim().length > 0,
+        },
+        shell: "tauri-react-workbench",
+        mode: "desktop-mvp",
+      },
+      null,
+      0,
+    ),
+    responseHeaders: {
+      "content-type": "application/json; charset=utf-8",
+      "x-fuseprobe-mode": "desktop-mvp",
+    },
     policyNote: "redirects disabled by policy",
   };
 }

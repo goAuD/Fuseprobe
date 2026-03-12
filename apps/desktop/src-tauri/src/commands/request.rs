@@ -2,6 +2,7 @@ use chrono::Local;
 
 use fuseprobe_core::{execute_request, HistoryEntry, RequestOptions};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 use crate::state::AppState;
 
@@ -23,6 +24,8 @@ pub struct SendRequestResult {
     pub content_type: String,
     pub charset: String,
     pub response_text: String,
+    pub raw_response_text: String,
+    pub response_headers: BTreeMap<String, String>,
     pub policy_note: String,
 }
 
@@ -72,6 +75,8 @@ pub async fn send_request(
         },
         charset: executed.charset,
         response_text: executed.body,
+        raw_response_text: executed.raw_body,
+        response_headers: executed.headers,
         policy_note: "redirects disabled by policy".to_string(),
     })
 }

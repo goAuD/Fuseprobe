@@ -23,6 +23,7 @@ pub struct FormatResult {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FormattedResponse {
     pub body: String,
+    pub raw_text: String,
     pub is_json: bool,
     pub is_binary: bool,
     pub truncated: bool,
@@ -91,6 +92,7 @@ pub fn format_response_body(
 
         return FormattedResponse {
             body: format!("[Binary response omitted: {mime}, {} bytes]", raw_body.len()),
+            raw_text: format!("[Binary response omitted: {mime}, {} bytes]", raw_body.len()),
             is_json: false,
             is_binary: true,
             truncated,
@@ -100,7 +102,8 @@ pub fn format_response_body(
         };
     }
 
-    let mut rendered_body = decode_text_body(&raw_body, &charset);
+    let raw_text = decode_text_body(&raw_body, &charset);
+    let mut rendered_body = raw_text.clone();
     let is_json = format.kind == BodyKind::Json;
 
     if is_json {
@@ -116,6 +119,7 @@ pub fn format_response_body(
 
     FormattedResponse {
         body: rendered_body,
+        raw_text,
         is_json,
         is_binary: false,
         truncated,

@@ -21,5 +21,7 @@ export interface SendRequestResult {
   contentType: string;
   charset: string;
   responseText: string;
+  rawResponseText: string;
+  responseHeaders: Record<string, string>;
   policyNote: string;
 }

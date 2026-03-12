@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { SendRequestResult } from "../../lib/contracts";
 
 interface ResponsePanelProps {
@@ -11,8 +12,23 @@ export default function ResponsePanel({
   isSending,
   error,
 }: ResponsePanelProps) {
+  const [activeTab, setActiveTab] = useState<"response" | "headers" | "raw">("response");
+
+  useEffect(() => {
+    setActiveTab("response");
+  }, [response, error]);
+
   const statusLine = error ? "Request Error" : isSending ? "Sending..." : response.statusLine;
   const responseBody = error ? error : response.responseText;
+  const responseHeaders = Object.entries(response.responseHeaders)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join("\n");
+  const previewText =
+    activeTab === "headers"
+      ? responseHeaders || "No response headers yet."
+      : activeTab === "raw"
+        ? error || response.rawResponseText || "No raw response yet."
+        : responseBody;
 
   return (
     <section className="panel response-panel" aria-label="response-panel">
@@ -38,12 +54,30 @@ export default function ResponsePanel({
       </div>
 
       <div className="pill-row" aria-label="response-tabs">
-        <span className="pill active">Response</span>
-        <span className="pill">Headers</span>
-        <span className="pill">Raw</span>
+        <button
+          className={`pill pill-button${activeTab === "response" ? " active" : ""}`}
+          type="button"
+          onClick={() => setActiveTab("response")}
+        >
+          Response
+        </button>
+        <button
+          className={`pill pill-button${activeTab === "headers" ? " active" : ""}`}
+          type="button"
+          onClick={() => setActiveTab("headers")}
+        >
+          Headers
+        </button>
+        <button
+          className={`pill pill-button${activeTab === "raw" ? " active" : ""}`}
+          type="button"
+          onClick={() => setActiveTab("raw")}
+        >
+          Raw
+        </button>
       </div>
 
-      <pre className={`response-preview${error ? " danger" : ""}`}>{responseBody}</pre>
+      <pre className={`response-preview${error ? " danger" : ""}`}>{previewText}</pre>
     </section>
   );
 }

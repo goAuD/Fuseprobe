@@ -15,6 +15,8 @@ const IDLE_RESPONSE: SendRequestResult = {
   contentType: "pending",
   charset: "utf-8",
   responseText: "Send a request to preview the desktop request flow.",
+  rawResponseText: "",
+  responseHeaders: {},
   policyNote: "redirects disabled by policy",
 };
 

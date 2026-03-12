@@ -11,6 +11,8 @@ Status: In progress
 - [x] request body editor
 - [x] request headers editor
 - [x] response view
+- [x] response headers tab with real data
+- [x] raw response tab with real data
 - [x] history list surface
 - [x] history delete action in the new shell
 - [x] history clear action in the new shell
@@ -22,8 +24,6 @@ Status: In progress
 ## Still Pending for MVP Parity
 
 - [ ] auth preset application flow
-- [ ] response headers tab with real data
-- [ ] raw response tab with real data
 - [ ] preset application into the request workbench
 - [ ] persistent Rust-backed desktop history state instead of seeded fallback rows
 

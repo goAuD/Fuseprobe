@@ -220,6 +220,11 @@ select.method-control {
   font-size: 12px;
 }
 
+.pill-button {
+  background: transparent;
+  cursor: pointer;
+}
+
 .pill.active {
   color: #00ff99;
   border-color: rgba(0, 255, 153, 0.18);

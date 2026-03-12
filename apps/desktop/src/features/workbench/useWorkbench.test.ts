@@ -34,6 +34,10 @@ it("stores the mocked response after submit", async () => {
     contentType: "application/json",
     charset: "utf-8",
     responseText: "{\"ok\":true}",
+    rawResponseText: "{\"ok\":true}",
+    responseHeaders: {
+      "content-type": "application/json",
+    },
     policyNote: "redirects disabled by policy",
   });
 

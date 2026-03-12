@@ -57,6 +57,11 @@ fn executes_json_requests_and_formats_the_response() {
     assert_eq!(result.content_type, "application/json");
     assert_eq!(result.charset, "utf-8");
     assert!(result.body.contains("\"ok\": true"));
+    assert_eq!(result.raw_body, r#"{"ok":true,"source":"rust"}"#);
+    assert_eq!(
+        result.headers.get("content-type").map(String::as_str),
+        Some("application/json; charset=utf-8")
+    );
 }
 
 #[test]
