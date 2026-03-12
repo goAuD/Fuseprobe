@@ -143,6 +143,7 @@ Completed so far:
 - added the first Rust history-store baseline with normalization, bounds, delete, and clear behavior
 - added the first Rust response-classification baseline for JSON, text, and binary detection
 - added the first Rust request-policy baseline for redirect, timeout, and max-response defaults
+- added the first Tauri command/TypeScript contract bridge between the desktop shell and the Rust core
 
 The current state is still an MVP scaffold, not yet a functional parity shell.
 
