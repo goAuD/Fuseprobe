@@ -1,4 +1,19 @@
-export default function ResponsePanel() {
+import type { SendRequestResult } from "../../lib/contracts";
+
+interface ResponsePanelProps {
+  response: SendRequestResult;
+  isSending: boolean;
+  error: string | null;
+}
+
+export default function ResponsePanel({
+  response,
+  isSending,
+  error,
+}: ResponsePanelProps) {
+  const statusLine = error ? "Request Error" : isSending ? "Sending..." : response.statusLine;
+  const responseBody = error ? error : response.responseText;
+
   return (
     <section className="panel response-panel" aria-label="response-panel">
       <div className="panel-header">
@@ -11,14 +26,14 @@ export default function ResponsePanel() {
 
       <div className="response-toolbar">
         <div className="status-block">
-          <span className="status-badge">200 OK</span>
-          <span>412 ms</span>
-          <span>3.2 KB</span>
+          <span className={`status-badge${error ? " danger" : ""}`}>{statusLine}</span>
+          <span>{isSending ? "working..." : `${response.durationMs} ms`}</span>
+          <span>{response.sizeLabel}</span>
         </div>
         <div className="meta-row">
-          <span className="meta-chip">application/json</span>
-          <span className="meta-chip">utf-8</span>
-          <span className="meta-chip">no redirects</span>
+          <span className="meta-chip">{response.contentType}</span>
+          <span className="meta-chip">{response.charset}</span>
+          <span className="meta-chip">{response.policyNote}</span>
         </div>
       </div>
 
@@ -28,7 +43,7 @@ export default function ResponsePanel() {
         <span className="pill">Raw</span>
       </div>
 
-      <pre className="response-preview">{`{\n  "users": [\n    {\n      "id": 101,\n      "email": "dana@example.com",\n      "active": true\n    }\n  ]\n}`}</pre>
+      <pre className={`response-preview${error ? " danger" : ""}`}>{responseBody}</pre>
     </section>
   );
 }

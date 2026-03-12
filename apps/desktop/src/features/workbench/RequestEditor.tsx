@@ -1,4 +1,16 @@
-export default function RequestEditor() {
+interface RequestEditorProps {
+  body: string;
+  headers: string;
+  onBodyChange: (value: string) => void;
+  onHeadersChange: (value: string) => void;
+}
+
+export default function RequestEditor({
+  body,
+  headers,
+  onBodyChange,
+  onHeadersChange,
+}: RequestEditorProps) {
   return (
     <section className="panel request-panel" aria-label="request-panel">
       <div className="panel-header">
@@ -16,13 +28,29 @@ export default function RequestEditor() {
       </div>
 
       <div className="editor-card">
-        <label className="editor-label">Request Body</label>
-        <pre className="editor-preview">{`{\n  "include": ["profile"],\n  "active": true\n}`}</pre>
+        <label className="editor-label" htmlFor="request-body">
+          Request Body
+        </label>
+        <textarea
+          id="request-body"
+          className="editor-input"
+          value={body}
+          onChange={(event) => onBodyChange(event.target.value)}
+          placeholder='{"include":["profile"]}'
+        />
       </div>
 
       <div className="editor-card">
-        <label className="editor-label">Request Headers</label>
-        <pre className="editor-preview">{`Accept: application/json\nX-Workspace: local-dev`}</pre>
+        <label className="editor-label" htmlFor="request-headers">
+          Request Headers
+        </label>
+        <textarea
+          id="request-headers"
+          className="editor-input editor-input-compact"
+          value={headers}
+          onChange={(event) => onHeadersChange(event.target.value)}
+          placeholder={"Accept: application/json\nX-Workspace: local-dev"}
+        />
       </div>
 
       <div className="editor-card compact">

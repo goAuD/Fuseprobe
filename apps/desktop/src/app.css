@@ -107,10 +107,40 @@ body {
   font-size: 14px;
 }
 
+.control,
+.editor-input {
+  outline: none;
+}
+
+.control:focus,
+.editor-input:focus {
+  border-color: rgba(0, 255, 153, 0.42);
+  box-shadow: 0 0 0 3px rgba(0, 255, 153, 0.08);
+}
+
+.method-control,
+.url-control,
+.editor-input {
+  appearance: none;
+}
+
 .url-control {
   justify-content: flex-start;
   font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
   color: #b7c0ba;
+}
+
+input.url-control,
+select.method-control {
+  width: 100%;
+}
+
+input.url-control {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+select.method-control {
+  cursor: pointer;
 }
 
 .send-control {
@@ -118,6 +148,7 @@ body {
   background: linear-gradient(180deg, rgba(0, 255, 153, 0.18), rgba(0, 255, 153, 0.09));
   color: #062016;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .workspace-grid {
@@ -242,6 +273,23 @@ body {
   font-size: 13px;
 }
 
+.editor-input {
+  width: 100%;
+  min-height: 128px;
+  padding: 12px 13px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(9, 11, 13, 0.96);
+  color: #dce6df;
+  resize: vertical;
+  font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  line-height: 1.55;
+}
+
+.editor-input-compact {
+  min-height: 96px;
+}
+
 .hint-text {
   color: #b7c0ba;
   font-size: 13px;
@@ -264,6 +312,13 @@ body {
   color: #39ffaf;
   font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
   font-weight: 700;
+}
+
+.status-badge.danger,
+.response-preview.danger {
+  border-color: rgba(255, 117, 117, 0.18);
+  background: rgba(255, 117, 117, 0.08);
+  color: #ffb0b0;
 }
 
 .meta-chip {
