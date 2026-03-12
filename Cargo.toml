@@ -1,5 +1,6 @@
 [workspace]
 members = [
   "crates/fuseprobe-core",
+  "apps/desktop/src-tauri",
 ]
 resolver = "2"

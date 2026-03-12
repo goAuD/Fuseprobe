@@ -13,6 +13,7 @@ env/
 .idea/
 *.swp
 *.swo
+node_modules/
 
 # OS files
 .DS_Store
@@ -24,6 +25,8 @@ build/
 *.egg-info/
 .pytest_cache/
 /target/
+apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/icon-source.png
 
 # App data
 history.json

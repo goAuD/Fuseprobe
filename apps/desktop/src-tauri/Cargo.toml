@@ -1,0 +1,16 @@
+[package]
+name = "fuseprobe-desktop"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[build-dependencies]
+tauri-build = { version = "2.5.6", features = [] }
+
+[dependencies]
+fuseprobe-core = { path = "../../../crates/fuseprobe-core" }
+tauri = { version = "2.10.3", features = [] }
+
+[lib]
+name = "fuseprobe_desktop"
+crate-type = ["staticlib", "cdylib", "rlib"]
