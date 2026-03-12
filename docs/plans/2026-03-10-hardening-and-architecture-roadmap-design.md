@@ -130,6 +130,20 @@ Reason:
 
 This does not mean the UI is “done”. It means the cleanup, stability, and lightweight performance pass planned for P2 has been completed well enough that the next active workstream can move away from Tkinter polish and into the new platform-migration design work.
 
+### P3 Early Progress
+
+The platform migration is now underway.
+
+Completed so far:
+
+- added the root Rust workspace and the `crates/fuseprobe-core` crate
+- scaffolded the `apps/desktop` Tauri + React/Vite shell
+- generated the initial Tauri icon set from the current Fuseprobe branding asset
+- ported URL validation and sensitive query redaction into the Rust core with tests
+- added the first Rust history-store baseline with normalization, bounds, delete, and clear behavior
+
+The current state is still an MVP scaffold, not yet a functional parity shell.
+
 ## Priorities
 
 ### P1: Hardening, Architecture Split, and Test Expansion
