@@ -5,6 +5,14 @@ export interface SendRequestPayload {
   headers: string;
 }
 
+export interface HistoryEntry {
+  method: string;
+  url: string;
+  status: number;
+  elapsed: number;
+  time: string;
+}
+
 export interface SendRequestResult {
   request: SendRequestPayload;
   statusLine: string;

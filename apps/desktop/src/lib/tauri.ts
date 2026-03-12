@@ -1,5 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { SendRequestPayload, SendRequestResult } from "./contracts";
+import type {
+  HistoryEntry,
+  SendRequestPayload,
+  SendRequestResult,
+} from "./contracts";
 
 export function buildSendRequestPayload(
   payload: SendRequestPayload,
@@ -38,8 +42,24 @@ function buildMockResponse(payload: SendRequestPayload): SendRequestResult {
 export async function sendRequest(
   payload: SendRequestPayload,
 ): Promise<SendRequestResult> {
-  const echoedPayload = await invoke<SendRequestPayload>("send_request", {
-    payload: buildSendRequestPayload(payload),
-  });
+  const normalizedPayload = buildSendRequestPayload(payload);
+  let echoedPayload = normalizedPayload;
+
+  try {
+    echoedPayload = await invoke<SendRequestPayload>("send_request", {
+      payload: normalizedPayload,
+    });
+  } catch {
+    echoedPayload = normalizedPayload;
+  }
+
   return buildMockResponse(echoedPayload);
+}
+
+export async function loadHistory(): Promise<HistoryEntry[]> {
+  try {
+    return await invoke<HistoryEntry[]>("load_history");
+  } catch {
+    return [];
+  }
 }
