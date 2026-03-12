@@ -813,6 +813,11 @@ dependencies = [
 [[package]]
 name = "fuseprobe-core"
 version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "url",
+]
 
 [[package]]
 name = "fuseprobe-desktop"
