@@ -3,9 +3,15 @@ import { apiTemplateNames } from "../presets/presets";
 
 interface HistoryPanelProps {
   refreshToken?: number;
+  activeTemplateName: string | null;
+  onApplyTemplate: (templateName: string) => void;
 }
 
-export default function HistoryPanel({ refreshToken = 0 }: HistoryPanelProps) {
+export default function HistoryPanel({
+  refreshToken = 0,
+  activeTemplateName,
+  onApplyTemplate,
+}: HistoryPanelProps) {
   const { entries, isLoading, deleteEntry, clearEntries } = useHistory(refreshToken);
 
   return (
@@ -27,7 +33,13 @@ export default function HistoryPanel({ refreshToken = 0 }: HistoryPanelProps) {
         <p className="editor-label">Templates</p>
         <div className="template-grid">
           {apiTemplateNames.map((name) => (
-            <button key={name} className="template-chip" type="button">
+            <button
+              key={name}
+              className={`template-chip${activeTemplateName === name ? " active" : ""}`}
+              type="button"
+              aria-pressed={activeTemplateName === name}
+              onClick={() => onApplyTemplate(name)}
+            >
               {name}
             </button>
           ))}

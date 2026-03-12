@@ -17,6 +17,10 @@ export default function WorkbenchPage() {
     isSending,
     error,
     historyRevision,
+    activeTemplateName,
+    activeAuthPresetName,
+    authDescription,
+    applyTemplate,
     submitRequest,
   } = useWorkbench();
 
@@ -72,10 +76,17 @@ export default function WorkbenchPage() {
           <RequestEditor
             body={body}
             headers={headers}
+            activeTemplateName={activeTemplateName}
+            activeAuthPresetName={activeAuthPresetName}
+            authDescription={authDescription}
             onBodyChange={setBody}
             onHeadersChange={setHeaders}
           />
-          <HistoryPanel refreshToken={historyRevision} />
+          <HistoryPanel
+            refreshToken={historyRevision}
+            activeTemplateName={activeTemplateName}
+            onApplyTemplate={applyTemplate}
+          />
         </div>
         <div className="content-column">
           <ResponsePanel response={response} isSending={isSending} error={error} />

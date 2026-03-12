@@ -82,3 +82,21 @@ it("surfaces string-based request errors from the desktop bridge", async () => {
     "Invalid or unsafe URL. Only http:// and https:// are allowed.",
   );
 });
+
+it("applies template defaults without keeping stale auth headers", () => {
+  const { result } = renderHook(() => useWorkbench());
+
+  act(() => {
+    result.current.setHeaders("Accept: application/json\nAuthorization: Bearer stale");
+    result.current.applyTemplate("GitHub API");
+  });
+
+  expect(result.current.method).toBe("GET");
+  expect(result.current.url).toBe("https://api.github.com/user");
+  expect(result.current.headers).toBe(
+    "Accept: application/json\nAuthorization: Bearer <YOUR_TOKEN>",
+  );
+  expect(result.current.activeTemplateName).toBe("GitHub API");
+  expect(result.current.activeAuthPresetName).toBe("Bearer Token");
+  expect(result.current.authDescription).toBe("JWT or OAuth2 bearer token");
+});

@@ -1,5 +1,10 @@
 import { useState } from "react";
 import type { SendRequestResult } from "../../lib/contracts";
+import {
+  applyAuthPresetHeaders,
+  getApiTemplateByName,
+  getAuthPreset,
+} from "../presets/presets";
 import { sendRequest } from "../../lib/tauri";
 
 const IDLE_RESPONSE: SendRequestResult = {
@@ -29,6 +34,9 @@ export function useWorkbench() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [historyRevision, setHistoryRevision] = useState(0);
+  const [activeTemplateName, setActiveTemplateName] = useState<string | null>(null);
+  const [activeAuthPresetName, setActiveAuthPresetName] = useState("No Auth");
+  const [authDescription, setAuthDescription] = useState("No authentication");
 
   async function submitRequest() {
     if (!url.trim()) {
@@ -61,6 +69,21 @@ export function useWorkbench() {
     }
   }
 
+  function applyTemplate(templateName: string) {
+    const template = getApiTemplateByName(templateName);
+    const firstExample = template.examples[0];
+    const nextMethod = firstExample?.method ?? "GET";
+    const nextUrl = `${template.baseUrl}${firstExample?.path ?? ""}`;
+    const authPreset = getAuthPreset(template.auth);
+
+    setMethod(nextMethod);
+    setUrl(nextUrl);
+    setHeaders((currentHeaders) => applyAuthPresetHeaders(currentHeaders, authPreset));
+    setActiveTemplateName(template.name);
+    setActiveAuthPresetName(authPreset.name);
+    setAuthDescription(authPreset.description);
+  }
+
   return {
     method,
     setMethod,
@@ -74,6 +97,10 @@ export function useWorkbench() {
     isSending,
     error,
     historyRevision,
+    activeTemplateName,
+    activeAuthPresetName,
+    authDescription,
+    applyTemplate,
     submitRequest,
   };
 }

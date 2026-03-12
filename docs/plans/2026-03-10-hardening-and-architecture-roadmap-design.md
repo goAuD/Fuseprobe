@@ -151,8 +151,9 @@ Completed so far:
 - replaced the Tauri request stub with real Rust core execution and in-memory desktop history updates on successful sends
 - added desktop history delete and clear actions in the new shell, wired through the Tauri bridge
 - added real `Response / Headers / Raw` views in the new shell, backed by live desktop response data
+- added preset application flow in the new shell so template chips now drive method, URL, and auth-header defaults in the request workbench
 
-The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, preset listing, and local-history loading all exist in the React desktop app, but the shell is still short of parity because the Rust-side persistence and preset application behaviors are only partially wired.
+The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, response views, preset application, and local-history loading all exist in the React desktop app, but the shell is still short of parity because the Rust-side history persistence path still falls back to seeded rows when desktop loading returns empty.
 
 ## Priorities
 

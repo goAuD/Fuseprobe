@@ -43,13 +43,11 @@ Completed so far:
 - real Tauri request execution now calls the Rust core instead of echoing stub payloads
 - history delete and clear actions now exist in the new shell through the Tauri bridge
 - response headers and raw response tabs now render real desktop response data
+- template chips now apply method, URL, and auth preset defaults into the desktop request workbench
 
 Still pending before MVP parity:
 
-- real Rust-backed request execution through the desktop shell
-- real desktop history persistence and mutation actions
-- auth preset application flow
-- response headers/raw tabs with real data
+- persistent Rust-backed desktop history state instead of seeded fallback rows
 
 ## Decision
 

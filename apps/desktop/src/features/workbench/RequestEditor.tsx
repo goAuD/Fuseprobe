@@ -1,6 +1,9 @@
 interface RequestEditorProps {
   body: string;
   headers: string;
+  activeTemplateName: string | null;
+  activeAuthPresetName: string;
+  authDescription: string;
   onBodyChange: (value: string) => void;
   onHeadersChange: (value: string) => void;
 }
@@ -8,6 +11,9 @@ interface RequestEditorProps {
 export default function RequestEditor({
   body,
   headers,
+  activeTemplateName,
+  activeAuthPresetName,
+  authDescription,
   onBodyChange,
   onHeadersChange,
 }: RequestEditorProps) {
@@ -55,7 +61,13 @@ export default function RequestEditor({
 
       <div className="editor-card compact">
         <label className="editor-label">Auth Preset</label>
-        <p className="hint-text">Bearer Token · redacted in history and errors</p>
+        <div className="auth-summary">
+          <p className="hint-text">{activeAuthPresetName}</p>
+          <span className="hint-badge">
+            {activeTemplateName ? `from ${activeTemplateName}` : "manual request"}
+          </span>
+        </div>
+        <p className="hint-text hint-text-subtle">{authDescription}</p>
       </div>
     </section>
   );

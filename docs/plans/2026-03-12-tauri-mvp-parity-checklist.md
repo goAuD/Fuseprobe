@@ -23,8 +23,8 @@ Status: In progress
 
 ## Still Pending for MVP Parity
 
-- [ ] auth preset application flow
-- [ ] preset application into the request workbench
+- [x] auth preset application flow
+- [x] preset application into the request workbench
 - [ ] persistent Rust-backed desktop history state instead of seeded fallback rows
 
 ## Final MVP Release Gate

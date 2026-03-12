@@ -300,6 +300,28 @@ select.method-control {
   font-size: 13px;
 }
 
+.hint-text-subtle {
+  color: #7f8c85;
+  margin-top: 8px;
+}
+
+.auth-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hint-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 255, 153, 0.16);
+  background: rgba(0, 255, 153, 0.08);
+  color: #39ffaf;
+  font-size: 11px;
+  line-height: 1;
+}
+
 .response-toolbar {
   margin-bottom: 14px;
   padding: 12px 14px;
@@ -376,6 +398,12 @@ select.method-control {
 .template-chip:hover,
 .template-chip:focus {
   border-color: rgba(0, 255, 153, 0.24);
+  color: #edf1ee;
+}
+
+.template-chip.active {
+  border-color: rgba(0, 255, 153, 0.2);
+  background: rgba(0, 255, 153, 0.12);
   color: #edf1ee;
 }
 
