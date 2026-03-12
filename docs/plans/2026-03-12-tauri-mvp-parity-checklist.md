@@ -12,6 +12,8 @@ Status: In progress
 - [x] request headers editor
 - [x] response view
 - [x] history list surface
+- [x] history delete action in the new shell
+- [x] history clear action in the new shell
 - [x] preset catalog surface
 - [x] typed Tauri desktop bridge contracts
 - [x] fallback browser-safe desktop shell preview
@@ -22,8 +24,6 @@ Status: In progress
 - [ ] auth preset application flow
 - [ ] response headers tab with real data
 - [ ] raw response tab with real data
-- [ ] history delete action in the new shell
-- [ ] history clear action in the new shell
 - [ ] preset application into the request workbench
 - [ ] persistent Rust-backed desktop history state instead of seeded fallback rows
 

@@ -149,6 +149,7 @@ Completed so far:
 - added the first desktop preset catalog and history hook so the shell now renders real template data and bridge-backed local history state
 - added the first desktop integration coverage and a tracked parity checklist for the Tauri MVP shell
 - replaced the Tauri request stub with real Rust core execution and in-memory desktop history updates on successful sends
+- added desktop history delete and clear actions in the new shell, wired through the Tauri bridge
 
 The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, preset listing, and local-history loading all exist in the React desktop app, but the shell is still short of parity because the Rust-side persistence and preset application behaviors are only partially wired.
 

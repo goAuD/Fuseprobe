@@ -1,4 +1,8 @@
-import { buildSendRequestPayload } from "./tauri";
+import {
+  buildSendRequestPayload,
+  clearHistory,
+  deleteHistoryEntry,
+} from "./tauri";
 
 it("builds a request payload from the workbench input", () => {
   expect(
@@ -14,4 +18,9 @@ it("builds a request payload from the workbench input", () => {
     body: "",
     headers: "",
   });
+});
+
+it("falls back to empty arrays for history mutations without a desktop bridge", async () => {
+  await expect(deleteHistoryEntry(0)).resolves.toEqual([]);
+  await expect(clearHistory()).resolves.toEqual([]);
 });

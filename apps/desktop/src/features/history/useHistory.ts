@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import type { HistoryEntry } from "../../lib/contracts";
-import { loadHistory } from "../../lib/tauri";
+import {
+  clearHistory as clearHistoryFromBridge,
+  deleteHistoryEntry as deleteHistoryEntryFromBridge,
+  loadHistory,
+} from "../../lib/tauri";
 
 const FALLBACK_HISTORY: HistoryEntry[] = [
   {
@@ -52,5 +56,21 @@ export function useHistory(refreshToken = 0) {
     };
   }, [refreshToken]);
 
-  return { entries, isLoading };
+  async function deleteEntry(index: number) {
+    const localNext = entries.filter((_, entryIndex) => entryIndex !== index);
+    setEntries(localNext);
+
+    const bridgedEntries = await deleteHistoryEntryFromBridge(index);
+    if (bridgedEntries.length > 0) {
+      setEntries(bridgedEntries);
+    }
+  }
+
+  async function clearEntries() {
+    setEntries([]);
+    const bridgedEntries = await clearHistoryFromBridge();
+    setEntries(bridgedEntries);
+  }
+
+  return { entries, isLoading, deleteEntry, clearEntries };
 }

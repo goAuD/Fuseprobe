@@ -10,3 +10,26 @@ pub fn load_history(state: tauri::State<'_, AppState>) -> Result<Vec<HistoryEntr
         .map_err(|_| "history state is unavailable".to_string())?;
     Ok(history.all().to_vec())
 }
+
+#[tauri::command]
+pub fn delete_history_entry(
+    state: tauri::State<'_, AppState>,
+    index: usize,
+) -> Result<Vec<HistoryEntry>, String> {
+    let mut history = state
+        .history
+        .lock()
+        .map_err(|_| "history state is unavailable".to_string())?;
+    history.delete(index);
+    Ok(history.all().to_vec())
+}
+
+#[tauri::command]
+pub fn clear_history(state: tauri::State<'_, AppState>) -> Result<Vec<HistoryEntry>, String> {
+    let mut history = state
+        .history
+        .lock()
+        .map_err(|_| "history state is unavailable".to_string())?;
+    history.clear();
+    Ok(history.all().to_vec())
+}

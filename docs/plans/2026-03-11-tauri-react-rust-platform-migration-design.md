@@ -41,6 +41,7 @@ Completed so far:
 - typed Tauri command bridge contracts
 - first interactive workbench shell with request, response, presets, and local-history surfaces
 - real Tauri request execution now calls the Rust core instead of echoing stub payloads
+- history delete and clear actions now exist in the new shell through the Tauri bridge
 
 Still pending before MVP parity:
 

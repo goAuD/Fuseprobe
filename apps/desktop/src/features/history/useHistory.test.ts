@@ -1,16 +1,27 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { useHistory } from "./useHistory";
-import { loadHistory } from "../../lib/tauri";
+import {
+  clearHistory,
+  deleteHistoryEntry,
+  loadHistory,
+} from "../../lib/tauri";
+import { act } from "@testing-library/react";
 
 vi.mock("../../lib/tauri", () => ({
+  clearHistory: vi.fn(),
+  deleteHistoryEntry: vi.fn(),
   loadHistory: vi.fn(),
 }));
 
 const mockedLoadHistory = vi.mocked(loadHistory);
+const mockedDeleteHistoryEntry = vi.mocked(deleteHistoryEntry);
+const mockedClearHistory = vi.mocked(clearHistory);
 
 beforeEach(() => {
   mockedLoadHistory.mockReset();
+  mockedDeleteHistoryEntry.mockReset();
+  mockedClearHistory.mockReset();
 });
 
 it("falls back to seeded history when the bridge returns no rows", async () => {
@@ -85,4 +96,72 @@ it("reloads when the refresh token changes", async () => {
   });
 
   expect(mockedLoadHistory).toHaveBeenCalledTimes(2);
+});
+
+it("deletes a history row through the bridge and updates local state", async () => {
+  mockedLoadHistory.mockResolvedValue([
+    {
+      method: "GET",
+      url: "https://example.com/users",
+      status: 200,
+      elapsed: 40,
+      time: "10:00:00",
+    },
+    {
+      method: "POST",
+      url: "https://example.com/users",
+      status: 201,
+      elapsed: 52,
+      time: "10:01:00",
+    },
+  ]);
+  mockedDeleteHistoryEntry.mockResolvedValue([
+    {
+      method: "POST",
+      url: "https://example.com/users",
+      status: 201,
+      elapsed: 52,
+      time: "10:01:00",
+    },
+  ]);
+
+  const { result } = renderHook(() => useHistory());
+
+  await waitFor(() => {
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  await act(async () => {
+    await result.current.deleteEntry(0);
+  });
+
+  expect(mockedDeleteHistoryEntry).toHaveBeenCalledWith(0);
+  expect(result.current.entries).toHaveLength(1);
+  expect(result.current.entries[0]?.method).toBe("POST");
+});
+
+it("clears history through the bridge and empties local state", async () => {
+  mockedLoadHistory.mockResolvedValue([
+    {
+      method: "GET",
+      url: "https://example.com/users",
+      status: 200,
+      elapsed: 40,
+      time: "10:00:00",
+    },
+  ]);
+  mockedClearHistory.mockResolvedValue([]);
+
+  const { result } = renderHook(() => useHistory());
+
+  await waitFor(() => {
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  await act(async () => {
+    await result.current.clearEntries();
+  });
+
+  expect(mockedClearHistory).toHaveBeenCalledTimes(1);
+  expect(result.current.entries).toEqual([]);
 });

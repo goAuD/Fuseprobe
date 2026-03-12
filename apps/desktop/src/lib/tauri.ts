@@ -60,3 +60,19 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
     return [];
   }
 }
+
+export async function deleteHistoryEntry(index: number): Promise<HistoryEntry[]> {
+  try {
+    return await invoke<HistoryEntry[]>("delete_history_entry", { index });
+  } catch {
+    return [];
+  }
+}
+
+export async function clearHistory(): Promise<HistoryEntry[]> {
+  try {
+    return await invoke<HistoryEntry[]>("clear_history");
+  } catch {
+    return [];
+  }
+}

@@ -10,6 +10,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::request::send_request,
             commands::history::load_history,
+            commands::history::delete_history_entry,
+            commands::history::clear_history,
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Fuseprobe desktop shell");

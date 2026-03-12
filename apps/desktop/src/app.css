@@ -340,6 +340,14 @@ select.method-control {
   gap: 10px;
 }
 
+.history-actions,
+.history-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .preset-section {
   padding: 18px 18px 0;
 }
@@ -369,6 +377,25 @@ select.method-control {
 .history-item {
   padding: 14px 15px;
   border-radius: 16px;
+}
+
+.history-action,
+.history-delete {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 14, 16, 0.96);
+  color: #b7c0ba;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.history-action:hover,
+.history-action:focus,
+.history-delete:hover,
+.history-delete:focus {
+  border-color: rgba(0, 255, 153, 0.24);
+  color: #edf1ee;
 }
 
 .history-empty {
