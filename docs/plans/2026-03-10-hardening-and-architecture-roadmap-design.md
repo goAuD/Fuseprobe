@@ -141,6 +141,8 @@ Completed so far:
 - generated the initial Tauri icon set from the current Fuseprobe branding asset
 - ported URL validation and sensitive query redaction into the Rust core with tests
 - added the first Rust history-store baseline with normalization, bounds, delete, and clear behavior
+- added the first Rust response-classification baseline for JSON, text, and binary detection
+- added the first Rust request-policy baseline for redirect, timeout, and max-response defaults
 
 The current state is still an MVP scaffold, not yet a functional parity shell.
 
