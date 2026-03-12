@@ -144,8 +144,9 @@ Completed so far:
 - added the first Rust response-classification baseline for JSON, text, and binary detection
 - added the first Rust request-policy baseline for redirect, timeout, and max-response defaults
 - added the first Tauri command/TypeScript contract bridge between the desktop shell and the Rust core
+- added the first React workbench shell with request, response, and history regions aligned to the approved direction mockup
 
-The current state is still an MVP scaffold, not yet a functional parity shell.
+The current state is now a visual MVP shell with a real Rust/Tauri foundation, but it is not yet a functional parity shell because the request/response flow is still mostly placeholder UI on the React side.
 
 ## Priorities
 
