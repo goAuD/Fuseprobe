@@ -824,6 +824,7 @@ name = "fuseprobe-desktop"
 version = "0.1.0"
 dependencies = [
  "fuseprobe-core",
+ "serde",
  "tauri",
  "tauri-build",
 ]
