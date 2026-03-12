@@ -147,6 +147,7 @@ Completed so far:
 - added the first React workbench shell with request, response, and history regions aligned to the approved direction mockup
 - added the first interactive workbench state hook so method, URL, body, and headers now drive a typed desktop request/response flow
 - added the first desktop preset catalog and history hook so the shell now renders real template data and bridge-backed local history state
+- added the first desktop integration coverage and a tracked parity checklist for the Tauri MVP shell
 
 The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, preset listing, and local-history loading all exist in the React desktop app, but the shell is still short of parity because the Rust-side persistence and preset application behaviors are only partially wired.
 

@@ -12,6 +12,12 @@ Fuseprobe is a lightweight, privacy-focused API testing tool. No cloud, no bloat
 
 Source-available for noncommercial use. Commercial use requires permission.
 
+## Desktop Migration Note
+
+A new `Tauri + React/Vite + Rust` desktop shell is in progress under `apps/desktop/`.
+
+The current stable reference implementation still lives in the Python app at `main.py`, `src/`, and `tests/`. Until parity is reached, `python main.py` remains the baseline behavior to compare against.
+
 ## Features
 
 * **Offline First:** Works without internet connection for local APIs
