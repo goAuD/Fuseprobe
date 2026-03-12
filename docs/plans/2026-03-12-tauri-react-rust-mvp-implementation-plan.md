@@ -10,6 +10,22 @@
 
 ---
 
+## Canonical Role
+
+This is the canonical execution plan for the Tauri MVP migration.
+
+Use this file for:
+
+- task order
+- exact files to touch
+- test-first implementation steps
+- verification commands
+- commit checkpoints
+
+Architecture, product scope, and migration decisions belong in:
+
+- `docs/plans/2026-03-11-tauri-react-rust-platform-migration-design.md`
+
 ## Required Reading
 
 - Design spec: `docs/plans/2026-03-11-tauri-react-rust-platform-migration-design.md`

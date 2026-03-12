@@ -3,6 +3,20 @@
 Date: 2026-03-11
 Status: Approved design baseline
 
+## Canonical Role
+
+This is the canonical architecture and scope document for the Fuseprobe platform migration.
+
+Use this file for:
+
+- target architecture
+- product constraints
+- migration phases
+- MVP feature scope
+- UI direction
+
+Do not duplicate those decisions in the roadmap or the implementation plan. Those documents should reference this file.
+
 ## Purpose
 
 Define the next major product direction for Fuseprobe after P1 and P2:

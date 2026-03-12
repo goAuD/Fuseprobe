@@ -36,6 +36,15 @@ Tracked design references now exist at:
 
 These are reference artifacts, not implementation contracts. Their role is to preserve the visual and architectural direction so the platform migration and the later UI refinement do not restart from a blank slate.
 
+## Canonical Files
+
+For the Tauri migration, use these files as the single sources of truth:
+
+- Architecture and scope: `docs/plans/2026-03-11-tauri-react-rust-platform-migration-design.md`
+- Implementation tasks: `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
+
+This roadmap should stay high level and should not re-specify those documents in detail.
+
 ## Progress Log
 
 ### Completed So Far
@@ -149,15 +158,17 @@ After the first architecture split is in place:
 
 The old P3 "desktop polish" goal has been re-scoped.
 
-The next primary workstream is now:
+The next primary workstream is now the Tauri migration described in:
 
-- treat the Tkinter app as the stable reference implementation
-- move the product shell to `Tauri + React/Vite`
-- rebuild the request, history, formatting, and redaction core in Rust
-- keep the product offline-first and cross-platform from the start
-- define the future CLI as a later consumer of the same Rust core, not as a separate architecture
+- `docs/plans/2026-03-11-tauri-react-rust-platform-migration-design.md`
+- `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
 
-The first migration release should be an MVP shell, not a full parity rewrite in one step.
+In short:
+
+- the Tkinter app becomes the stable reference implementation
+- the new product shell moves to `Tauri + React/Vite`
+- the core request/history/formatting/redaction logic moves to Rust
+- the first release is an MVP shell, not a full parity rewrite
 
 ### P4: UI/UX Refinement and Follow-On Features
 
