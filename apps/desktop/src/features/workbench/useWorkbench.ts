@@ -26,6 +26,7 @@ export function useWorkbench() {
   const [response, setResponse] = useState<SendRequestResult>(IDLE_RESPONSE);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [historyRevision, setHistoryRevision] = useState(0);
 
   async function submitRequest() {
     if (!url.trim()) {
@@ -44,9 +45,14 @@ export function useWorkbench() {
         headers,
       });
       setResponse(result);
+      setHistoryRevision((revision) => revision + 1);
     } catch (requestError) {
       const message =
-        requestError instanceof Error ? requestError.message : "Request failed.";
+        requestError instanceof Error
+          ? requestError.message
+          : typeof requestError === "string"
+            ? requestError
+            : "Request failed.";
       setError(message);
     } finally {
       setIsSending(false);
@@ -65,6 +71,7 @@ export function useWorkbench() {
     response,
     isSending,
     error,
+    historyRevision,
     submitRequest,
   };
 }

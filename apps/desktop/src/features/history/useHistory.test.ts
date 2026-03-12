@@ -53,3 +53,36 @@ it("uses loaded history rows when the bridge returns data", async () => {
     },
   ]);
 });
+
+it("reloads when the refresh token changes", async () => {
+  mockedLoadHistory
+    .mockResolvedValueOnce([])
+    .mockResolvedValueOnce([
+      {
+        method: "PATCH",
+        url: "https://example.com/users/7",
+        status: 200,
+        elapsed: 55,
+        time: "10:13:09",
+      },
+    ]);
+
+  const { result, rerender } = renderHook(
+    ({ refreshToken }) => useHistory(refreshToken),
+    {
+      initialProps: { refreshToken: 0 },
+    },
+  );
+
+  await waitFor(() => {
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  rerender({ refreshToken: 1 });
+
+  await waitFor(() => {
+    expect(result.current.entries[0]?.method).toBe("PATCH");
+  });
+
+  expect(mockedLoadHistory).toHaveBeenCalledTimes(2);
+});

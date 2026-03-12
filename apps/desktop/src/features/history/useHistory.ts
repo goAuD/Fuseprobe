@@ -19,7 +19,7 @@ const FALLBACK_HISTORY: HistoryEntry[] = [
   },
 ];
 
-export function useHistory() {
+export function useHistory(refreshToken = 0) {
   const [entries, setEntries] = useState<HistoryEntry[]>(FALLBACK_HISTORY);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -50,7 +50,7 @@ export function useHistory() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [refreshToken]);
 
   return { entries, isLoading };
 }

@@ -15,6 +15,7 @@ Status: In progress
 - [x] preset catalog surface
 - [x] typed Tauri desktop bridge contracts
 - [x] fallback browser-safe desktop shell preview
+- [x] real request execution wired from Tauri into the Rust request core
 
 ## Still Pending for MVP Parity
 
@@ -25,7 +26,6 @@ Status: In progress
 - [ ] history clear action in the new shell
 - [ ] preset application into the request workbench
 - [ ] persistent Rust-backed desktop history state instead of seeded fallback rows
-- [ ] real request execution wired from Tauri into the Rust request core
 
 ## Final MVP Release Gate
 

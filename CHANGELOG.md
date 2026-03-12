@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rust workspace and `fuseprobe-core` migration baseline for validation, redaction, history, formatting, and request policy
 - desktop workbench MVP shell with typed request state, response mock flow, preset catalog, and local-history hook
 - Tauri MVP parity checklist and desktop integration coverage for the migration work
+- real Rust-backed request execution from the Tauri desktop command, replacing the earlier echo stub
 
 ### Changed
 - License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development

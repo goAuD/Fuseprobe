@@ -1,8 +1,12 @@
 import { useHistory } from "../history/useHistory";
 import { apiTemplateNames } from "../presets/presets";
 
-export default function HistoryPanel() {
-  const { entries, isLoading } = useHistory();
+interface HistoryPanelProps {
+  refreshToken?: number;
+}
+
+export default function HistoryPanel({ refreshToken = 0 }: HistoryPanelProps) {
+  const { entries, isLoading } = useHistory(refreshToken);
 
   return (
     <aside className="panel history-panel" aria-label="history-panel">

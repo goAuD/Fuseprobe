@@ -43,17 +43,14 @@ export async function sendRequest(
   payload: SendRequestPayload,
 ): Promise<SendRequestResult> {
   const normalizedPayload = buildSendRequestPayload(payload);
-  let echoedPayload = normalizedPayload;
 
   try {
-    echoedPayload = await invoke<SendRequestPayload>("send_request", {
+    return await invoke<SendRequestResult>("send_request", {
       payload: normalizedPayload,
     });
   } catch {
-    echoedPayload = normalizedPayload;
+    return buildMockResponse(normalizedPayload);
   }
-
-  return buildMockResponse(echoedPayload);
 }
 
 export async function loadHistory(): Promise<HistoryEntry[]> {

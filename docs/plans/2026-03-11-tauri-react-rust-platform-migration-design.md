@@ -40,6 +40,7 @@ Completed so far:
 - Rust validation, redaction, history, formatting, and request-policy baseline modules
 - typed Tauri command bridge contracts
 - first interactive workbench shell with request, response, presets, and local-history surfaces
+- real Tauri request execution now calls the Rust core instead of echoing stub payloads
 
 Still pending before MVP parity:
 

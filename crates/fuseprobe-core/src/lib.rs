@@ -4,10 +4,13 @@ mod redaction;
 mod request;
 mod validation;
 
-pub use formatting::{classify_response, BodyKind, FormatResult};
+pub use formatting::{
+    classify_response, extract_charset, format_response_body, BodyKind, FormatResult,
+    FormattedResponse,
+};
 pub use history::{HistoryEntry, HistoryStore};
 pub use redaction::redact_url;
-pub use request::{RequestOptions, DEFAULT_MAX_RESPONSE_BYTES};
+pub use request::{execute_request, ExecutedResponse, RequestOptions, DEFAULT_MAX_RESPONSE_BYTES};
 pub use validation::validate_url;
 
 pub fn version() -> &'static str {

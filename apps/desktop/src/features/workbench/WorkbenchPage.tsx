@@ -16,6 +16,7 @@ export default function WorkbenchPage() {
     response,
     isSending,
     error,
+    historyRevision,
     submitRequest,
   } = useWorkbench();
 
@@ -74,7 +75,7 @@ export default function WorkbenchPage() {
             onBodyChange={setBody}
             onHeadersChange={setHeaders}
           />
-          <HistoryPanel />
+          <HistoryPanel refreshToken={historyRevision} />
         </div>
         <div className="content-column">
           <ResponsePanel response={response} isSending={isSending} error={error} />

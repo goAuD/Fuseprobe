@@ -58,4 +58,23 @@ it("stores the mocked response after submit", async () => {
   });
   expect(result.current.response.statusLine).toBe("200 OK");
   expect(result.current.error).toBeNull();
+  expect(result.current.historyRevision).toBe(1);
+});
+
+it("surfaces string-based request errors from the desktop bridge", async () => {
+  mockedSendRequest.mockRejectedValue("Invalid or unsafe URL. Only http:// and https:// are allowed.");
+
+  const { result } = renderHook(() => useWorkbench());
+
+  act(() => {
+    result.current.setUrl("ftp://internal.example");
+  });
+
+  await act(async () => {
+    await result.current.submitRequest();
+  });
+
+  expect(result.current.error).toBe(
+    "Invalid or unsafe URL. Only http:// and https:// are allowed.",
+  );
 });
