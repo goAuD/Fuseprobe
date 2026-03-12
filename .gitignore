@@ -23,6 +23,7 @@ dist/
 build/
 *.egg-info/
 .pytest_cache/
+/target/
 
 # App data
 history.json
