@@ -1,7 +1,7 @@
 # Fuseprobe Tauri/React/Rust Platform Migration Design
 
 Date: 2026-03-11
-Status: Approved design baseline
+Status: Approved design baseline, implementation in progress
 
 ## Canonical Role
 
@@ -28,6 +28,25 @@ Define the next major product direction for Fuseprobe after P1 and P2:
 - avoid a risky "rewrite everything at once" migration
 
 This document is the design baseline for the next phase of work. It does not start implementation by itself.
+
+## Implementation Status
+
+Implementation is now underway.
+
+Completed so far:
+
+- Rust workspace and `fuseprobe-core` crate scaffold
+- Tauri + React/Vite desktop shell scaffold
+- Rust validation, redaction, history, formatting, and request-policy baseline modules
+- typed Tauri command bridge contracts
+- first interactive workbench shell with request, response, presets, and local-history surfaces
+
+Still pending before MVP parity:
+
+- real Rust-backed request execution through the desktop shell
+- real desktop history persistence and mutation actions
+- auth preset application flow
+- response headers/raw tabs with real data
 
 ## Decision
 

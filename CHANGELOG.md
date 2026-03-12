@@ -9,9 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Tauri + React/Vite desktop shell scaffold under `apps/desktop`
+- Rust workspace and `fuseprobe-core` migration baseline for validation, redaction, history, formatting, and request policy
+- desktop workbench MVP shell with typed request state, response mock flow, preset catalog, and local-history hook
+- Tauri MVP parity checklist and desktop integration coverage for the migration work
+
 ### Changed
 - License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development
 - README now states the project is source-available for noncommercial use and points commercial exceptions to GitHub issues
+- Tauri migration design status now reflects active implementation instead of design-only planning
 
 ---
 
