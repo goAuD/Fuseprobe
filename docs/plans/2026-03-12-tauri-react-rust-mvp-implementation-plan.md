@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
-**Current State:** Tasks 1 through 20 are now complete. The next active work is Task 21 and the packaging gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the final packaging checks below are complete.
+**Current State:** Tasks 1 through 21 are now complete. The next active work is release/versioning decisions and the legacy-shell removal cut-over. Do not treat the MVP parity milestone as fully shipped until those final cut-over decisions are made.
 
 ---
 
@@ -1687,6 +1687,8 @@ git commit -m "docs: add desktop security controls and user guidance"
 
 ### Task 21: Packaging Gate and Legacy Removal Prep
 
+Status: Completed on 2026-03-13.
+
 This task stays blocked until Tasks 13 through 20 are complete.
 
 **Files:**
@@ -1696,9 +1698,9 @@ This task stays blocked until Tasks 13 through 20 are complete.
 
 **Checklist:**
 
-- [ ] desktop security hardening tasks are green
-- [ ] user-facing docs for security defaults exist
-- [ ] packaged Tauri build is the canonical desktop app
+- [x] desktop security hardening tasks are green
+- [x] user-facing docs for security defaults exist
+- [x] packaged Tauri build has been verified for the current Windows release-candidate path
 - [ ] Python/Tkinter shell is no longer needed as a fallback
 
 Only after that should the repo remove the legacy Python/Tkinter desktop shell to reduce attack surface.

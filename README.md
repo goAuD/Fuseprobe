@@ -12,11 +12,11 @@ Fuseprobe is a lightweight, privacy-focused API testing tool. No cloud, no bloat
 
 Source-available for noncommercial use. Commercial use requires permission.
 
-## Desktop Migration Note
+## Desktop Shell
 
-A new `Tauri + React/Vite + Rust` desktop shell is in progress under `apps/desktop/`.
+The canonical desktop app is now the `Tauri + React/Vite + Rust` shell under `apps/desktop/`.
 
-The current stable reference implementation still lives in the Python app at `main.py`, `src/`, and `tests/`. Until parity is reached, `python main.py` remains the baseline behavior to compare against.
+The older Python/Tkinter app remains in the repository only as a temporary legacy reference during the packaging cut-over. It is no longer the primary desktop direction and should be treated as a fallback baseline while the release candidate is being finalized.
 
 ## Desktop Security Defaults
 
@@ -62,20 +62,45 @@ See [docs/usage-and-security.md](docs/usage-and-security.md) for the public usag
 
 ## Requirements
 
+### Canonical desktop shell
+
+* Node.js 20+
+* npm 10+
+* Rust stable toolchain
+
+### Legacy reference app
+
 * Python 3.8+
 * Dependencies: `customtkinter`, `requests`
 
 ## Installation
 
 ```bash
-# Clone repository
 git clone https://github.com/goAuD/Fuseprobe.git
 cd Fuseprobe
+```
 
-# Install dependencies
+### Desktop development shell
+
+```bash
+npm --prefix apps/desktop install
+npm --prefix apps/desktop run tauri:dev
+```
+
+### Desktop release-candidate build
+
+```bash
+npm --prefix apps/desktop run tauri:build
+```
+
+Expected Windows release artifact:
+
+- `target/release/fuseprobe-desktop.exe`
+
+### Legacy Python reference app
+
+```bash
 pip install -r requirements.txt
-
-# Run
 python main.py
 ```
 
@@ -83,12 +108,13 @@ On Windows, prefer `python main.py` if `py` points to a different interpreter th
 
 ## Usage
 
-1. Select HTTP method (GET, POST, PUT, PATCH, DELETE)
-2. Enter API URL
-3. (Optional) Add request body JSON in "Request Body" tab
-4. (Optional) Add custom headers in "Headers" tab
-5. (Optional) Use "Presets" tab for quick auth setup or API templates
-6. Click **SEND** or press **Enter**
+1. Launch the desktop shell with `npm --prefix apps/desktop run tauri:dev`
+2. Select HTTP method (GET, POST, PUT, PATCH, DELETE)
+3. Enter API URL
+4. (Optional) Add request body JSON in the request editor
+5. (Optional) Add custom headers in the request editor
+6. (Optional) Use the template chips for quick preset loading
+7. Click **Send**
 
 ### Presets Tab
 
@@ -117,31 +143,29 @@ The Presets tab provides quick access to:
 
 ```
 Fuseprobe/
+├── apps/
+│   └── desktop/              # Canonical Tauri + React/Vite desktop shell
+├── crates/
+│   └── fuseprobe-core/       # Shared Rust request/history/security core
 ├── assets/
 │   ├── fuseprobe.png         # App screenshot
 │   └── fuseprobe_social.png  # Social preview image
 ├── docs/
 │   ├── release-v2.1.0.md     # Public release notes
 │   ├── usage-and-security.md # User-facing usage and security notes
-│   └── plans/                # Architecture, migration, and roadmap docs
-├── main.py              # Entry point
-├── version.py           # Version definition
-├── fuseprobe_theme.py   # Fuseprobe theme module
-├── COMMERCIAL-USE.md    # Commercial licensing note
-├── requirements.txt     # Dependencies
-├── src/
-│   ├── __init__.py
-│   ├── logic.py         # Business logic (API, validation)
-│   ├── presets.py       # Auth presets & API templates
-│   └── ui.py            # CustomTkinter UI
-└── tests/
-    ├── __init__.py
-    └── test_logic.py    # Unit tests
+│   └── plans/                # Architecture, migration, roadmap, packaging gate
+├── main.py                   # Legacy Python reference entry point
+├── version.py                # Shared version metadata
+├── fuseprobe_theme.py        # Legacy Python theme module
+├── COMMERCIAL-USE.md         # Commercial licensing note
+├── requirements.txt          # Legacy Python dependencies
+├── src/                      # Legacy Python reference implementation
+└── tests/                    # Legacy Python reference tests
 ```
 
 ## Data Storage
 
-Python reference app history is stored in your user config directory:
+Legacy Python reference app history is stored in your user config directory:
 - **Windows:** `%USERPROFILE%\\.fuseprobe\\history.json`
 - **Linux/macOS:** `~/.fuseprobe/history.json`
 
@@ -192,6 +216,8 @@ The desktop shell also reads legacy Fuseprobe and NanoMan history/settings when 
 
 ```bash
 python -m pytest tests/ -v
+npm --prefix apps/desktop test -- --run
+cargo test
 ```
 
 ## License

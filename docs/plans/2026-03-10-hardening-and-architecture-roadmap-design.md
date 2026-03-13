@@ -185,11 +185,12 @@ The first implementation slice of that gate is now complete:
 - non-null production CSP and narrowed Tauri desktop capability scope with explicit custom-command allowlisting
 - request body/header ceiling enforcement in the Rust core and single-flight desktop request backpressure with disabled send-state UX
 - explicit desktop security controls with confirmations and user-facing security guidance for the Tauri shell
+- packaging-gate verification completed with a successful `tauri build` release-candidate executable on Windows
 
 The next active slice is:
 
-- packaging-gate verification and release-candidate prep for the hardened Tauri shell
-- legacy Python/Tkinter shell removal only at packaging cut-over
+- legacy Python/Tkinter shell removal at packaging cut-over
+- release/versioning decisions for the first fully canonical Tauri desktop release
 
 ## Priorities
 
@@ -245,6 +246,8 @@ Before packaging the new shell:
 The detailed task order belongs in:
 
 - `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
+
+This gate is now complete for the current desktop release-candidate baseline.
 
 ### P5: UI/UX Refinement and Follow-On Features
 

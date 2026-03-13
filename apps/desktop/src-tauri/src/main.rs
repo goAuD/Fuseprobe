@@ -1,3 +1,3 @@
 fn main() {
-    fuseprobe_desktop::run();
+    fuseprobe_desktop_lib::run();
 }

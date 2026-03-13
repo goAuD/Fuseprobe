@@ -1,7 +1,7 @@
 # Fuseprobe Tauri MVP Parity Checklist
 
 Date: 2026-03-12
-Status: MVP parity and release-gate verification complete
+Status: MVP parity, release-gate verification, and Windows packaging gate complete
 
 ## Current Migrated Pieces
 
@@ -28,6 +28,12 @@ No remaining feature parity gaps for the MVP shell.
 
 The next work is release-gate verification and follow-on polish rather than another missing desktop feature.
 
+## Packaging Gate
+
+- [x] hardened desktop shell builds through `npm --prefix apps/desktop run tauri:build`
+- [x] Windows release-candidate executable produced at `target/release/fuseprobe-desktop.exe`
+- [ ] final legacy Python/Tkinter shell removal deferred until packaging cut-over
+
 ## Final MVP Release Gate
 
 - [x] request execution works end-to-end
@@ -43,3 +49,4 @@ The next work is release-gate verification and follow-on polish rather than anot
 - History redaction, normalization, current-path save, and legacy-path load fallback are covered in `crates/fuseprobe-core/tests/history_store.rs`.
 - Desktop history delete and clear behavior are covered in `apps/desktop/src/features/history/useHistory.test.ts`.
 - Desktop formatted/raw response presentation is covered in `apps/desktop/src/features/workbench/ResponsePanel.test.tsx`.
+- The current Windows release-candidate packaging path was verified with `npm --prefix apps/desktop run tauri:build`, producing `target/release/fuseprobe-desktop.exe`.

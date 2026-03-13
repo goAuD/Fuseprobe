@@ -29,12 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - enforced request body/header input ceilings in the Rust core and added single-flight desktop request backpressure so overlapping sends are rejected deterministically
 - desktop security controls for `Unsafe mode / Local targets` and `History persistence`, with explicit confirmation and in-app warning affordances
 - public usage and security guidance in `docs/usage-and-security.md`
+- explicit Tauri packaging scripts for the canonical desktop shell and verified Windows release-candidate build output
 
 ### Changed
 - License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development
 - README now states the project is source-available for noncommercial use and points commercial exceptions to GitHub issues
 - Tauri migration design status now reflects active implementation instead of design-only planning
 - the desktop shell now documents security-first defaults explicitly instead of treating them as implicit behavior
+- README and planning docs now treat the Tauri shell as the canonical desktop app, while the Python shell is documented as temporary legacy reference only
 
 ---
 

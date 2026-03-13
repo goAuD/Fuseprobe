@@ -54,13 +54,14 @@ Completed so far:
 - the shipped desktop shell now has an explicit custom-command allowlist and a non-null production CSP instead of the earlier `core:default` capability and disabled CSP shortcut
 - the Rust request path now rejects oversized request bodies and header blocks before parsing or network execution, and the desktop shell now enforces single-flight request execution with disabled send controls during active work
 - the desktop shell now exposes explicit security toggles for unsafe targets and history persistence, both guarded by confirmation and backed by user-facing security documentation
+- the Windows packaging gate has been exercised successfully with a real `tauri build`, producing a release-candidate desktop executable from the hardened shell
 
 Still pending before MVP parity:
 
 - no remaining feature-level parity gaps
 - no remaining release-gate verification gaps for the MVP baseline
 
-The next active work is no longer feature parity. The post-MVP security hardening gate is now effectively closed, and the next work moves to packaging-gate preparation tracked in:
+The next active work is no longer feature parity. The post-MVP security hardening gate is closed, the packaging gate has been exercised for the current Windows release-candidate path, and the next work moves to release/versioning decisions plus the final legacy-shell cut-over tracked in:
 
 - `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
 
@@ -130,6 +131,7 @@ Additional security direction confirmed after the MVP parity pass:
 - both risky settings should require explicit confirmation before they are enabled
 - the shipped desktop shell should fail closed rather than fabricating mock success
 - the legacy Python/Tkinter shell should be removed before packaging once the Tauri shell clears the security gate
+- once the release-candidate packaging path is accepted, the legacy Python/Tkinter shell should be removed to reduce attack surface
 
 ## Scope Strategy
 
@@ -285,6 +287,8 @@ Before packaging and before removing the legacy shell:
 - add explicit warnings, confirmations, and user-facing security docs
 
 This phase is now functionally complete for the current desktop shell baseline.
+
+The next cut-over step is not more shell parity work. It is release readiness and legacy removal.
 
 The canonical execution order for this phase belongs in:
 
