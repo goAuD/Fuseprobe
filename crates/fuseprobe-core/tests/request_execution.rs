@@ -108,3 +108,66 @@ fn truncates_large_text_responses() {
     assert!(result.truncated);
     assert!(result.body.contains("Output truncated at 8 bytes"));
 }
+
+#[test]
+fn does_not_follow_redirects_and_redacts_sensitive_location_values() {
+    let server = Server::http("127.0.0.1:0").expect("server should bind");
+    let address = format!("http://{}", server.server_addr());
+    let redirect_target = format!("{address}/target?token=secret");
+
+    let worker = thread::spawn(move || {
+        let request = server.recv().expect("request should arrive");
+        assert_eq!(request.url(), "/redirect");
+
+        let response = Response::empty(StatusCode(302)).with_header(
+            Header::from_bytes("Location", redirect_target).expect("location header should be valid"),
+        );
+
+        request.respond(response).expect("response should be sent");
+    });
+
+    let result = execute_request(
+        "GET",
+        &format!("{address}/redirect"),
+        "",
+        "",
+        &RequestOptions::default(),
+    )
+    .expect("request should succeed");
+
+    worker.join().expect("worker should exit");
+
+    assert_eq!(result.status_code, 302);
+    assert!(result.body.contains("Redirect not followed. Location:"));
+    assert!(result.body.contains("token=%2A%2A%2A"));
+    assert!(!result.body.contains("token=secret"));
+}
+
+#[test]
+fn omits_binary_responses_from_text_rendering() {
+    let server = Server::http("127.0.0.1:0").expect("server should bind");
+    let address = format!("http://{}", server.server_addr());
+
+    let worker = thread::spawn(move || {
+        let request = server.recv().expect("request should arrive");
+        let response = Response::from_data(vec![0_u8, 159, 146, 150])
+            .with_status_code(StatusCode(200))
+            .with_header(
+                Header::from_bytes("Content-Type", "application/octet-stream")
+                    .expect("header should be valid"),
+            );
+
+        request.respond(response).expect("response should be sent");
+    });
+
+    let result = execute_request("GET", &address, "", "", &RequestOptions::default())
+        .expect("request should succeed");
+
+    worker.join().expect("worker should exit");
+
+    assert!(result.is_binary);
+    assert!(!result.is_json);
+    assert_eq!(result.content_type, "application/octet-stream");
+    assert!(result.body.contains("[Binary response omitted: application/octet-stream"));
+    assert_eq!(result.body, result.raw_body);
+}

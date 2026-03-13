@@ -45,11 +45,12 @@ Completed so far:
 - response headers and raw response tabs now render real desktop response data
 - template chips now apply method, URL, and auth preset defaults into the desktop request workbench
 - desktop history now loads from persistent Rust-backed storage and saves back to the current Fuseprobe history path
+- release-gate verification is now explicitly covered for redirect policy, history redaction, binary fallback, and formatted JSON response rendering
 
 Still pending before MVP parity:
 
 - no remaining feature-level parity gaps
-- release-gate verification still needs to be closed explicitly for redirect, redaction, and response-render behavior
+- no remaining release-gate verification gaps for the MVP baseline
 
 ## Decision
 

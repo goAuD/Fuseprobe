@@ -1,7 +1,7 @@
 # Fuseprobe Tauri MVP Parity Checklist
 
 Date: 2026-03-12
-Status: In progress
+Status: MVP parity and release-gate verification complete
 
 ## Current Migrated Pieces
 
@@ -30,9 +30,16 @@ The next work is release-gate verification and follow-on polish rather than anot
 
 ## Final MVP Release Gate
 
-- [ ] request execution works end-to-end
-- [ ] redirect policy matches Python baseline
-- [ ] history redaction matches Python baseline
-- [ ] history delete and clear work
-- [ ] binary responses do not render as text
-- [ ] JSON responses render in the formatted response view
+- [x] request execution works end-to-end
+- [x] redirect policy matches Python baseline
+- [x] history redaction matches Python baseline
+- [x] history delete and clear work
+- [x] binary responses do not render as text
+- [x] JSON responses render in the formatted response view
+
+## Verification Notes
+
+- End-to-end request execution, redirect behavior, truncation, binary fallback, and JSON formatting are covered in `crates/fuseprobe-core/tests/request_execution.rs`.
+- History redaction, normalization, current-path save, and legacy-path load fallback are covered in `crates/fuseprobe-core/tests/history_store.rs`.
+- Desktop history delete and clear behavior are covered in `apps/desktop/src/features/history/useHistory.test.ts`.
+- Desktop formatted/raw response presentation is covered in `apps/desktop/src/features/workbench/ResponsePanel.test.tsx`.

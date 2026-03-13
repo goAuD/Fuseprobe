@@ -153,8 +153,9 @@ Completed so far:
 - added real `Response / Headers / Raw` views in the new shell, backed by live desktop response data
 - added preset application flow in the new shell so template chips now drive method, URL, and auth-header defaults in the request workbench
 - added persistent Rust-backed desktop history loading and saving, with current `~/.fuseprobe/history.json` storage and legacy `.nanoman` fallback loading
+- closed the Tauri MVP release-gate verification with explicit regression coverage for redirect policy, history redaction, binary fallback, and formatted JSON response rendering
 
-The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, response views, preset application, and local-history persistence all exist in the React desktop app. The remaining work is no longer about missing shell features; it is about closing the release-gate verification items and then moving into follow-on UX work.
+The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, response views, preset application, and local-history persistence all exist in the React desktop app, and the MVP release-gate checks are now explicitly covered. The next work can move away from parity closure and into follow-on UX and product iteration.
 
 ## Priorities
 

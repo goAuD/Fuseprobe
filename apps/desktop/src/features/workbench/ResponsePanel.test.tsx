@@ -37,3 +37,22 @@ it("switches between formatted response, headers, and raw tabs", () => {
   fireEvent.click(screen.getByRole("button", { name: "Raw" }));
   expect(screen.getByText('{"ok":true}')).toBeInTheDocument();
 });
+
+it("shows the binary placeholder in the formatted response tab", () => {
+  render(
+    <ResponsePanel
+      response={{
+        ...BASE_RESPONSE,
+        contentType: "application/octet-stream",
+        responseText: "[Binary response omitted: application/octet-stream, 4 bytes]",
+        rawResponseText: "[Binary response omitted: application/octet-stream, 4 bytes]",
+      }}
+      isSending={false}
+      error={null}
+    />,
+  );
+
+  expect(
+    screen.getByText("[Binary response omitted: application/octet-stream, 4 bytes]"),
+  ).toBeInTheDocument();
+});
