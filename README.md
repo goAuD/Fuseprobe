@@ -18,9 +18,22 @@ A new `Tauri + React/Vite + Rust` desktop shell is in progress under `apps/deskt
 
 The current stable reference implementation still lives in the Python app at `main.py`, `src/`, and `tests/`. Until parity is reached, `python main.py` remains the baseline behavior to compare against.
 
+## Desktop Security Defaults
+
+The current desktop shell is intentionally strict by default:
+
+- `Unsafe mode / Local targets` is **off** until you explicitly enable it
+- local, private, link-local, and metadata-style targets are blocked by default
+- `History persistence` is **off** until you explicitly enable it
+- both risky settings require an explicit confirmation before they switch on
+
+These are deliberate security design choices, not missing features.
+
+See [docs/usage-and-security.md](docs/usage-and-security.md) for the public usage and security notes.
+
 ## Features
 
-* **Offline First:** Works without internet connection for local APIs
+* **Offline First:** Works without cloud services and keeps desktop data local
 * **Privacy Focused:** No telemetry, no cloud, your data stays local
 * **Full HTTP Support:** GET, POST, PUT, PATCH, DELETE methods
 * **JSON Syntax Highlighting:** Color-coded JSON responses (keys, strings, numbers)
@@ -108,7 +121,9 @@ Fuseprobe/
 │   ├── fuseprobe.png         # App screenshot
 │   └── fuseprobe_social.png  # Social preview image
 ├── docs/
-│   └── release-v2.1.0.md     # Public release notes
+│   ├── release-v2.1.0.md     # Public release notes
+│   ├── usage-and-security.md # User-facing usage and security notes
+│   └── plans/                # Architecture, migration, and roadmap docs
 ├── main.py              # Entry point
 ├── version.py           # Version definition
 ├── fuseprobe_theme.py   # Fuseprobe theme module
@@ -126,11 +141,15 @@ Fuseprobe/
 
 ## Data Storage
 
-Request history is stored in your user config directory:
-- **Windows:** `%USERPROFILE%\.fuseprobe\history.json`
+Python reference app history is stored in your user config directory:
+- **Windows:** `%USERPROFILE%\\.fuseprobe\\history.json`
 - **Linux/macOS:** `~/.fuseprobe/history.json`
 
-Fuseprobe also reads legacy NanoMan history from `.nanoman/history.json` if present, so older request history is carried forward automatically.
+The new Tauri desktop shell keeps request history session-only by default.
+
+If you enable `History persistence`, the desktop shell stores redacted history in the OS config directory under `Fuseprobe/history.json` and keeps security settings in `Fuseprobe/settings.json`.
+
+The desktop shell also reads legacy Fuseprobe and NanoMan history/settings when present, so older local state can be carried forward safely.
 
 **Security:** Only method, URL, status code, and timing are saved. Headers and request body are never persisted to prevent leaking sensitive data.
 
@@ -142,6 +161,8 @@ Fuseprobe also reads legacy NanoMan history from `.nanoman/history.json` if pres
 | JavaScript injection | `javascript:` URLs rejected |
 | File access | `file://` URLs rejected |
 | Credential leaks | Headers/body not saved to history |
+| Local/internal probing | Desktop shell blocks local/private targets by default |
+| Accidental local persistence | Desktop shell keeps history session-only until enabled |
 | Request hanging | 10 second timeout |
 | UI freeze | Threaded requests |
 

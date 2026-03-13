@@ -27,11 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - hardened desktop persistence path resolution under the OS config directory, with explicit legacy migration fallbacks and surfaced non-fatal persistence warnings in the React shell
 - hardened the Tauri trust boundary with a non-null production CSP, explicit desktop command allowlisting, and removal of the broad `core:default` capability shortcut
 - enforced request body/header input ceilings in the Rust core and added single-flight desktop request backpressure so overlapping sends are rejected deterministically
+- desktop security controls for `Unsafe mode / Local targets` and `History persistence`, with explicit confirmation and in-app warning affordances
+- public usage and security guidance in `docs/usage-and-security.md`
 
 ### Changed
 - License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development
 - README now states the project is source-available for noncommercial use and points commercial exceptions to GitHub issues
 - Tauri migration design status now reflects active implementation instead of design-only planning
+- the desktop shell now documents security-first defaults explicitly instead of treating them as implicit behavior
 
 ---
 

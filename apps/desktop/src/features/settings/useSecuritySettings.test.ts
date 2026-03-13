@@ -86,3 +86,45 @@ it("updates security settings through the desktop bridge", async () => {
   expect(result.current.settings.allowUnsafeTargets).toBe(true);
   expect(result.current.settings.persistHistory).toBe(false);
 });
+
+it("captures bridge update failures as hook error state", async () => {
+  mockedLoadSecuritySettings.mockResolvedValue({
+    allowUnsafeTargets: false,
+    persistHistory: false,
+  });
+  mockedUpdateSecuritySettings.mockRejectedValue(
+    new Error("failed to save security settings"),
+  );
+
+  const { result } = renderHook(() => useSecuritySettings());
+
+  await waitFor(() => {
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  let capturedError: unknown = null;
+
+  await act(async () => {
+    try {
+      await result.current.updateSettings({
+        allowUnsafeTargets: true,
+        persistHistory: false,
+      });
+    } catch (error) {
+      capturedError = error;
+    }
+  });
+
+  expect(capturedError).toBeInstanceOf(Error);
+  expect((capturedError as Error).message).toBe(
+    "failed to save security settings",
+  );
+
+  await waitFor(() => {
+    expect(result.current.error).toBe("failed to save security settings");
+  });
+  expect(result.current.settings).toEqual({
+    allowUnsafeTargets: false,
+    persistHistory: false,
+  });
+});

@@ -55,11 +55,25 @@ export function useSecuritySettings() {
   }, []);
 
   async function updateSettings(nextSettings: SecuritySettings) {
-    const updatedSettings =
-      await updateSecuritySettingsFromBridge(nextSettings);
-    setSettings(updatedSettings);
     setError(null);
-    return updatedSettings;
+
+    try {
+      const updatedSettings =
+        await updateSecuritySettingsFromBridge(nextSettings);
+      setSettings(updatedSettings);
+      setError(null);
+      return updatedSettings;
+    } catch (updateError) {
+      const message =
+        updateError instanceof Error
+          ? updateError.message
+          : typeof updateError === "string"
+            ? updateError
+            : "Failed to update security settings.";
+
+      setError(message);
+      throw updateError;
+    }
   }
 
   return {

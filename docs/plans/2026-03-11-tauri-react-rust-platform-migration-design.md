@@ -53,13 +53,14 @@ Completed so far:
 - desktop persistence now resolves through the OS config directory, carries legacy migration fallbacks explicitly, and surfaces non-fatal persistence warnings back into the React shell instead of hiding them
 - the shipped desktop shell now has an explicit custom-command allowlist and a non-null production CSP instead of the earlier `core:default` capability and disabled CSP shortcut
 - the Rust request path now rejects oversized request bodies and header blocks before parsing or network execution, and the desktop shell now enforces single-flight request execution with disabled send controls during active work
+- the desktop shell now exposes explicit security toggles for unsafe targets and history persistence, both guarded by confirmation and backed by user-facing security documentation
 
 Still pending before MVP parity:
 
 - no remaining feature-level parity gaps
 - no remaining release-gate verification gaps for the MVP baseline
 
-The next active work is no longer feature parity. It is the post-MVP security hardening gate tracked in:
+The next active work is no longer feature parity. The post-MVP security hardening gate is now effectively closed, and the next work moves to packaging-gate preparation tracked in:
 
 - `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
 
@@ -126,6 +127,7 @@ Additional security direction confirmed after the MVP parity pass:
 - local, private, link-local, and metadata targets should be blocked by default
 - those targets should only be available behind an explicit persisted `Unsafe mode / Local targets` setting
 - history persistence should be off by default and only enabled explicitly by the user
+- both risky settings should require explicit confirmation before they are enabled
 - the shipped desktop shell should fail closed rather than fabricating mock success
 - the legacy Python/Tkinter shell should be removed before packaging once the Tauri shell clears the security gate
 
@@ -281,6 +283,8 @@ Before packaging and before removing the legacy shell:
 - make history persistence opt-in
 - tighten Tauri CSP and capability scope
 - add explicit warnings, confirmations, and user-facing security docs
+
+This phase is now functionally complete for the current desktop shell baseline.
 
 The canonical execution order for this phase belongs in:
 

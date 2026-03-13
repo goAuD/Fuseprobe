@@ -184,11 +184,12 @@ The first implementation slice of that gate is now complete:
 - surfaced non-fatal persistence warnings in the Rust/Tauri/React desktop path
 - non-null production CSP and narrowed Tauri desktop capability scope with explicit custom-command allowlisting
 - request body/header ceiling enforcement in the Rust core and single-flight desktop request backpressure with disabled send-state UX
+- explicit desktop security controls with confirmations and user-facing security guidance for the Tauri shell
 
 The next active slice is:
 
-- add explicit security toggles, confirmations, and user-facing docs
-- keep tightening the shipped Tauri boundary before packaging
+- packaging-gate verification and release-candidate prep for the hardened Tauri shell
+- legacy Python/Tkinter shell removal only at packaging cut-over
 
 ## Priorities
 

@@ -2,6 +2,7 @@ import HistoryPanel from "./HistoryPanel";
 import RequestEditor from "./RequestEditor";
 import ResponsePanel from "./ResponsePanel";
 import { useWorkbench } from "./useWorkbench";
+import SecuritySettingsPanel from "../settings/SecuritySettingsPanel";
 
 export default function WorkbenchPage() {
   const {
@@ -96,6 +97,7 @@ export default function WorkbenchPage() {
             onBodyChange={setBody}
             onHeadersChange={setHeaders}
           />
+          <SecuritySettingsPanel />
           <HistoryPanel
             refreshToken={historyRevision}
             activeTemplateName={activeTemplateName}
