@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
-**Current State:** Tasks 1 through 12 are now complete. The next active work is a security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
+**Current State:** Tasks 1 through 13 are now complete. The next active work is Task 14 and the rest of the security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
 
 ---
 
@@ -1089,6 +1089,8 @@ Security decisions already approved:
 - document these defaults in user-facing docs as intentional security design choices
 
 ### Task 13: Add Persisted Desktop Security Settings
+
+Status: Completed on 2026-03-13.
 
 **Files:**
 - Create: `crates/fuseprobe-core/src/settings.rs`

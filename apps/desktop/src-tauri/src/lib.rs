@@ -12,6 +12,8 @@ pub fn run() {
             commands::history::load_history,
             commands::history::delete_history_entry,
             commands::history::clear_history,
+            commands::settings::load_security_settings,
+            commands::settings::update_security_settings,
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Fuseprobe desktop shell");

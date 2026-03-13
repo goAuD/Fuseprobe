@@ -100,8 +100,8 @@ fn truncates_large_text_responses() {
         ..RequestOptions::default()
     };
 
-    let result = execute_request("GET", &address, "", "", &options)
-        .expect("request should succeed");
+    let result =
+        execute_request("GET", &address, "", "", &options).expect("request should succeed");
 
     worker.join().expect("worker should exit");
 
@@ -120,7 +120,8 @@ fn does_not_follow_redirects_and_redacts_sensitive_location_values() {
         assert_eq!(request.url(), "/redirect");
 
         let response = Response::empty(StatusCode(302)).with_header(
-            Header::from_bytes("Location", redirect_target).expect("location header should be valid"),
+            Header::from_bytes("Location", redirect_target)
+                .expect("location header should be valid"),
         );
 
         request.respond(response).expect("response should be sent");
@@ -168,6 +169,8 @@ fn omits_binary_responses_from_text_rendering() {
     assert!(result.is_binary);
     assert!(!result.is_json);
     assert_eq!(result.content_type, "application/octet-stream");
-    assert!(result.body.contains("[Binary response omitted: application/octet-stream"));
+    assert!(result
+        .body
+        .contains("[Binary response omitted: application/octet-stream"));
     assert_eq!(result.body, result.raw_body);
 }

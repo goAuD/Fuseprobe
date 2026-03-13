@@ -169,7 +169,9 @@ fn save_to_file_round_trips_history_entries() {
         "GET",
         "https://api.example.com/items?access_token=secret",
     ));
-    store.save_to_file(&history_file).expect("save history to disk");
+    store
+        .save_to_file(&history_file)
+        .expect("save history to disk");
 
     let saved_payload = fs::read_to_string(&history_file).expect("read saved history");
     assert!(saved_payload.contains("\"history\""));

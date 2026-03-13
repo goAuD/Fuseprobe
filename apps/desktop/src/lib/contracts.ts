@@ -5,6 +5,11 @@ export interface SendRequestPayload {
   headers: string;
 }
 
+export interface SecuritySettings {
+  allowUnsafeTargets: boolean;
+  persistHistory: boolean;
+}
+
 export interface HistoryEntry {
   method: string;
   url: string;

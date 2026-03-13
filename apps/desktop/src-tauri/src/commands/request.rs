@@ -66,7 +66,9 @@ pub async fn send_request(
 
     Ok(SendRequestResult {
         request: payload,
-        status_line: format!("{} {}", executed.status_code, executed.reason).trim().to_string(),
+        status_line: format!("{} {}", executed.status_code, executed.reason)
+            .trim()
+            .to_string(),
         duration_ms: executed.elapsed_ms.round() as u64,
         size_label: format_byte_count(executed.byte_count),
         content_type: if executed.content_type.is_empty() {

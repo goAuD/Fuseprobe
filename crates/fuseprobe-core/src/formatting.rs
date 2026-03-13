@@ -91,8 +91,14 @@ pub fn format_response_body(
         };
 
         return FormattedResponse {
-            body: format!("[Binary response omitted: {mime}, {} bytes]", raw_body.len()),
-            raw_text: format!("[Binary response omitted: {mime}, {} bytes]", raw_body.len()),
+            body: format!(
+                "[Binary response omitted: {mime}, {} bytes]",
+                raw_body.len()
+            ),
+            raw_text: format!(
+                "[Binary response omitted: {mime}, {} bytes]",
+                raw_body.len()
+            ),
             is_json: false,
             is_binary: true,
             truncated,

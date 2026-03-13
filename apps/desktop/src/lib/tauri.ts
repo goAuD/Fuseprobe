@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   HistoryEntry,
+  SecuritySettings,
   SendRequestPayload,
   SendRequestResult,
 } from "./contracts";
@@ -93,4 +94,14 @@ export async function clearHistory(): Promise<HistoryEntry[]> {
   } catch {
     return [];
   }
+}
+
+export async function loadSecuritySettings(): Promise<SecuritySettings> {
+  return await invoke<SecuritySettings>("load_security_settings");
+}
+
+export async function updateSecuritySettings(
+  settings: SecuritySettings,
+): Promise<SecuritySettings> {
+  return await invoke<SecuritySettings>("update_security_settings", { settings });
 }

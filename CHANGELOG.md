@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - preset application flow in the new desktop shell, including template-driven method, URL, and auth-header defaults
 - persistent Rust-backed desktop history state in the new shell, replacing the earlier seeded fallback rows
 - explicit release-gate regression coverage for redirect handling, history redaction, binary fallback, and formatted JSON response rendering in the Tauri MVP
+- persisted desktop security settings baseline with safe defaults across the Rust core, Tauri command layer, and React hook state
 
 ### Changed
 - License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development

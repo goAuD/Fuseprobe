@@ -1,4 +1,8 @@
-use std::{collections::BTreeMap, io::Read, time::{Duration, Instant}};
+use std::{
+    collections::BTreeMap,
+    io::Read,
+    time::{Duration, Instant},
+};
 
 use reqwest::{
     blocking::{Client, Response},
@@ -172,7 +176,9 @@ fn parse_headers(headers_text: &str) -> Result<HeaderMap, String> {
             format!("Invalid header on line {line_number}: unsupported header name '{key}'")
         })?;
         let header_value = HeaderValue::from_str(value).map_err(|_| {
-            format!("Invalid header on line {line_number}: header value contains control characters")
+            format!(
+                "Invalid header on line {line_number}: header value contains control characters"
+            )
         })?;
         headers.insert(header_name, header_value);
     }

@@ -46,6 +46,7 @@ Completed so far:
 - template chips now apply method, URL, and auth preset defaults into the desktop request workbench
 - desktop history now loads from persistent Rust-backed storage and saves back to the current Fuseprobe history path
 - release-gate verification is now explicitly covered for redirect policy, history redaction, binary fallback, and formatted JSON response rendering
+- persisted desktop security settings now exist across the Rust core, Tauri commands, and React hook layer with safe defaults
 
 Still pending before MVP parity:
 
