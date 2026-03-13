@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../i18n/locale";
 import type { HistoryEntry } from "../../lib/contracts";
 import {
   clearHistory as clearHistoryFromBridge,
@@ -7,6 +8,7 @@ import {
 } from "../../lib/tauri";
 
 export function useHistory(refreshToken = 0) {
+  const { strings } = useLocale();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function useHistory(refreshToken = 0) {
             ? loadError.message
             : typeof loadError === "string"
               ? loadError
-              : "Failed to load desktop history.",
+              : strings.hooks.failedToLoadDesktopHistory,
         );
       })
       .finally(() => {
@@ -51,7 +53,7 @@ export function useHistory(refreshToken = 0) {
     return () => {
       isActive = false;
     };
-  }, [refreshToken]);
+  }, [refreshToken, strings.hooks.failedToLoadDesktopHistory]);
 
   async function deleteEntry(index: number) {
     setError(null);
@@ -68,7 +70,7 @@ export function useHistory(refreshToken = 0) {
           ? deleteError.message
           : typeof deleteError === "string"
             ? deleteError
-            : "Failed to remove history entry.",
+            : strings.hooks.failedToRemoveHistoryEntry,
       );
     }
   }
@@ -88,7 +90,7 @@ export function useHistory(refreshToken = 0) {
           ? clearError.message
           : typeof clearError === "string"
             ? clearError
-            : "Failed to clear history.",
+            : strings.hooks.failedToClearHistory,
       );
     }
   }

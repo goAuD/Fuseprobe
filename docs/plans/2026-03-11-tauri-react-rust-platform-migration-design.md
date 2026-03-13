@@ -55,6 +55,7 @@ Completed so far:
 - the Rust request path now rejects oversized request bodies and header blocks before parsing or network execution, and the desktop shell now enforces single-flight request execution with disabled send controls during active work
 - the desktop shell now exposes explicit security toggles for unsafe targets and history persistence, both guarded by confirmation and backed by user-facing security documentation
 - the Windows packaging gate has been exercised successfully with a real `tauri build`, producing a release-candidate desktop executable from the hardened shell
+- the desktop shell now has real `en / de / hu` UI string switching, reusable dropdown controls, dismissible non-blocking notice banners, and an accessible custom confirmation modal instead of the earlier decorative selector and centered overlay alerts
 
 Still pending before MVP parity:
 

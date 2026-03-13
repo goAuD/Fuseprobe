@@ -1,3 +1,4 @@
+import { useLocale } from "../i18n/locale";
 import { useHistory } from "../history/useHistory";
 import { apiTemplateNames } from "../presets/presets";
 
@@ -12,26 +13,24 @@ export default function HistoryPanel({
   activeTemplateName,
   onApplyTemplate,
 }: HistoryPanelProps) {
+  const { strings } = useLocale();
   const { entries, isLoading, error, warning, deleteEntry, clearEntries } =
     useHistory(refreshToken);
 
   return (
     <aside className="panel history-panel" aria-label="history-panel">
       <div className="panel-header">
-        <div>
-          <p className="panel-eyebrow">History</p>
-          <h2>History</h2>
-        </div>
+        <h2>{strings.history.title}</h2>
         <div className="history-actions">
-          <span className="panel-meta">device only</span>
+          <span className="panel-meta">{strings.history.deviceOnly}</span>
           <button className="history-action" type="button" onClick={() => void clearEntries()}>
-            Clear
+            {strings.history.clear}
           </button>
         </div>
       </div>
 
       <div className="preset-section">
-        <p className="editor-label">Templates</p>
+        <p className="editor-label">{strings.history.templates}</p>
         <div className="template-grid">
           {apiTemplateNames.map((name) => (
             <button
@@ -57,9 +56,9 @@ export default function HistoryPanel({
             {warning}
           </p>
         ) : isLoading ? (
-          <p className="history-empty">Loading local history...</p>
+          <p className="history-empty">{strings.history.loading}</p>
         ) : entries.length === 0 ? (
-          <p className="history-empty">History is empty.</p>
+          <p className="history-empty">{strings.history.empty}</p>
         ) : (
           entries.map((entry, index) => (
             <article key={`${entry.time}-${entry.method}-${entry.url}`} className="history-item">
@@ -72,11 +71,11 @@ export default function HistoryPanel({
                   type="button"
                   onClick={() => void deleteEntry(index)}
                 >
-                  Remove
+                  {strings.history.remove}
                 </button>
               </div>
               <span>
-                {entry.status || "pending"} · {Math.round(entry.elapsed)} ms · {entry.time}
+                {entry.status || strings.history.pending} · {Math.round(entry.elapsed)} ms · {entry.time}
               </span>
             </article>
           ))

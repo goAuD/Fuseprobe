@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../i18n/locale";
 import type { SendRequestResult } from "../../lib/contracts";
 
 interface ResponsePanelProps {
@@ -12,38 +13,40 @@ export default function ResponsePanel({
   isSending,
   error,
 }: ResponsePanelProps) {
+  const { strings } = useLocale();
   const [activeTab, setActiveTab] = useState<"response" | "headers" | "raw">("response");
 
   useEffect(() => {
     setActiveTab("response");
   }, [response, error]);
 
-  const statusLine = error ? "Request Error" : isSending ? "Sending..." : response.statusLine;
+  const statusLine = error
+    ? strings.response.requestError
+    : isSending
+      ? strings.app.sending
+      : response.statusLine;
   const responseBody = error ? error : response.responseText;
   const responseHeaders = Object.entries(response.responseHeaders)
     .map(([key, value]) => `${key}: ${value}`)
     .join("\n");
   const previewText =
     activeTab === "headers"
-      ? responseHeaders || "No response headers yet."
+      ? responseHeaders || strings.response.noHeadersYet
       : activeTab === "raw"
-        ? error || response.rawResponseText || "No raw response yet."
+        ? error || response.rawResponseText || strings.response.noRawYet
         : responseBody;
 
   return (
     <section className="panel response-panel" aria-label="response-panel">
       <div className="panel-header">
-        <div>
-          <p className="panel-eyebrow">Response</p>
-          <h2>Response</h2>
-        </div>
-        <span className="panel-meta">formatted view first, raw when needed</span>
+        <h2>{strings.response.title}</h2>
+        <span className="panel-meta">{strings.response.meta}</span>
       </div>
 
       <div className="response-toolbar">
         <div className="status-block">
           <span className={`status-badge${error ? " danger" : ""}`}>{statusLine}</span>
-          <span>{isSending ? "working..." : `${response.durationMs} ms`}</span>
+          <span>{isSending ? strings.response.working : `${response.durationMs} ms`}</span>
           <span>{response.sizeLabel}</span>
         </div>
         <div className="meta-row">
@@ -59,21 +62,21 @@ export default function ResponsePanel({
           type="button"
           onClick={() => setActiveTab("response")}
         >
-          Response
+          {strings.response.tabs.response}
         </button>
         <button
           className={`pill pill-button${activeTab === "headers" ? " active" : ""}`}
           type="button"
           onClick={() => setActiveTab("headers")}
         >
-          Headers
+          {strings.response.tabs.headers}
         </button>
         <button
           className={`pill pill-button${activeTab === "raw" ? " active" : ""}`}
           type="button"
           onClick={() => setActiveTab("raw")}
         >
-          Raw
+          {strings.response.tabs.raw}
         </button>
       </div>
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { SecuritySettings } from "../../lib/contracts";
+import { useLocale } from "../i18n/locale";
 import {
   loadSecuritySettings as loadSecuritySettingsFromBridge,
   updateSecuritySettings as updateSecuritySettingsFromBridge,
@@ -11,6 +12,7 @@ const DEFAULT_SECURITY_SETTINGS: SecuritySettings = {
 };
 
 export function useSecuritySettings() {
+  const { strings } = useLocale();
   const [settings, setSettings] = useState<SecuritySettings>(
     DEFAULT_SECURITY_SETTINGS,
   );
@@ -38,7 +40,7 @@ export function useSecuritySettings() {
             ? loadError.message
             : typeof loadError === "string"
               ? loadError
-              : "Failed to load security settings.";
+              : strings.hooks.failedToLoadSecuritySettings;
 
         setSettings(DEFAULT_SECURITY_SETTINGS);
         setError(message);
@@ -52,7 +54,7 @@ export function useSecuritySettings() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [strings.hooks.failedToLoadSecuritySettings]);
 
   async function updateSettings(nextSettings: SecuritySettings) {
     setError(null);
@@ -69,7 +71,7 @@ export function useSecuritySettings() {
           ? updateError.message
           : typeof updateError === "string"
             ? updateError
-            : "Failed to update security settings.";
+            : strings.hooks.failedToUpdateSecuritySettings;
 
       setError(message);
       throw updateError;

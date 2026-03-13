@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
-**Current State:** Tasks 1 through 21 are now complete. The next active work is release/versioning decisions and the legacy-shell removal cut-over. Do not treat the MVP parity milestone as fully shipped until those final cut-over decisions are made.
+**Current State:** Tasks 1 through 21 are now complete. A post-gate UI hardening pass has also landed on the desktop shell for locale-backed `en/de/hu` strings, reusable dropdowns, dismissible notice banners, and accessible confirmation behavior. The next active work is release/versioning decisions and the legacy-shell removal cut-over. Do not treat the MVP parity milestone as fully shipped until those final cut-over decisions are made.
 
 ---
 

@@ -19,12 +19,21 @@ it("shows an inline alert when the request cannot be sent", () => {
   );
 });
 
+it("lets the user dismiss a request notice banner", () => {
+  render(<WorkbenchPage />);
+
+  fireEvent.click(screen.getByRole("button", { name: /send/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Dismiss notice" }));
+
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
 it("applies a template into the request workbench", () => {
   render(<WorkbenchPage />);
 
   fireEvent.click(screen.getByRole("button", { name: "GitHub API" }));
 
-  expect(screen.getByLabelText("Request method")).toHaveValue("GET");
+  expect(screen.getByLabelText("Request method")).toHaveTextContent("GET");
   expect(screen.getByLabelText("Request URL")).toHaveValue("https://api.github.com/user");
   expect(screen.getByLabelText("Request Headers")).toHaveValue(
     "Authorization: Bearer <YOUR_TOKEN>",

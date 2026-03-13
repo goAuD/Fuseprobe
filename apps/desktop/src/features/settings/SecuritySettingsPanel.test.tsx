@@ -20,7 +20,6 @@ it("prompts for confirmation before enabling unsafe local targets", async () => 
     allowUnsafeTargets: true,
     persistHistory: false,
   });
-  const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
   mockedUseSecuritySettings.mockReturnValue({
     settings: {
@@ -38,9 +37,11 @@ it("prompts for confirmation before enabling unsafe local targets", async () => 
     screen.getByRole("checkbox", { name: "Unsafe mode / Local targets" }),
   );
 
-  expect(confirmSpy).toHaveBeenCalledWith(
-    expect.stringContaining("Enable Unsafe mode / Local targets?"),
-  );
+  expect(
+    screen.getByRole("dialog", { name: /Enable Unsafe mode/i }),
+  ).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "OK" }));
 
   await waitFor(() => {
     expect(updateSettings).toHaveBeenCalledWith({
@@ -55,7 +56,6 @@ it("does not update unsafe mode when confirmation is cancelled", async () => {
     allowUnsafeTargets: true,
     persistHistory: false,
   });
-  vi.spyOn(window, "confirm").mockReturnValue(false);
 
   mockedUseSecuritySettings.mockReturnValue({
     settings: {
@@ -73,9 +73,47 @@ it("does not update unsafe mode when confirmation is cancelled", async () => {
     screen.getByRole("checkbox", { name: "Unsafe mode / Local targets" }),
   );
 
+  // Modal appears
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
   await waitFor(() => {
     expect(updateSettings).not.toHaveBeenCalled();
   });
+
+  // Modal dismissed
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+it("dismisses the confirmation dialog with Escape", async () => {
+  const updateSettings = vi.fn().mockResolvedValue({
+    allowUnsafeTargets: true,
+    persistHistory: false,
+  });
+
+  mockedUseSecuritySettings.mockReturnValue({
+    settings: {
+      allowUnsafeTargets: false,
+      persistHistory: false,
+    },
+    isLoading: false,
+    error: null,
+    updateSettings,
+  });
+
+  render(<SecuritySettingsPanel />);
+
+  fireEvent.click(
+    screen.getByRole("checkbox", { name: "Unsafe mode / Local targets" }),
+  );
+
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+
+  await waitFor(() => {
+    expect(updateSettings).not.toHaveBeenCalled();
+  });
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 
 it("prompts for confirmation before enabling history persistence", async () => {
@@ -83,7 +121,6 @@ it("prompts for confirmation before enabling history persistence", async () => {
     allowUnsafeTargets: false,
     persistHistory: true,
   });
-  const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
   mockedUseSecuritySettings.mockReturnValue({
     settings: {
@@ -101,9 +138,11 @@ it("prompts for confirmation before enabling history persistence", async () => {
     screen.getByRole("checkbox", { name: "History persistence" }),
   );
 
-  expect(confirmSpy).toHaveBeenCalledWith(
-    expect.stringContaining("Enable History persistence?"),
-  );
+  expect(
+    screen.getByRole("dialog", { name: /Enable History persistence/i }),
+  ).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "OK" }));
 
   await waitFor(() => {
     expect(updateSettings).toHaveBeenCalledWith({

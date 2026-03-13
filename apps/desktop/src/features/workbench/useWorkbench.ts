@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocale } from "../i18n/locale";
 import type { SendRequestResult } from "../../lib/contracts";
 import {
   applyAuthPresetHeaders,
@@ -7,32 +8,35 @@ import {
 } from "../presets/presets";
 import { sendRequest } from "../../lib/tauri";
 
-const IDLE_RESPONSE: SendRequestResult = {
-  request: {
-    method: "GET",
-    url: "",
-    body: "",
-    headers: "",
-  },
-  statusLine: "Idle",
-  durationMs: 0,
-  sizeLabel: "0 B",
-  contentType: "pending",
-  charset: "utf-8",
-  responseText: "Send a request to preview the desktop request flow.",
-  rawResponseText: "",
-  responseHeaders: {},
-  policyNote: "redirects disabled by policy",
-  persistenceWarning: null,
-};
-
 export function useWorkbench() {
+  const { strings } = useLocale();
   const requestInFlightRef = useRef(false);
+  const idleResponse = useMemo<SendRequestResult>(
+    () => ({
+      request: {
+        method: "GET",
+        url: "",
+        body: "",
+        headers: "",
+      },
+      statusLine: strings.hooks.idleStatus,
+      durationMs: 0,
+      sizeLabel: "0 B",
+      contentType: "pending",
+      charset: "utf-8",
+      responseText: strings.hooks.idleResponseText,
+      rawResponseText: "",
+      responseHeaders: {},
+      policyNote: "redirects disabled by policy",
+      persistenceWarning: null,
+    }),
+    [strings.hooks.idleResponseText, strings.hooks.idleStatus],
+  );
   const [method, setMethod] = useState("GET");
   const [url, setUrl] = useState("");
   const [body, setBody] = useState("");
   const [headers, setHeaders] = useState("");
-  const [response, setResponse] = useState<SendRequestResult>(IDLE_RESPONSE);
+  const [response, setResponse] = useState<SendRequestResult>(idleResponse);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [persistenceWarning, setPersistenceWarning] = useState<string | null>(null);
@@ -41,14 +45,27 @@ export function useWorkbench() {
   const [activeAuthPresetName, setActiveAuthPresetName] = useState("No Auth");
   const [authDescription, setAuthDescription] = useState("No authentication");
 
+  useEffect(() => {
+    setResponse((currentResponse) => {
+      const isIdleState =
+        currentResponse.request.url === "" &&
+        currentResponse.durationMs === 0 &&
+        currentResponse.sizeLabel === "0 B" &&
+        currentResponse.contentType === "pending" &&
+        currentResponse.rawResponseText === "";
+
+      return isIdleState ? idleResponse : currentResponse;
+    });
+  }, [idleResponse]);
+
   async function submitRequest() {
     if (!url.trim()) {
-      setError("Enter a request URL before sending.");
+      setError(strings.hooks.enterUrlBeforeSending);
       return;
     }
 
     if (requestInFlightRef.current) {
-      setError("A request is already in progress.");
+      setError(strings.hooks.requestAlreadyInProgress);
       return;
     }
 
@@ -74,7 +91,7 @@ export function useWorkbench() {
           ? requestError.message
           : typeof requestError === "string"
             ? requestError
-            : "Request failed.";
+            : strings.hooks.requestFailed;
       setError(message);
     } finally {
       requestInFlightRef.current = false;

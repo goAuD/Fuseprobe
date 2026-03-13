@@ -187,10 +187,19 @@ The first implementation slice of that gate is now complete:
 - explicit desktop security controls with confirmations and user-facing security guidance for the Tauri shell
 - packaging-gate verification completed with a successful `tauri build` release-candidate executable on Windows
 
+Post-gate UI hardening has also landed on the canonical desktop shell:
+
+- real locale-backed `en / de / hu` shell strings instead of a decorative language selector
+- reusable dropdown controls for request method and language selection
+- accessible security confirmation modal behavior with keyboard handling and focus return
+- dismissible non-blocking request/persistence notices instead of centered overlay alerts
+- a general clean-code pass across the Tauri shell UI surface so the cut-over branch does not ship obvious UI debt
+
 The next active slice is:
 
 - legacy Python/Tkinter shell removal at packaging cut-over
 - release/versioning decisions for the first fully canonical Tauri desktop release
+- final logo asset replacement after the current temporary ASCII/SVG brand mark placeholder
 
 ## Priorities
 
