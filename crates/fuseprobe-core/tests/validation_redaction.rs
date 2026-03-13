@@ -1,4 +1,6 @@
-use fuseprobe_core::{redact_url, validate_url, validate_url_with_unsafe_targets};
+use fuseprobe_core::{
+    redact_url, redact_url_for_history, validate_url, validate_url_with_unsafe_targets,
+};
 
 #[test]
 fn rejects_urls_with_embedded_credentials() {
@@ -42,6 +44,17 @@ fn redacts_sensitive_query_values() {
     assert!(redacted.contains("token=%2A%2A%2A"));
     assert!(redacted.contains("api_key=%2A%2A%2A"));
     assert!(redacted.contains("safe=yes"));
+}
+
+#[test]
+fn redacts_all_query_values_and_fragments_for_history() {
+    let redacted =
+        redact_url_for_history("https://api.example.com/items?page=2&token=secret#section");
+
+    assert!(redacted.contains("page=%2A%2A%2A"));
+    assert!(redacted.contains("token=%2A%2A%2A"));
+    assert!(!redacted.contains("page=2"));
+    assert!(!redacted.contains("#section"));
 }
 
 #[test]

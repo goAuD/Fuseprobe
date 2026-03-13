@@ -49,6 +49,7 @@ Completed so far:
 - persisted desktop security settings now exist across the Rust core, Tauri commands, and React hook layer with safe defaults
 - fail-open desktop bridge behavior has been removed so request and history actions now surface real bridge errors instead of fabricating success
 - local, private, link-local, and metadata targets are now blocked by default in the Rust request path unless the persisted unsafe-mode setting is enabled
+- history persistence is now opt-in in the desktop state layer, and persisted URLs now strip fragments and redact every query value before disk storage
 
 Still pending before MVP parity:
 

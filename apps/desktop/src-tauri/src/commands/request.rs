@@ -4,7 +4,7 @@ use fuseprobe_core::{execute_request, HistoryEntry, RequestOptions};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use crate::state::AppState;
+use crate::state::{sync_history_persistence, AppState};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SendRequestPayload {
@@ -35,11 +35,13 @@ pub async fn send_request(
     payload: SendRequestPayload,
 ) -> Result<SendRequestResult, String> {
     let payload_for_core = payload.clone();
-    let allow_unsafe_targets = state
+    let settings = state
         .settings
         .lock()
         .map_err(|_| "security settings are unavailable".to_string())?
-        .allow_unsafe_targets;
+        .clone();
+    let allow_unsafe_targets = settings.allow_unsafe_targets;
+    let persist_history = settings.persist_history;
     let options = RequestOptions {
         allow_unsafe_targets,
         ..RequestOptions::default()
@@ -70,7 +72,8 @@ pub async fn send_request(
         .lock()
         .map_err(|_| "history state is unavailable".to_string())?;
     history.add(history_entry);
-    let _ = history.save_to_file(&state.history_file);
+    sync_history_persistence(&history, &state.history_file, persist_history)
+        .map_err(|error| format!("failed to sync history persistence: {error}"))?;
 
     Ok(SendRequestResult {
         request: payload,

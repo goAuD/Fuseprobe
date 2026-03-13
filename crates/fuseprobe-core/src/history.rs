@@ -5,7 +5,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::redact_url;
+use crate::redact_url_for_history;
 
 const DEFAULT_MAX_ITEMS: usize = 100;
 
@@ -22,7 +22,7 @@ impl HistoryEntry {
     pub fn new(method: &str, url: &str) -> Self {
         Self {
             method: coerce_method(Some(method)),
-            url: redact_url(url),
+            url: redact_url_for_history(url),
             status: 0,
             elapsed: 0.0,
             time: "--:--:--".to_string(),
@@ -53,7 +53,7 @@ impl HistoryStore {
 
     pub fn add(&mut self, entry: HistoryEntry) {
         self.entries.push(HistoryEntry {
-            url: redact_url(&entry.url),
+            url: redact_url_for_history(&entry.url),
             ..entry
         });
         if self.entries.len() > self.max_items {
@@ -143,7 +143,7 @@ fn normalize_entry(value: Value) -> HistoryEntry {
                 .and_then(|item| item.get("method"))
                 .and_then(Value::as_str),
         ),
-        url: redact_url(&coerce_text(object.and_then(|item| item.get("url")))),
+        url: redact_url_for_history(&coerce_text(object.and_then(|item| item.get("url")))),
         status: coerce_i64(object.and_then(|item| item.get("status"))),
         elapsed: coerce_f64(object.and_then(|item| item.get("elapsed"))),
         time: coerce_time(object.and_then(|item| item.get("time"))),

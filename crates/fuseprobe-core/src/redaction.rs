@@ -47,6 +47,35 @@ pub fn redact_url(input: &str) -> String {
     parsed.to_string()
 }
 
+pub fn redact_url_for_history(input: &str) -> String {
+    if input.is_empty() {
+        return input.to_string();
+    }
+
+    let Ok(mut parsed) = Url::parse(input) else {
+        return input.to_string();
+    };
+
+    parsed.set_fragment(None);
+
+    if parsed.query().is_none() {
+        return parsed.to_string();
+    }
+
+    let redacted_query = parsed
+        .query_pairs()
+        .map(|(key, _)| {
+            let key = key.into_owned();
+            let encoded_key = encode_form_component(&key, true);
+            format!("{encoded_key}=%2A%2A%2A")
+        })
+        .collect::<Vec<_>>()
+        .join("&");
+
+    parsed.set_query(Some(&redacted_query));
+    parsed.to_string()
+}
+
 fn encode_form_component(value: &str, is_key: bool) -> String {
     let serialized = if is_key {
         let mut serializer = url::form_urlencoded::Serializer::new(String::new());

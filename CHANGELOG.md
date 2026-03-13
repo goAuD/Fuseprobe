@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - persisted desktop security settings baseline with safe defaults across the Rust core, Tauri command layer, and React hook state
 - fail-closed desktop bridge behavior for request and history actions, replacing the earlier silent mock/empty fallbacks
 - deny-by-default blocking for local/private/link-local/metadata targets in the Rust request path, with persisted unsafe-mode wiring in the desktop command layer
+- opt-in desktop history persistence with session-only history by default, plus stricter persisted URL redaction that strips fragments and masks all query values
 
 ### Changed
 - License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development

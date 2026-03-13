@@ -846,6 +846,7 @@ dependencies = [
  "chrono",
  "fuseprobe-core",
  "serde",
+ "serde_json",
  "tauri",
  "tauri-build",
 ]

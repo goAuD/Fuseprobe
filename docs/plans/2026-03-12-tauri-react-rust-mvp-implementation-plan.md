@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
-**Current State:** Tasks 1 through 15 are now complete. The next active work is Task 16 and the rest of the security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
+**Current State:** Tasks 1 through 16 are now complete. The next active work is Task 17 and the rest of the security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
 
 ---
 
@@ -1345,6 +1345,8 @@ git commit -m "feat: enforce deny-by-default target policy"
 ```
 
 ### Task 16: Make History Persistence Opt-In and Tighten URL Redaction
+
+Status: Completed on 2026-03-13.
 
 **Files:**
 - Modify: `crates/fuseprobe-core/src/redaction.rs`

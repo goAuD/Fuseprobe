@@ -31,7 +31,10 @@ fn add_entry_redacts_sensitive_query_params_and_enforces_bounds() {
     ));
 
     assert_eq!(store.all().len(), 2);
-    assert_eq!(store.all()[0].url, "https://api.example.com/data?id=2");
+    assert_eq!(
+        store.all()[0].url,
+        "https://api.example.com/data?id=%2A%2A%2A"
+    );
     assert!(store.all()[1].url.contains("api_key=%2A%2A%2A"));
 }
 
@@ -179,6 +182,25 @@ fn save_to_file_round_trips_history_entries() {
     let loaded = HistoryStore::load_from_files(&history_file, &legacy_history_file);
     assert_eq!(loaded.all().len(), 1);
     assert!(loaded.all()[0].url.contains("access_token=%2A%2A%2A"));
+}
+
+#[test]
+fn save_to_file_strips_fragments_from_persisted_history() {
+    let temp_dir = TestDir::new("save-history-fragment");
+    let history_file = temp_dir.path().join("history.json");
+    let mut store = HistoryStore::new();
+
+    store.add(HistoryEntry::new(
+        "GET",
+        "https://api.example.com/items?page=2#secret-fragment",
+    ));
+    store
+        .save_to_file(&history_file)
+        .expect("save history to disk");
+
+    let saved_payload = fs::read_to_string(&history_file).expect("read saved history");
+    assert!(saved_payload.contains("page=%2A%2A%2A"));
+    assert!(!saved_payload.contains("#secret-fragment"));
 }
 
 struct TestDir {
