@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - deny-by-default blocking for local/private/link-local/metadata targets in the Rust request path, with persisted unsafe-mode wiring in the desktop command layer
 - opt-in desktop history persistence with session-only history by default, plus stricter persisted URL redaction that strips fragments and masks all query values
 - hardened desktop persistence path resolution under the OS config directory, with explicit legacy migration fallbacks and surfaced non-fatal persistence warnings in the React shell
+- hardened the Tauri trust boundary with a non-null production CSP, explicit desktop command allowlisting, and removal of the broad `core:default` capability shortcut
 
 ### Changed
 - License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development

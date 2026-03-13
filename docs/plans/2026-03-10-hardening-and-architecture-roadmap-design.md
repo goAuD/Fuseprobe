@@ -182,10 +182,11 @@ The first implementation slice of that gate is now complete:
 - opt-in history persistence baseline
 - deterministic config-dir path resolution for desktop persistence
 - surfaced non-fatal persistence warnings in the Rust/Tauri/React desktop path
+- non-null production CSP and narrowed Tauri desktop capability scope with explicit custom-command allowlisting
 
 The next active slice is:
 
-- reinstate Tauri CSP and shrink capability scope
+- add request ceilings and single-flight backpressure
 - keep tightening the shipped Tauri boundary before packaging
 
 ## Priorities

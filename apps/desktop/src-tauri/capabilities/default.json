@@ -2,6 +2,14 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Default capability for the main Fuseprobe window.",
+  "local": true,
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "allow-send-request",
+    "allow-load-history",
+    "allow-delete-history-entry",
+    "allow-clear-history",
+    "allow-load-security-settings",
+    "allow-update-security-settings"
+  ]
 }

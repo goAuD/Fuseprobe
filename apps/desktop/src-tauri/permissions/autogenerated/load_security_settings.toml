@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-load-security-settings"
+description = "Enables the load_security_settings command without any pre-configured scope."
+commands.allow = ["load_security_settings"]
+
+[[permission]]
+identifier = "deny-load-security-settings"
+description = "Denies the load_security_settings command without any pre-configured scope."
+commands.deny = ["load_security_settings"]
