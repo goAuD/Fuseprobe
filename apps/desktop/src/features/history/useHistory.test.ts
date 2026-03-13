@@ -24,7 +24,7 @@ beforeEach(() => {
   mockedClearHistory.mockReset();
 });
 
-it("falls back to seeded history when the bridge returns no rows", async () => {
+it("stays empty when the bridge returns no rows", async () => {
   mockedLoadHistory.mockResolvedValue([]);
 
   const { result } = renderHook(() => useHistory());
@@ -33,8 +33,7 @@ it("falls back to seeded history when the bridge returns no rows", async () => {
     expect(result.current.isLoading).toBe(false);
   });
 
-  expect(result.current.entries[0]?.method).toBe("GET");
-  expect(result.current.entries[0]?.url).toContain("api.example.com/users");
+  expect(result.current.entries).toEqual([]);
 });
 
 it("uses loaded history rows when the bridge returns data", async () => {
@@ -96,6 +95,18 @@ it("reloads when the refresh token changes", async () => {
   });
 
   expect(mockedLoadHistory).toHaveBeenCalledTimes(2);
+});
+
+it("stays empty when history loading fails", async () => {
+  mockedLoadHistory.mockRejectedValue(new Error("desktop bridge unavailable"));
+
+  const { result } = renderHook(() => useHistory());
+
+  await waitFor(() => {
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  expect(result.current.entries).toEqual([]);
 });
 
 it("deletes a history row through the bridge and updates local state", async () => {
@@ -163,5 +174,30 @@ it("clears history through the bridge and empties local state", async () => {
   });
 
   expect(mockedClearHistory).toHaveBeenCalledTimes(1);
+  expect(result.current.entries).toEqual([]);
+});
+
+it("accepts an empty bridge result after deleting the final history row", async () => {
+  mockedLoadHistory.mockResolvedValue([
+    {
+      method: "GET",
+      url: "https://example.com/users",
+      status: 200,
+      elapsed: 40,
+      time: "10:00:00",
+    },
+  ]);
+  mockedDeleteHistoryEntry.mockResolvedValue([]);
+
+  const { result } = renderHook(() => useHistory());
+
+  await waitFor(() => {
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  await act(async () => {
+    await result.current.deleteEntry(0);
+  });
+
   expect(result.current.entries).toEqual([]);
 });

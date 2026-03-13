@@ -1,5 +1,9 @@
+use std::fs;
+use std::io;
+use std::path::Path;
+
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 
 use crate::redact_url;
 
@@ -70,6 +74,60 @@ impl HistoryStore {
 
     pub fn all(&self) -> &[HistoryEntry] {
         &self.entries
+    }
+
+    pub fn load_from_files(history_file: &Path, legacy_history_file: &Path) -> Self {
+        let source = if history_file.exists() {
+            history_file
+        } else if legacy_history_file.exists() {
+            legacy_history_file
+        } else {
+            return Self::new();
+        };
+
+        let payload = match fs::read_to_string(source) {
+            Ok(payload) => payload,
+            Err(_) => return Self::new(),
+        };
+
+        let value = match serde_json::from_str::<Value>(&payload) {
+            Ok(value) => value,
+            Err(_) => return Self::new(),
+        };
+
+        let rows = match value {
+            Value::Array(items) => items,
+            Value::Object(object) => object
+                .get("history")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default(),
+            _ => Vec::new(),
+        };
+
+        let mut store = Self::new();
+        for entry in Self::normalize(rows) {
+            store.add(entry);
+        }
+        store
+    }
+
+    pub fn save_to_file(&self, history_file: &Path) -> io::Result<()> {
+        if let Some(parent) = history_file.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        let temp_path = history_file.with_extension("tmp");
+        let payload = json!({ "history": self.entries });
+        let encoded = serde_json::to_vec_pretty(&payload)
+            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
+
+        fs::write(&temp_path, encoded)?;
+        if history_file.exists() {
+            fs::remove_file(history_file)?;
+        }
+        fs::rename(&temp_path, history_file)?;
+        Ok(())
     }
 
     pub fn normalize(rows: Vec<Value>) -> Vec<HistoryEntry> {

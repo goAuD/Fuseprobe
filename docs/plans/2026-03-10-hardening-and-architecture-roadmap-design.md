@@ -152,8 +152,9 @@ Completed so far:
 - added desktop history delete and clear actions in the new shell, wired through the Tauri bridge
 - added real `Response / Headers / Raw` views in the new shell, backed by live desktop response data
 - added preset application flow in the new shell so template chips now drive method, URL, and auth-header defaults in the request workbench
+- added persistent Rust-backed desktop history loading and saving, with current `~/.fuseprobe/history.json` storage and legacy `.nanoman` fallback loading
 
-The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, response views, preset application, and local-history loading all exist in the React desktop app, but the shell is still short of parity because the Rust-side history persistence path still falls back to seeded rows when desktop loading returns empty.
+The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, response views, preset application, and local-history persistence all exist in the React desktop app. The remaining work is no longer about missing shell features; it is about closing the release-gate verification items and then moving into follow-on UX work.
 
 ## Priorities
 

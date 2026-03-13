@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - history delete and clear actions in the new desktop shell, backed by the Tauri bridge
 - real response headers and raw response tabs in the new desktop shell
 - preset application flow in the new desktop shell, including template-driven method, URL, and auth-header defaults
+- persistent Rust-backed desktop history state in the new shell, replacing the earlier seeded fallback rows
 
 ### Changed
 - License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development

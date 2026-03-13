@@ -6,7 +6,7 @@ use state::AppState;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .manage(AppState::default())
+        .manage(AppState::load())
         .invoke_handler(tauri::generate_handler![
             commands::request::send_request,
             commands::history::load_history,

@@ -21,6 +21,7 @@ pub fn delete_history_entry(
         .lock()
         .map_err(|_| "history state is unavailable".to_string())?;
     history.delete(index);
+    let _ = history.save_to_file(&state.history_file);
     Ok(history.all().to_vec())
 }
 
@@ -31,5 +32,6 @@ pub fn clear_history(state: tauri::State<'_, AppState>) -> Result<Vec<HistoryEnt
         .lock()
         .map_err(|_| "history state is unavailable".to_string())?;
     history.clear();
+    let _ = history.save_to_file(&state.history_file);
     Ok(history.all().to_vec())
 }

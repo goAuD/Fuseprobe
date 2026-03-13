@@ -44,10 +44,12 @@ Completed so far:
 - history delete and clear actions now exist in the new shell through the Tauri bridge
 - response headers and raw response tabs now render real desktop response data
 - template chips now apply method, URL, and auth preset defaults into the desktop request workbench
+- desktop history now loads from persistent Rust-backed storage and saves back to the current Fuseprobe history path
 
 Still pending before MVP parity:
 
-- persistent Rust-backed desktop history state instead of seeded fallback rows
+- no remaining feature-level parity gaps
+- release-gate verification still needs to be closed explicitly for redirect, redaction, and response-render behavior
 
 ## Decision
 

@@ -57,11 +57,12 @@ pub async fn send_request(
         time: current_time_label(),
     };
 
-    state
+    let mut history = state
         .history
         .lock()
-        .map_err(|_| "history state is unavailable".to_string())?
-        .add(history_entry);
+        .map_err(|_| "history state is unavailable".to_string())?;
+    history.add(history_entry);
+    let _ = history.save_to_file(&state.history_file);
 
     Ok(SendRequestResult {
         request: payload,

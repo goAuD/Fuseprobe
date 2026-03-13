@@ -6,25 +6,8 @@ import {
   loadHistory,
 } from "../../lib/tauri";
 
-const FALLBACK_HISTORY: HistoryEntry[] = [
-  {
-    method: "GET",
-    url: "https://api.example.com/users",
-    status: 200,
-    elapsed: 412,
-    time: "09:41:12",
-  },
-  {
-    method: "POST",
-    url: "https://api.example.com/audit/events",
-    status: 401,
-    elapsed: 138,
-    time: "09:43:07",
-  },
-];
-
 export function useHistory(refreshToken = 0) {
-  const [entries, setEntries] = useState<HistoryEntry[]>(FALLBACK_HISTORY);
+  const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,14 +19,14 @@ export function useHistory(refreshToken = 0) {
           return;
         }
 
-        setEntries(loadedEntries.length > 0 ? loadedEntries : FALLBACK_HISTORY);
+        setEntries(loadedEntries);
       })
       .catch(() => {
         if (!isActive) {
           return;
         }
 
-        setEntries(FALLBACK_HISTORY);
+        setEntries([]);
       })
       .finally(() => {
         if (isActive) {
@@ -61,9 +44,7 @@ export function useHistory(refreshToken = 0) {
     setEntries(localNext);
 
     const bridgedEntries = await deleteHistoryEntryFromBridge(index);
-    if (bridgedEntries.length > 0) {
-      setEntries(bridgedEntries);
-    }
+    setEntries(bridgedEntries);
   }
 
   async function clearEntries() {
