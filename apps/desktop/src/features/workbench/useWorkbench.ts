@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { SendRequestResult } from "../../lib/contracts";
 import {
   applyAuthPresetHeaders,
@@ -27,6 +27,7 @@ const IDLE_RESPONSE: SendRequestResult = {
 };
 
 export function useWorkbench() {
+  const requestInFlightRef = useRef(false);
   const [method, setMethod] = useState("GET");
   const [url, setUrl] = useState("");
   const [body, setBody] = useState("");
@@ -46,6 +47,12 @@ export function useWorkbench() {
       return;
     }
 
+    if (requestInFlightRef.current) {
+      setError("A request is already in progress.");
+      return;
+    }
+
+    requestInFlightRef.current = true;
     setIsSending(true);
     setError(null);
     setPersistenceWarning(null);
@@ -57,6 +64,7 @@ export function useWorkbench() {
         body,
         headers,
       });
+      setError(null);
       setResponse(result);
       setPersistenceWarning(result.persistenceWarning);
       setHistoryRevision((revision) => revision + 1);
@@ -69,6 +77,7 @@ export function useWorkbench() {
             : "Request failed.";
       setError(message);
     } finally {
+      requestInFlightRef.current = false;
       setIsSending(false);
     }
   }

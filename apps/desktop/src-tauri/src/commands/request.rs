@@ -35,6 +35,7 @@ pub async fn send_request(
     state: tauri::State<'_, AppState>,
     payload: SendRequestPayload,
 ) -> Result<SendRequestResult, String> {
+    let _request_guard = state.try_begin_request()?;
     let payload_for_core = payload.clone();
     let settings = state
         .settings

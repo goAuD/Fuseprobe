@@ -1,6 +1,9 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Mutex,
+};
 
 use fuseprobe_core::{HistoryStore, SecuritySettings};
 
@@ -12,6 +15,7 @@ pub struct AppState {
     pub settings: Mutex<SecuritySettings>,
     pub settings_file: Option<PathBuf>,
     persistence_warning: Mutex<Option<String>>,
+    request_in_flight: AtomicBool,
 }
 
 impl AppState {
@@ -43,6 +47,7 @@ impl AppState {
             settings: Mutex::new(settings),
             settings_file,
             persistence_warning: Mutex::new(startup_warning),
+            request_in_flight: AtomicBool::new(false),
         }
     }
 
@@ -60,6 +65,27 @@ impl AppState {
             .map_err(|_| "persistence warning state is unavailable".to_string())?;
         *current = warning;
         Ok(())
+    }
+
+    pub fn try_begin_request(&self) -> Result<RequestFlightGuard<'_>, String> {
+        self.request_in_flight
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+            .map_err(|_| "A request is already in progress.".to_string())?;
+
+        Ok(RequestFlightGuard {
+            request_in_flight: &self.request_in_flight,
+        })
+    }
+}
+
+#[derive(Debug)]
+pub struct RequestFlightGuard<'a> {
+    request_in_flight: &'a AtomicBool,
+}
+
+impl Drop for RequestFlightGuard<'_> {
+    fn drop(&mut self) {
+        self.request_in_flight.store(false, Ordering::Release);
     }
 }
 
@@ -157,11 +183,12 @@ fn first_existing_path(paths: &[PathBuf]) -> Option<&Path> {
 
 #[cfg(test)]
 mod tests {
-    use super::{load_history_store, load_security_settings, sync_history_persistence};
+    use super::{load_history_store, load_security_settings, sync_history_persistence, AppState};
     use fuseprobe_core::{HistoryEntry, HistoryStore, SecuritySettings};
     use serde_json::json;
     use std::fs;
     use std::path::{Path, PathBuf};
+    use std::sync::{atomic::AtomicBool, Mutex};
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
@@ -323,6 +350,23 @@ mod tests {
         assert!(warning.is_none());
     }
 
+    #[test]
+    fn rejects_a_second_request_while_one_is_in_flight() {
+        let state = test_state();
+        let first_guard = state
+            .try_begin_request()
+            .expect("first request slot should be available");
+
+        let error = state
+            .try_begin_request()
+            .expect_err("second request slot should be rejected");
+
+        drop(first_guard);
+
+        assert_eq!(error, "A request is already in progress.");
+        assert!(state.try_begin_request().is_ok());
+    }
+
     struct TestDir {
         path: PathBuf,
     }
@@ -350,6 +394,17 @@ mod tests {
     impl Drop for TestDir {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.path);
+        }
+    }
+
+    fn test_state() -> AppState {
+        AppState {
+            history: Mutex::new(HistoryStore::new()),
+            history_file: None,
+            settings: Mutex::new(SecuritySettings::default()),
+            settings_file: None,
+            persistence_warning: Mutex::new(None),
+            request_in_flight: AtomicBool::new(false),
         }
     }
 }

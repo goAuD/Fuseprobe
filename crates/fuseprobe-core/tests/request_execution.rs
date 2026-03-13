@@ -1,6 +1,9 @@
 use std::thread;
 
-use fuseprobe_core::{execute_request, RequestOptions, DEFAULT_MAX_RESPONSE_BYTES};
+use fuseprobe_core::{
+    execute_request, RequestOptions, DEFAULT_MAX_REQUEST_BODY_BYTES,
+    DEFAULT_MAX_REQUEST_HEADERS_BYTES, DEFAULT_MAX_RESPONSE_BYTES,
+};
 use tiny_http::{Header, Response, Server, StatusCode};
 
 #[test]
@@ -20,6 +23,53 @@ fn enforces_a_max_response_size() {
 fn keeps_a_timeout_default() {
     let options = RequestOptions::default();
     assert_eq!(options.timeout_seconds, 10);
+}
+
+#[test]
+fn rejects_oversized_request_bodies_before_network_execution() {
+    let body = "a".repeat(DEFAULT_MAX_REQUEST_BODY_BYTES + 1);
+
+    let error = execute_request(
+        "POST",
+        "https://example.com/users",
+        &body,
+        "",
+        &RequestOptions::default(),
+    )
+    .expect_err("oversized body should be rejected");
+
+    assert_eq!(
+        error,
+        format!(
+            "Request body exceeds the {} byte limit",
+            DEFAULT_MAX_REQUEST_BODY_BYTES
+        )
+    );
+}
+
+#[test]
+fn rejects_oversized_request_headers_before_header_parsing() {
+    let headers = format!(
+        "X-Long: {}",
+        "a".repeat(DEFAULT_MAX_REQUEST_HEADERS_BYTES + 1)
+    );
+
+    let error = execute_request(
+        "GET",
+        "https://example.com/users",
+        "",
+        &headers,
+        &RequestOptions::default(),
+    )
+    .expect_err("oversized headers should be rejected");
+
+    assert_eq!(
+        error,
+        format!(
+            "Request headers exceed the {} byte limit",
+            DEFAULT_MAX_REQUEST_HEADERS_BYTES
+        )
+    );
 }
 
 #[test]

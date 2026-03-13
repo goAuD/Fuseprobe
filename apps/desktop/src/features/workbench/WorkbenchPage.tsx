@@ -40,6 +40,7 @@ export default function WorkbenchPage() {
           <select
             aria-label="Request method"
             className="control method-control"
+            disabled={isSending}
             value={method}
             onChange={(event) => setMethod(event.target.value)}
           >
@@ -52,6 +53,7 @@ export default function WorkbenchPage() {
           <input
             aria-label="Request URL"
             className="control url-control"
+            disabled={isSending}
             value={url}
             onChange={(event) => setUrl(event.target.value)}
             placeholder="https://api.example.com/users?limit=20"
@@ -59,6 +61,7 @@ export default function WorkbenchPage() {
           <button
             className="control send-control"
             type="button"
+            disabled={isSending}
             onClick={() => void submitRequest()}
           >
             {isSending ? "Sending..." : "Send"}
@@ -86,6 +89,7 @@ export default function WorkbenchPage() {
           <RequestEditor
             body={body}
             headers={headers}
+            isSending={isSending}
             activeTemplateName={activeTemplateName}
             activeAuthPresetName={activeAuthPresetName}
             authDescription={authDescription}

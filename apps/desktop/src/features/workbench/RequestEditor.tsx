@@ -1,6 +1,7 @@
 interface RequestEditorProps {
   body: string;
   headers: string;
+  isSending: boolean;
   activeTemplateName: string | null;
   activeAuthPresetName: string;
   authDescription: string;
@@ -11,6 +12,7 @@ interface RequestEditorProps {
 export default function RequestEditor({
   body,
   headers,
+  isSending,
   activeTemplateName,
   activeAuthPresetName,
   authDescription,
@@ -40,6 +42,7 @@ export default function RequestEditor({
         <textarea
           id="request-body"
           className="editor-input"
+          disabled={isSending}
           value={body}
           onChange={(event) => onBodyChange(event.target.value)}
           placeholder='{"include":["profile"]}'
@@ -53,6 +56,7 @@ export default function RequestEditor({
         <textarea
           id="request-headers"
           className="editor-input editor-input-compact"
+          disabled={isSending}
           value={headers}
           onChange={(event) => onHeadersChange(event.target.value)}
           placeholder={"Accept: application/json\nX-Workspace: local-dev"}

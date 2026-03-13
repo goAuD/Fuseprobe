@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
-**Current State:** Tasks 1 through 18 are now complete. The next active work is Task 19 and the rest of the security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
+**Current State:** Tasks 1 through 19 are now complete. The next active work is Task 20 and the rest of the security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
 
 ---
 
@@ -1548,6 +1548,8 @@ git commit -m "hardening: tighten tauri csp and capabilities"
 ```
 
 ### Task 19: Add Request Input Ceilings and Single-Flight Backpressure
+
+Status: Completed on 2026-03-13.
 
 **Files:**
 - Modify: `crates/fuseprobe-core/src/request.rs`

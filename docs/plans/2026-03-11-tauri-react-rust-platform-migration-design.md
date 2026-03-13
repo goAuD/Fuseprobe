@@ -52,6 +52,7 @@ Completed so far:
 - history persistence is now opt-in in the desktop state layer, and persisted URLs now strip fragments and redact every query value before disk storage
 - desktop persistence now resolves through the OS config directory, carries legacy migration fallbacks explicitly, and surfaces non-fatal persistence warnings back into the React shell instead of hiding them
 - the shipped desktop shell now has an explicit custom-command allowlist and a non-null production CSP instead of the earlier `core:default` capability and disabled CSP shortcut
+- the Rust request path now rejects oversized request bodies and header blocks before parsing or network execution, and the desktop shell now enforces single-flight request execution with disabled send controls during active work
 
 Still pending before MVP parity:
 

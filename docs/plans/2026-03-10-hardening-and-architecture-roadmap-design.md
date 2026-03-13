@@ -183,10 +183,11 @@ The first implementation slice of that gate is now complete:
 - deterministic config-dir path resolution for desktop persistence
 - surfaced non-fatal persistence warnings in the Rust/Tauri/React desktop path
 - non-null production CSP and narrowed Tauri desktop capability scope with explicit custom-command allowlisting
+- request body/header ceiling enforcement in the Rust core and single-flight desktop request backpressure with disabled send-state UX
 
 The next active slice is:
 
-- add request ceilings and single-flight backpressure
+- add explicit security toggles, confirmations, and user-facing docs
 - keep tightening the shipped Tauri boundary before packaging
 
 ## Priorities

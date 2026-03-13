@@ -15,11 +15,15 @@ use serde_json::Value;
 use crate::{format_response_body, redact_url, validate_url_with_unsafe_targets};
 
 pub const DEFAULT_MAX_RESPONSE_BYTES: usize = 1024 * 1024;
+pub const DEFAULT_MAX_REQUEST_BODY_BYTES: usize = 256 * 1024;
+pub const DEFAULT_MAX_REQUEST_HEADERS_BYTES: usize = 32 * 1024;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RequestOptions {
     pub follow_redirects: bool,
     pub max_response_bytes: usize,
+    pub max_request_body_bytes: usize,
+    pub max_request_headers_bytes: usize,
     pub timeout_seconds: u64,
     pub allow_unsafe_targets: bool,
 }
@@ -45,6 +49,8 @@ impl Default for RequestOptions {
         Self {
             follow_redirects: false,
             max_response_bytes: DEFAULT_MAX_RESPONSE_BYTES,
+            max_request_body_bytes: DEFAULT_MAX_REQUEST_BODY_BYTES,
+            max_request_headers_bytes: DEFAULT_MAX_REQUEST_HEADERS_BYTES,
             timeout_seconds: 10,
             allow_unsafe_targets: false,
         }
@@ -59,6 +65,7 @@ pub fn execute_request(
     options: &RequestOptions,
 ) -> Result<ExecutedResponse, String> {
     validate_url_with_unsafe_targets(url, options.allow_unsafe_targets)?;
+    validate_input_sizes(payload, headers_text, options)?;
 
     let method = parse_method(method)?;
     let json_payload = parse_json_payload(payload)?;
@@ -108,6 +115,30 @@ pub fn execute_request(
         byte_count: formatted.byte_count,
         charset: formatted.charset,
     })
+}
+
+fn validate_input_sizes(
+    payload: &str,
+    headers_text: &str,
+    options: &RequestOptions,
+) -> Result<(), String> {
+    let payload_len = payload.len();
+    if payload_len > options.max_request_body_bytes {
+        return Err(format!(
+            "Request body exceeds the {} byte limit",
+            options.max_request_body_bytes
+        ));
+    }
+
+    let headers_len = headers_text.len();
+    if headers_len > options.max_request_headers_bytes {
+        return Err(format!(
+            "Request headers exceed the {} byte limit",
+            options.max_request_headers_bytes
+        ));
+    }
+
+    Ok(())
 }
 
 fn build_client(options: &RequestOptions) -> Result<Client, String> {

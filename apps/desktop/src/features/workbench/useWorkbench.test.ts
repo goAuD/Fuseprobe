@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { useWorkbench } from "./useWorkbench";
 import { sendRequest } from "../../lib/tauri";
@@ -88,6 +88,62 @@ it("surfaces string-based request errors from the desktop bridge", async () => {
   );
 });
 
+it("prevents a second submit while a request is already in progress", async () => {
+  let resolveRequest: ((value: SendRequestReturn) => void) | null = null;
+  mockedSendRequest.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        resolveRequest = resolve;
+      }),
+  );
+
+  const { result } = renderHook(() => useWorkbench());
+
+  act(() => {
+    result.current.setUrl("https://example.com");
+  });
+
+  await act(async () => {
+    void result.current.submitRequest();
+  });
+
+  expect(result.current.isSending).toBe(true);
+
+  await act(async () => {
+    await result.current.submitRequest();
+  });
+
+  expect(mockedSendRequest).toHaveBeenCalledTimes(1);
+  expect(result.current.error).toBe("A request is already in progress.");
+
+  await act(async () => {
+    resolveRequest?.({
+      request: {
+        method: "GET",
+        url: "https://example.com",
+        body: "",
+        headers: "",
+      },
+      statusLine: "200 OK",
+      durationMs: 12,
+      sizeLabel: "42 B",
+      contentType: "application/json",
+      charset: "utf-8",
+      responseText: "{\"ok\":true}",
+      rawResponseText: "{\"ok\":true}",
+      responseHeaders: {},
+      policyNote: "redirects disabled by policy",
+      persistenceWarning: null,
+    });
+  });
+
+  await waitFor(() => {
+    expect(result.current.isSending).toBe(false);
+  });
+
+  expect(result.current.error).toBeNull();
+});
+
 it("applies template defaults without keeping stale auth headers", () => {
   const { result } = renderHook(() => useWorkbench());
 
@@ -105,3 +161,5 @@ it("applies template defaults without keeping stale auth headers", () => {
   expect(result.current.activeAuthPresetName).toBe("Bearer Token");
   expect(result.current.authDescription).toBe("JWT or OAuth2 bearer token");
 });
+
+type SendRequestReturn = Awaited<ReturnType<typeof sendRequest>>;
