@@ -158,6 +158,16 @@ select.method-control {
   padding: 18px 0 0;
 }
 
+.shell-alert {
+  margin: 0 0 -2px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 117, 117, 0.18);
+  background: rgba(255, 117, 117, 0.08);
+  color: #ffb0b0;
+  font-size: 13px;
+}
+
 .sidebar-column,
 .content-column {
   display: grid;
@@ -437,6 +447,16 @@ select.method-control {
   border-radius: 16px;
   border: 1px dashed rgba(255, 255, 255, 0.08);
   color: #7f8c85;
+  font-size: 12px;
+}
+
+.history-error {
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 117, 117, 0.18);
+  background: rgba(255, 117, 117, 0.08);
+  color: #ffb0b0;
   font-size: 12px;
 }
 

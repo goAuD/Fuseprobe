@@ -9,6 +9,16 @@ it("shows the send action and response region together", () => {
   expect(screen.getByLabelText("response-panel")).toBeInTheDocument();
 });
 
+it("shows an inline alert when the request cannot be sent", () => {
+  render(<WorkbenchPage />);
+
+  fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Enter a request URL before sending.",
+  );
+});
+
 it("applies a template into the request workbench", () => {
   render(<WorkbenchPage />);
 

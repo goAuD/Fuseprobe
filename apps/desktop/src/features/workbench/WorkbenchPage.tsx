@@ -72,6 +72,11 @@ export default function WorkbenchPage() {
       </header>
 
       <section className="workspace-grid">
+        {error ? (
+          <p className="shell-alert" role="alert">
+            {error}
+          </p>
+        ) : null}
         <div className="sidebar-column">
           <RequestEditor
             body={body}

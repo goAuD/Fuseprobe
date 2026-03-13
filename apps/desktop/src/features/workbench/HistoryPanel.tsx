@@ -12,7 +12,8 @@ export default function HistoryPanel({
   activeTemplateName,
   onApplyTemplate,
 }: HistoryPanelProps) {
-  const { entries, isLoading, deleteEntry, clearEntries } = useHistory(refreshToken);
+  const { entries, isLoading, error, deleteEntry, clearEntries } =
+    useHistory(refreshToken);
 
   return (
     <aside className="panel history-panel" aria-label="history-panel">
@@ -47,7 +48,11 @@ export default function HistoryPanel({
       </div>
 
       <div className="history-list">
-        {isLoading ? (
+        {error ? (
+          <p className="history-error" role="alert">
+            {error}
+          </p>
+        ) : isLoading ? (
           <p className="history-empty">Loading local history...</p>
         ) : entries.length === 0 ? (
           <p className="history-empty">History is empty.</p>

@@ -47,6 +47,7 @@ Completed so far:
 - desktop history now loads from persistent Rust-backed storage and saves back to the current Fuseprobe history path
 - release-gate verification is now explicitly covered for redirect policy, history redaction, binary fallback, and formatted JSON response rendering
 - persisted desktop security settings now exist across the Rust core, Tauri commands, and React hook layer with safe defaults
+- fail-open desktop bridge behavior has been removed so request and history actions now surface real bridge errors instead of fabricating success
 
 Still pending before MVP parity:
 

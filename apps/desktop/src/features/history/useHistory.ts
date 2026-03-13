@@ -9,9 +9,12 @@ import {
 export function useHistory(refreshToken = 0) {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
+    setIsLoading(true);
+    setError(null);
 
     void loadHistory()
       .then((loadedEntries) => {
@@ -21,12 +24,19 @@ export function useHistory(refreshToken = 0) {
 
         setEntries(loadedEntries);
       })
-      .catch(() => {
+      .catch((loadError) => {
         if (!isActive) {
           return;
         }
 
         setEntries([]);
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : typeof loadError === "string"
+              ? loadError
+              : "Failed to load desktop history.",
+        );
       })
       .finally(() => {
         if (isActive) {
@@ -40,18 +50,38 @@ export function useHistory(refreshToken = 0) {
   }, [refreshToken]);
 
   async function deleteEntry(index: number) {
-    const localNext = entries.filter((_, entryIndex) => entryIndex !== index);
-    setEntries(localNext);
+    setError(null);
 
-    const bridgedEntries = await deleteHistoryEntryFromBridge(index);
-    setEntries(bridgedEntries);
+    try {
+      const bridgedEntries = await deleteHistoryEntryFromBridge(index);
+      setEntries(bridgedEntries);
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : typeof deleteError === "string"
+            ? deleteError
+            : "Failed to remove history entry.",
+      );
+    }
   }
 
   async function clearEntries() {
-    setEntries([]);
-    const bridgedEntries = await clearHistoryFromBridge();
-    setEntries(bridgedEntries);
+    setError(null);
+
+    try {
+      const bridgedEntries = await clearHistoryFromBridge();
+      setEntries(bridgedEntries);
+    } catch (clearError) {
+      setError(
+        clearError instanceof Error
+          ? clearError.message
+          : typeof clearError === "string"
+            ? clearError
+            : "Failed to clear history.",
+      );
+    }
   }
 
-  return { entries, isLoading, deleteEntry, clearEntries };
+  return { entries, isLoading, error, deleteEntry, clearEntries };
 }

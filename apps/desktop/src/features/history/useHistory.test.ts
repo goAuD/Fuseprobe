@@ -107,6 +107,7 @@ it("stays empty when history loading fails", async () => {
   });
 
   expect(result.current.entries).toEqual([]);
+  expect(result.current.error).toBe("desktop bridge unavailable");
 });
 
 it("deletes a history row through the bridge and updates local state", async () => {
@@ -200,4 +201,56 @@ it("accepts an empty bridge result after deleting the final history row", async 
   });
 
   expect(result.current.entries).toEqual([]);
+});
+
+it("keeps the current entries when deleting through the bridge fails", async () => {
+  mockedLoadHistory.mockResolvedValue([
+    {
+      method: "GET",
+      url: "https://example.com/users",
+      status: 200,
+      elapsed: 40,
+      time: "10:00:00",
+    },
+  ]);
+  mockedDeleteHistoryEntry.mockRejectedValue(new Error("delete failed"));
+
+  const { result } = renderHook(() => useHistory());
+
+  await waitFor(() => {
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  await act(async () => {
+    await result.current.deleteEntry(0);
+  });
+
+  expect(result.current.entries).toHaveLength(1);
+  expect(result.current.error).toBe("delete failed");
+});
+
+it("keeps the current entries when clearing through the bridge fails", async () => {
+  mockedLoadHistory.mockResolvedValue([
+    {
+      method: "GET",
+      url: "https://example.com/users",
+      status: 200,
+      elapsed: 40,
+      time: "10:00:00",
+    },
+  ]);
+  mockedClearHistory.mockRejectedValue(new Error("clear failed"));
+
+  const { result } = renderHook(() => useHistory());
+
+  await waitFor(() => {
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  await act(async () => {
+    await result.current.clearEntries();
+  });
+
+  expect(result.current.entries).toHaveLength(1);
+  expect(result.current.error).toBe("clear failed");
 });

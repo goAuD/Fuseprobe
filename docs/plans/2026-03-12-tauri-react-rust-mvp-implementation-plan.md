@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
-**Current State:** Tasks 1 through 13 are now complete. The next active work is Task 14 and the rest of the security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
+**Current State:** Tasks 1 through 14 are now complete. The next active work is Task 15 and the rest of the security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
 
 ---
 
@@ -1194,6 +1194,8 @@ git commit -m "feat: add persisted desktop security settings"
 ```
 
 ### Task 14: Remove Fail-Open Frontend Fallbacks
+
+Status: Completed on 2026-03-13.
 
 **Files:**
 - Modify: `apps/desktop/src/lib/tauri.ts`
