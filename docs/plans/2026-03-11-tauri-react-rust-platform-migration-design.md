@@ -52,6 +52,10 @@ Still pending before MVP parity:
 - no remaining feature-level parity gaps
 - no remaining release-gate verification gaps for the MVP baseline
 
+The next active work is no longer feature parity. It is the post-MVP security hardening gate tracked in:
+
+- `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
+
 ## Decision
 
 Fuseprobe should move to:
@@ -109,6 +113,14 @@ Additional direction confirmed during design:
 - cross-platform packaging is a goal from the beginning
 - a future CLI is desirable, but not part of the first migration release
 - the CLI should later reuse the same Rust core rather than become a separate implementation
+
+Additional security direction confirmed after the MVP parity pass:
+
+- local, private, link-local, and metadata targets should be blocked by default
+- those targets should only be available behind an explicit persisted `Unsafe mode / Local targets` setting
+- history persistence should be off by default and only enabled explicitly by the user
+- the shipped desktop shell should fail closed rather than fabricating mock success
+- the legacy Python/Tkinter shell should be removed before packaging once the Tauri shell clears the security gate
 
 ## Scope Strategy
 
@@ -251,6 +263,21 @@ Only after the MVP shell is stable:
 - help and guidance surfaces
 - refined visual language
 - eventual CLI consumer of the Rust core
+
+### Phase 5: Security Hardening Gate Before Packaging
+
+Before packaging and before removing the legacy shell:
+
+- remove fail-open desktop bridge behavior
+- add persisted security settings
+- enforce deny-by-default local/private target policy
+- make history persistence opt-in
+- tighten Tauri CSP and capability scope
+- add explicit warnings, confirmations, and user-facing security docs
+
+The canonical execution order for this phase belongs in:
+
+- `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
 
 ## UI Direction
 

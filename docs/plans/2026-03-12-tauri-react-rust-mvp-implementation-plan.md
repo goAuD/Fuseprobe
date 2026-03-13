@@ -8,6 +8,8 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
+**Current State:** Tasks 1 through 12 are now complete. The next active work is a security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
+
 ---
 
 ## Canonical Role
@@ -1062,3 +1064,625 @@ git commit -m "docs: record tauri mvp migration status"
 - Prefer parity and stability over feature growth.
 - Keep the first Rust implementation explicit and boring.
 - If a behavior is ambiguous, compare against the Python tests before deciding.
+
+---
+
+## Post-MVP Security Hardening Gate
+
+This is now the first-priority workstream.
+
+Reason:
+
+- the new shell is functionally credible
+- the Tauri trust boundary is now the highest-risk surface
+- packaging should stay blocked until these hardening tasks are complete
+- the Python/Tkinter reference app should remain in the repo only until this gate and the packaging cut-over are done
+
+Security decisions already approved:
+
+- deny local, private, link-local, and metadata targets by default
+- allow those targets only behind an explicit persisted `Unsafe mode / Local targets` setting
+- require an explicit confirmation before enabling that setting
+- keep history persistence off by default
+- require an explicit confirmation before enabling history persistence
+- remove fail-open frontend mock behavior from the shipped desktop shell
+- document these defaults in user-facing docs as intentional security design choices
+
+### Task 13: Add Persisted Desktop Security Settings
+
+**Files:**
+- Create: `crates/fuseprobe-core/src/settings.rs`
+- Modify: `crates/fuseprobe-core/src/lib.rs`
+- Create: `crates/fuseprobe-core/tests/settings_store.rs`
+- Create: `apps/desktop/src-tauri/src/commands/settings.rs`
+- Modify: `apps/desktop/src-tauri/src/commands/mod.rs`
+- Modify: `apps/desktop/src-tauri/src/lib.rs`
+- Modify: `apps/desktop/src-tauri/src/state.rs`
+- Modify: `apps/desktop/src/lib/contracts.ts`
+- Modify: `apps/desktop/src/lib/tauri.ts`
+- Create: `apps/desktop/src/features/settings/useSecuritySettings.ts`
+- Create: `apps/desktop/src/features/settings/useSecuritySettings.test.ts`
+
+**Step 1: Write the failing settings tests**
+
+In `crates/fuseprobe-core/tests/settings_store.rs`:
+
+```rust
+use fuseprobe_core::SecuritySettings;
+
+#[test]
+fn defaults_to_safe_settings() {
+    let settings = SecuritySettings::default();
+    assert!(!settings.allow_unsafe_targets);
+    assert!(!settings.persist_history);
+}
+```
+
+In `apps/desktop/src/features/settings/useSecuritySettings.test.ts`:
+
+```ts
+import { renderHook } from "@testing-library/react";
+import { useSecuritySettings } from "./useSecuritySettings";
+
+it("starts with security-first defaults", async () => {
+  const { result } = renderHook(() => useSecuritySettings());
+  expect(result.current.settings.allowUnsafeTargets).toBe(false);
+  expect(result.current.settings.persistHistory).toBe(false);
+});
+```
+
+**Step 2: Run tests to verify they fail**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-core settings_store
+npm --prefix apps/desktop test -- --run src/features/settings/useSecuritySettings.test.ts
+```
+
+Expected: FAIL because the settings model and bridge do not exist yet.
+
+**Step 3: Implement the minimal persisted settings model**
+
+In `crates/fuseprobe-core/src/settings.rs`:
+
+```rust
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct SecuritySettings {
+    pub allow_unsafe_targets: bool,
+    pub persist_history: bool,
+}
+
+impl Default for SecuritySettings {
+    fn default() -> Self {
+        Self {
+            allow_unsafe_targets: false,
+            persist_history: false,
+        }
+    }
+}
+```
+
+Load and save this through the Tauri state layer, and expose:
+
+- `load_security_settings`
+- `update_security_settings`
+
+The frontend hook should become the single source of truth for reading and updating these settings.
+
+**Step 4: Run tests to verify they pass**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-core settings_store
+npm --prefix apps/desktop test -- --run src/features/settings/useSecuritySettings.test.ts
+```
+
+Expected: PASS
+
+**Step 5: Commit**
+
+```bash
+git add crates/fuseprobe-core apps/desktop
+git commit -m "feat: add persisted desktop security settings"
+```
+
+### Task 14: Remove Fail-Open Frontend Fallbacks
+
+**Files:**
+- Modify: `apps/desktop/src/lib/tauri.ts`
+- Modify: `apps/desktop/src/features/workbench/useWorkbench.ts`
+- Modify: `apps/desktop/src/features/history/useHistory.ts`
+- Modify: `apps/desktop/src/features/workbench/WorkbenchPage.tsx`
+- Modify: `apps/desktop/src/lib/tauri.test.ts`
+- Modify: `apps/desktop/src/features/workbench/useWorkbench.test.ts`
+- Modify: `apps/desktop/src/features/history/useHistory.test.ts`
+
+**Step 1: Write the failing bridge tests**
+
+Add tests that assert:
+
+- `sendRequest(...)` rejects if the Tauri command rejects
+- `loadHistory()` rejects instead of returning a silent empty array
+- the workbench and history hooks surface a visible error state instead of fabricating success
+
+Example expectation in `apps/desktop/src/lib/tauri.test.ts`:
+
+```ts
+it("rethrows native request failures instead of returning a mock response", async () => {
+  vi.mocked(invoke).mockRejectedValueOnce(new Error("native request failed"));
+  await expect(
+    sendRequest({ method: "GET", url: "https://example.com", body: "", headers: "" }),
+  ).rejects.toThrow("native request failed");
+});
+```
+
+**Step 2: Run tests to verify they fail**
+
+Run:
+
+```bash
+npm --prefix apps/desktop test -- --run src/lib/tauri.test.ts src/features/workbench/useWorkbench.test.ts src/features/history/useHistory.test.ts
+```
+
+Expected: FAIL because the current bridge catches all errors and returns fake success or empty data.
+
+**Step 3: Remove the fallback behavior**
+
+- Delete `buildMockResponse(...)` from `apps/desktop/src/lib/tauri.ts`
+- Re-throw native command failures from all bridge functions
+- Add explicit error state in the workbench and history hooks
+- Render a visible inline error panel in `WorkbenchPage.tsx`
+
+The shipped desktop shell must fail closed.
+
+**Step 4: Run tests to verify they pass**
+
+Run:
+
+```bash
+npm --prefix apps/desktop test -- --run src/lib/tauri.test.ts src/features/workbench/useWorkbench.test.ts src/features/history/useHistory.test.ts
+```
+
+Expected: PASS
+
+**Step 5: Commit**
+
+```bash
+git add apps/desktop
+git commit -m "fix: remove fail-open desktop bridge fallbacks"
+```
+
+### Task 15: Enforce Deny-By-Default Local and Private Target Policy
+
+**Files:**
+- Create: `crates/fuseprobe-core/src/network_policy.rs`
+- Modify: `crates/fuseprobe-core/src/validation.rs`
+- Modify: `crates/fuseprobe-core/src/request.rs`
+- Modify: `crates/fuseprobe-core/src/lib.rs`
+- Modify: `crates/fuseprobe-core/tests/validation_redaction.rs`
+- Modify: `crates/fuseprobe-core/tests/request_execution.rs`
+- Modify: `apps/desktop/src-tauri/src/commands/request.rs`
+
+**Step 1: Write the failing policy tests**
+
+Add tests for these cases:
+
+- `http://127.0.0.1:8000` is rejected by default
+- `http://localhost:3000` is rejected by default
+- `http://169.254.169.254/latest/meta-data/` is rejected by default
+- the same targets are allowed when `allow_unsafe_targets` is true
+- redirects remain blocked if the redirect target resolves to a forbidden local/private destination
+
+Example:
+
+```rust
+#[test]
+fn rejects_loopback_targets_by_default() {
+    let err = validate_url("http://127.0.0.1:8000").unwrap_err();
+    assert!(err.contains("Unsafe mode"));
+}
+```
+
+**Step 2: Run tests to verify they fail**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-core validation_redaction
+cargo test -p fuseprobe-core request_execution
+```
+
+Expected: FAIL because loopback and private targets are currently allowed.
+
+**Step 3: Implement the policy gate**
+
+Create `crates/fuseprobe-core/src/network_policy.rs` with:
+
+- IP classification for loopback, private, link-local, unspecified, and reserved ranges
+- hostname classification for `localhost`
+- explicit metadata endpoint handling for `169.254.169.254`
+
+Extend `RequestOptions` with:
+
+```rust
+pub struct RequestOptions {
+    pub follow_redirects: bool,
+    pub max_response_bytes: usize,
+    pub timeout_seconds: u64,
+    pub allow_unsafe_targets: bool,
+}
+```
+
+When `allow_unsafe_targets` is `false`, reject those targets with a user-facing message that points to the `Unsafe mode / Local targets` setting.
+
+**Step 4: Run tests to verify they pass**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-core validation_redaction
+cargo test -p fuseprobe-core request_execution
+```
+
+Expected: PASS
+
+**Step 5: Commit**
+
+```bash
+git add crates/fuseprobe-core apps/desktop/src-tauri
+git commit -m "feat: enforce deny-by-default target policy"
+```
+
+### Task 16: Make History Persistence Opt-In and Tighten URL Redaction
+
+**Files:**
+- Modify: `crates/fuseprobe-core/src/redaction.rs`
+- Modify: `crates/fuseprobe-core/src/history.rs`
+- Modify: `crates/fuseprobe-core/tests/history_store.rs`
+- Modify: `crates/fuseprobe-core/tests/validation_redaction.rs`
+- Modify: `apps/desktop/src-tauri/src/commands/request.rs`
+- Modify: `apps/desktop/src-tauri/src/commands/history.rs`
+- Modify: `apps/desktop/src/features/history/useHistory.ts`
+- Modify: `apps/desktop/src/features/history/useHistory.test.ts`
+
+**Step 1: Write the failing tests**
+
+Add tests for:
+
+- request execution does not persist history when `persist_history` is `false`
+- history persistence only starts after the setting is enabled
+- persisted URLs strip fragments
+- persisted URLs redact every query value, not only a small sensitive-key list
+
+Example:
+
+```rust
+#[test]
+fn redacts_all_query_values_for_history() {
+    let redacted = redact_url("https://api.example.com/items?page=2&token=secret");
+    assert!(redacted.contains("page=%2A%2A%2A"));
+    assert!(redacted.contains("token=%2A%2A%2A"));
+}
+```
+
+**Step 2: Run tests to verify they fail**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-core history_store
+cargo test -p fuseprobe-core validation_redaction
+npm --prefix apps/desktop test -- --run src/features/history/useHistory.test.ts
+```
+
+Expected: FAIL because history persists unconditionally and redaction is still key-list based.
+
+**Step 3: Implement the secure history policy**
+
+- gate persistence in the Tauri commands using `SecuritySettings.persist_history`
+- keep in-memory history visible for the current session even when persistence is off
+- strip URL fragments before persistence
+- replace every stored query value with `***`
+- keep request bodies and headers out of persisted history as before
+
+Do not add a permissive “store full URLs” mode.
+
+**Step 4: Run tests to verify they pass**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-core history_store
+cargo test -p fuseprobe-core validation_redaction
+npm --prefix apps/desktop test -- --run src/features/history/useHistory.test.ts
+```
+
+Expected: PASS
+
+**Step 5: Commit**
+
+```bash
+git add crates/fuseprobe-core apps/desktop
+git commit -m "feat: make history persistence opt-in"
+```
+
+### Task 17: Harden Persistence Paths and Surface Save/Load Errors
+
+**Files:**
+- Create: `apps/desktop/src-tauri/src/paths.rs`
+- Modify: `apps/desktop/src-tauri/Cargo.toml`
+- Modify: `apps/desktop/src-tauri/src/state.rs`
+- Modify: `apps/desktop/src-tauri/src/commands/request.rs`
+- Modify: `apps/desktop/src-tauri/src/commands/history.rs`
+- Modify: `apps/desktop/src/lib/contracts.ts`
+- Modify: `apps/desktop/src/lib/tauri.ts`
+- Modify: `apps/desktop/src/features/workbench/useWorkbench.ts`
+- Modify: `apps/desktop/src/features/history/useHistory.ts`
+
+**Step 1: Write the failing path/error tests**
+
+Add Rust tests that assert:
+
+- config files resolve under the OS config directory, not the process current directory
+- save failures are returned as errors instead of being ignored
+
+Expected cases:
+
+- unwritable settings/history path returns an error
+- desktop hooks expose that error instead of silently swallowing it
+
+**Step 2: Run tests to verify they fail**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-desktop
+npm --prefix apps/desktop test -- --run src/features/workbench/useWorkbench.test.ts src/features/history/useHistory.test.ts
+```
+
+Expected: FAIL because save errors are currently discarded and config resolution still uses env-based fallbacks.
+
+**Step 3: Implement explicit path resolution and error propagation**
+
+- move desktop path logic into `apps/desktop/src-tauri/src/paths.rs`
+- replace `HOME` / `USERPROFILE` probing and current-directory fallback with `dirs::config_dir()`
+- create a deterministic Fuseprobe app folder under the config directory
+- propagate `save_to_file(...)` and `load_from_files(...)` failures back through command results
+- teach the React shell to render a non-secret-bearing persistence warning when this happens
+
+**Step 4: Run tests to verify they pass**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-desktop
+npm --prefix apps/desktop test -- --run src/features/workbench/useWorkbench.test.ts src/features/history/useHistory.test.ts
+```
+
+Expected: PASS
+
+**Step 5: Commit**
+
+```bash
+git add apps/desktop
+git commit -m "fix: harden desktop persistence paths and errors"
+```
+
+### Task 18: Reinstate Tauri CSP and Shrink Capability Scope
+
+**Files:**
+- Modify: `apps/desktop/src-tauri/tauri.conf.json`
+- Modify: `apps/desktop/src-tauri/capabilities/default.json`
+- Reference: `apps/desktop/src-tauri/gen/schemas/desktop-schema.json`
+- Modify: `apps/desktop/src/App.test.tsx` if startup behavior changes
+
+**Step 1: Add a failing config regression check**
+
+Create a small config assertion test or script that fails if:
+
+- `csp` is `null`
+- `core:default` remains in the main capability file
+
+If you prefer a test, place it in `apps/desktop/src-tauri/tests/security_config.rs` and read the JSON files there.
+
+**Step 2: Run the check to verify it fails**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-desktop security_config
+```
+
+Expected: FAIL because the current config still uses `csp: null` and `core:default`.
+
+**Step 3: Tighten the desktop boundary**
+
+- replace `csp: null` with a strict production CSP for the bundled frontend
+- keep dev convenience only in dev mode, not in shipped config
+- remove `core:default` from `capabilities/default.json`
+- add back only the minimum capability entries needed for the single main window and custom command invocation
+- document each retained permission with a short justification comment if the file format allows it
+
+Use `apps/desktop/src-tauri/gen/schemas/desktop-schema.json` as the authority when selecting exact permission names.
+
+**Step 4: Verify the shell still starts**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-desktop security_config
+cargo check -p fuseprobe-desktop
+npm --prefix apps/desktop run build
+npm --prefix apps/desktop run tauri dev
+```
+
+Expected:
+
+- config regression test passes
+- desktop crate still compiles
+- frontend build still passes
+- desktop shell opens and commands still work
+
+**Step 5: Commit**
+
+```bash
+git add apps/desktop
+git commit -m "hardening: tighten tauri csp and capabilities"
+```
+
+### Task 19: Add Request Input Ceilings and Single-Flight Backpressure
+
+**Files:**
+- Modify: `crates/fuseprobe-core/src/request.rs`
+- Modify: `crates/fuseprobe-core/tests/request_execution.rs`
+- Modify: `apps/desktop/src-tauri/src/state.rs`
+- Modify: `apps/desktop/src-tauri/src/commands/request.rs`
+- Modify: `apps/desktop/src/features/workbench/useWorkbench.ts`
+- Modify: `apps/desktop/src/features/workbench/useWorkbench.test.ts`
+- Modify: `apps/desktop/src/features/workbench/RequestEditor.tsx`
+
+**Step 1: Write the failing limit tests**
+
+Add tests that assert:
+
+- oversized request bodies are rejected before network execution
+- oversized header blocks are rejected before header parsing
+- a second `send_request` call while one is already active returns a controlled “request already in progress” error
+
+Suggested initial limits:
+
+- body text: `256 KiB`
+- header text: `32 KiB`
+- active request slots: `1`
+
+**Step 2: Run tests to verify they fail**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-core request_execution
+npm --prefix apps/desktop test -- --run src/features/workbench/useWorkbench.test.ts
+```
+
+Expected: FAIL because the current path accepts arbitrarily large strings and does not guard concurrent sends.
+
+**Step 3: Implement the hard limits**
+
+- add input-size validation in the Rust request layer before parsing or dispatch
+- add a `Semaphore` or single-flight guard to `AppState`
+- return a deterministic error when the guard is already held
+- disable the `Send` action in the workbench UI while a request is in flight
+
+Do not silently queue unbounded desktop requests.
+
+**Step 4: Run tests to verify they pass**
+
+Run:
+
+```bash
+cargo test -p fuseprobe-core request_execution
+npm --prefix apps/desktop test -- --run src/features/workbench/useWorkbench.test.ts
+```
+
+Expected: PASS
+
+**Step 5: Commit**
+
+```bash
+git add crates/fuseprobe-core apps/desktop
+git commit -m "hardening: add request ceilings and backpressure"
+```
+
+### Task 20: Add Security Toggles, Confirmations, and User-Facing Docs
+
+**Files:**
+- Create: `apps/desktop/src/features/settings/SecuritySettingsPanel.tsx`
+- Create: `apps/desktop/src/features/settings/SecuritySettingsPanel.test.tsx`
+- Modify: `apps/desktop/src/features/workbench/WorkbenchPage.tsx`
+- Modify: `apps/desktop/src/app.css`
+- Modify: `README.md`
+- Create: `docs/usage-and-security.md`
+- Modify: `docs/plans/2026-03-11-tauri-react-rust-platform-migration-design.md`
+- Modify: `docs/plans/2026-03-10-hardening-and-architecture-roadmap-design.md`
+- Modify: `CHANGELOG.md`
+
+**Step 1: Write the failing UI tests**
+
+Add tests that assert:
+
+- enabling `Unsafe mode / Local targets` prompts for confirmation
+- enabling `History persistence` prompts for confirmation
+- both toggles render visible warning copy or tooltip text
+
+**Step 2: Run tests to verify they fail**
+
+Run:
+
+```bash
+npm --prefix apps/desktop test -- --run src/features/settings/SecuritySettingsPanel.test.tsx
+```
+
+Expected: FAIL because the security settings panel does not exist yet.
+
+**Step 3: Implement the security UX**
+
+- add a visible settings section to the desktop shell
+- add a hover/focus warning affordance for each risky toggle
+- require a confirmation step before changing each setting from `false` to `true`
+- store the final setting through the persisted settings command layer
+
+Also add user-facing docs:
+
+- `README.md`: short security defaults section
+- `docs/usage-and-security.md`: concise public explanation of
+  - why local/private targets are blocked by default
+  - what `Unsafe mode / Local targets` does
+  - why history persistence is off by default
+  - what data history does and does not store when enabled
+
+Do not put internal-only threat-model detail in the user doc.
+
+**Step 4: Run the verification suite**
+
+Run:
+
+```bash
+npm --prefix apps/desktop test -- --run
+npm --prefix apps/desktop run build
+cargo test
+cargo check -p fuseprobe-desktop
+python -m pytest tests -q
+python -m ruff check src tests
+```
+
+Expected: all commands pass
+
+**Step 5: Commit**
+
+```bash
+git add apps/desktop docs README.md CHANGELOG.md
+git commit -m "docs: add desktop security controls and user guidance"
+```
+
+### Task 21: Packaging Gate and Legacy Removal Prep
+
+This task stays blocked until Tasks 13 through 20 are complete.
+
+**Files:**
+- Modify: `README.md`
+- Modify: `CHANGELOG.md`
+- Delete later: Python/Tkinter desktop shell files after the Tauri release candidate is accepted
+
+**Checklist:**
+
+- [ ] desktop security hardening tasks are green
+- [ ] user-facing docs for security defaults exist
+- [ ] packaged Tauri build is the canonical desktop app
+- [ ] Python/Tkinter shell is no longer needed as a fallback
+
+Only after that should the repo remove the legacy Python/Tkinter desktop shell to reduce attack surface.

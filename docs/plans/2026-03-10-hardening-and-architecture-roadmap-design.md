@@ -157,6 +157,19 @@ Completed so far:
 
 The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, response views, preset application, and local-history persistence all exist in the React desktop app, and the MVP release-gate checks are now explicitly covered. The next work can move away from parity closure and into follow-on UX and product iteration.
 
+That next work has now been narrowed further: before broader UX polish or packaging, the active workstream is a post-MVP security hardening gate for the shipped Tauri shell. The canonical task list lives in:
+
+- `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
+
+Approved decisions for that gate:
+
+- local, private, link-local, and metadata targets blocked by default
+- explicit persisted `Unsafe mode / Local targets` opt-in for risky destinations
+- history persistence off by default
+- explicit confirmations for enabling risky settings
+- fail-closed desktop bridge behavior
+- legacy Python/Tkinter shell removed only after the hardening gate and packaging cut-over
+
 ## Priorities
 
 ### P1: Hardening, Architecture Split, and Test Expansion
@@ -197,7 +210,22 @@ In short:
 - the core request/history/formatting/redaction logic moves to Rust
 - the first release is an MVP shell, not a full parity rewrite
 
-### P4: UI/UX Refinement and Follow-On Features
+### P4: Security Hardening Gate Before Packaging
+
+Before packaging the new shell:
+
+- tighten the Tauri trust boundary
+- add persisted security settings
+- enforce local/private target policy
+- make history persistence opt-in
+- harden path resolution and persistence-error handling
+- add user-facing security guidance
+
+The detailed task order belongs in:
+
+- `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
+
+### P5: UI/UX Refinement and Follow-On Features
 
 After the new platform shell exists and the MVP reaches stable feature parity on the core paths:
 
