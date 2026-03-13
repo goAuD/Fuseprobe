@@ -77,23 +77,43 @@ impl HistoryStore {
     }
 
     pub fn load_from_files(history_file: &Path, legacy_history_file: &Path) -> Self {
+        Self::load_from_files_with_warning(history_file, legacy_history_file).0
+    }
+
+    pub fn load_from_files_with_warning(
+        history_file: &Path,
+        legacy_history_file: &Path,
+    ) -> (Self, Option<String>) {
         let source = if history_file.exists() {
             history_file
         } else if legacy_history_file.exists() {
             legacy_history_file
         } else {
-            return Self::new();
+            return (Self::new(), None);
         };
 
         let payload = match fs::read_to_string(source) {
             Ok(payload) => payload,
-            Err(_) => return Self::new(),
+            Err(_) => return (
+                Self::new(),
+                Some(
+                    "History could not be loaded from disk. The current session will start empty."
+                        .to_string(),
+                ),
+            ),
         };
 
-        let value = match serde_json::from_str::<Value>(&payload) {
-            Ok(value) => value,
-            Err(_) => return Self::new(),
-        };
+        let value =
+            match serde_json::from_str::<Value>(&payload) {
+                Ok(value) => value,
+                Err(_) => return (
+                    Self::new(),
+                    Some(
+                        "Saved history could not be parsed. The current session will start empty."
+                            .to_string(),
+                    ),
+                ),
+            };
 
         let rows = match value {
             Value::Array(items) => items,
@@ -109,7 +129,7 @@ impl HistoryStore {
         for entry in Self::normalize(rows) {
             store.add(entry);
         }
-        store
+        (store, None)
     }
 
     pub fn save_to_file(&self, history_file: &Path) -> io::Result<()> {

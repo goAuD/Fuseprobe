@@ -180,10 +180,12 @@ The first implementation slice of that gate is now complete:
 - fail-closed desktop bridge baseline
 - deny-by-default target policy baseline
 - opt-in history persistence baseline
+- deterministic config-dir path resolution for desktop persistence
+- surfaced non-fatal persistence warnings in the Rust/Tauri/React desktop path
 
 The next active slice is:
 
-- harden persistence path resolution and persistence-error handling
+- reinstate Tauri CSP and shrink capability scope
 - keep tightening the shipped Tauri boundary before packaging
 
 ## Priorities

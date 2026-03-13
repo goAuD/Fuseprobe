@@ -12,7 +12,7 @@ export default function HistoryPanel({
   activeTemplateName,
   onApplyTemplate,
 }: HistoryPanelProps) {
-  const { entries, isLoading, error, deleteEntry, clearEntries } =
+  const { entries, isLoading, error, warning, deleteEntry, clearEntries } =
     useHistory(refreshToken);
 
   return (
@@ -51,6 +51,10 @@ export default function HistoryPanel({
         {error ? (
           <p className="history-error" role="alert">
             {error}
+          </p>
+        ) : warning ? (
+          <p className="history-warning" role="status">
+            {warning}
           </p>
         ) : isLoading ? (
           <p className="history-empty">Loading local history...</p>

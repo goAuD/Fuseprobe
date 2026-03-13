@@ -10,19 +10,22 @@ export function useHistory(refreshToken = 0) {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
     setIsLoading(true);
     setError(null);
+    setWarning(null);
 
     void loadHistory()
-      .then((loadedEntries) => {
+      .then((result) => {
         if (!isActive) {
           return;
         }
 
-        setEntries(loadedEntries);
+        setEntries(result.entries);
+        setWarning(result.persistenceWarning);
       })
       .catch((loadError) => {
         if (!isActive) {
@@ -30,6 +33,7 @@ export function useHistory(refreshToken = 0) {
         }
 
         setEntries([]);
+        setWarning(null);
         setError(
           loadError instanceof Error
             ? loadError.message
@@ -51,11 +55,14 @@ export function useHistory(refreshToken = 0) {
 
   async function deleteEntry(index: number) {
     setError(null);
+    setWarning(null);
 
     try {
-      const bridgedEntries = await deleteHistoryEntryFromBridge(index);
-      setEntries(bridgedEntries);
+      const result = await deleteHistoryEntryFromBridge(index);
+      setEntries(result.entries);
+      setWarning(result.persistenceWarning);
     } catch (deleteError) {
+      setWarning(null);
       setError(
         deleteError instanceof Error
           ? deleteError.message
@@ -68,11 +75,14 @@ export function useHistory(refreshToken = 0) {
 
   async function clearEntries() {
     setError(null);
+    setWarning(null);
 
     try {
-      const bridgedEntries = await clearHistoryFromBridge();
-      setEntries(bridgedEntries);
+      const result = await clearHistoryFromBridge();
+      setEntries(result.entries);
+      setWarning(result.persistenceWarning);
     } catch (clearError) {
+      setWarning(null);
       setError(
         clearError instanceof Error
           ? clearError.message
@@ -83,5 +93,5 @@ export function useHistory(refreshToken = 0) {
     }
   }
 
-  return { entries, isLoading, error, deleteEntry, clearEntries };
+  return { entries, isLoading, error, warning, deleteEntry, clearEntries };
 }

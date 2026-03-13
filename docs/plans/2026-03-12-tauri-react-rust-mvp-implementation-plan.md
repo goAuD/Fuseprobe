@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
-**Current State:** Tasks 1 through 16 are now complete. The next active work is Task 17 and the rest of the security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
+**Current State:** Tasks 1 through 17 are now complete. The next active work is Task 18 and the rest of the security-first hardening gate for the shipped Tauri desktop shell. Do not treat the MVP parity milestone as release-ready until the security tasks below are complete.
 
 ---
 
@@ -1420,6 +1420,8 @@ git commit -m "feat: make history persistence opt-in"
 ```
 
 ### Task 17: Harden Persistence Paths and Surface Save/Load Errors
+
+Status: Completed on 2026-03-13.
 
 **Files:**
 - Create: `apps/desktop/src-tauri/src/paths.rs`

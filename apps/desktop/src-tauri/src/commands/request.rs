@@ -27,6 +27,7 @@ pub struct SendRequestResult {
     pub raw_response_text: String,
     pub response_headers: BTreeMap<String, String>,
     pub policy_note: String,
+    pub persistence_warning: Option<String>,
 }
 
 #[tauri::command]
@@ -72,8 +73,9 @@ pub async fn send_request(
         .lock()
         .map_err(|_| "history state is unavailable".to_string())?;
     history.add(history_entry);
-    sync_history_persistence(&history, &state.history_file, persist_history)
-        .map_err(|error| format!("failed to sync history persistence: {error}"))?;
+    let persistence_warning =
+        sync_history_persistence(&history, state.history_file.as_deref(), persist_history);
+    state.set_persistence_warning(persistence_warning.clone())?;
 
     Ok(SendRequestResult {
         request: payload,
@@ -92,6 +94,7 @@ pub async fn send_request(
         raw_response_text: executed.raw_body,
         response_headers: executed.headers,
         policy_note: "redirects disabled by policy".to_string(),
+        persistence_warning,
     })
 }
 

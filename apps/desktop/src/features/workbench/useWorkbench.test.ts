@@ -39,6 +39,8 @@ it("stores the mocked response after submit", async () => {
       "content-type": "application/json",
     },
     policyNote: "redirects disabled by policy",
+    persistenceWarning:
+      "Persistent history could not be saved. Session history remains available.",
   });
 
   const { result } = renderHook(() => useWorkbench());
@@ -62,6 +64,9 @@ it("stores the mocked response after submit", async () => {
   });
   expect(result.current.response.statusLine).toBe("200 OK");
   expect(result.current.error).toBeNull();
+  expect(result.current.persistenceWarning).toBe(
+    "Persistent history could not be saved. Session history remains available.",
+  );
   expect(result.current.historyRevision).toBe(1);
 });
 

@@ -1,90 +1,163 @@
-use std::env;
 use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use fuseprobe_core::{HistoryStore, SecuritySettings};
 
+use crate::paths::resolve_storage_paths;
+
 pub struct AppState {
     pub history: Mutex<HistoryStore>,
-    pub history_file: PathBuf,
+    pub history_file: Option<PathBuf>,
     pub settings: Mutex<SecuritySettings>,
-    pub settings_file: PathBuf,
+    pub settings_file: Option<PathBuf>,
+    persistence_warning: Mutex<Option<String>>,
 }
 
 impl AppState {
     pub fn load() -> Self {
-        let settings_file = current_settings_file();
-        let settings = SecuritySettings::load_from_file(&settings_file);
-        let history_file = current_history_file();
-        let legacy_history_file = legacy_history_file();
-        let history = load_history_store(&settings, &history_file, &legacy_history_file);
+        let mut startup_warning = None;
+        let (history_file, settings_file, legacy_history_files, legacy_settings_files) =
+            match resolve_storage_paths() {
+                Ok(paths) => (
+                    Some(paths.history_file),
+                    Some(paths.settings_file),
+                    paths.legacy_history_files,
+                    paths.legacy_settings_files,
+                ),
+                Err(error) => {
+                    startup_warning = Some(error);
+                    (None, None, Vec::new(), Vec::new())
+                }
+            };
+        let (settings, settings_warning) =
+            load_security_settings(settings_file.as_deref(), &legacy_settings_files);
+        startup_warning = merge_warnings(startup_warning, settings_warning);
+        let (history, history_warning) =
+            load_history_store(&settings, history_file.as_deref(), &legacy_history_files);
+        startup_warning = merge_warnings(startup_warning, history_warning);
 
         Self {
             history: Mutex::new(history),
             history_file,
             settings: Mutex::new(settings),
             settings_file,
+            persistence_warning: Mutex::new(startup_warning),
         }
     }
+
+    pub fn persistence_warning(&self) -> Result<Option<String>, String> {
+        self.persistence_warning
+            .lock()
+            .map(|warning| warning.clone())
+            .map_err(|_| "persistence warning state is unavailable".to_string())
+    }
+
+    pub fn set_persistence_warning(&self, warning: Option<String>) -> Result<(), String> {
+        let mut current = self
+            .persistence_warning
+            .lock()
+            .map_err(|_| "persistence warning state is unavailable".to_string())?;
+        *current = warning;
+        Ok(())
+    }
+}
+
+pub(crate) fn load_security_settings(
+    settings_file: Option<&Path>,
+    legacy_settings_files: &[PathBuf],
+) -> (SecuritySettings, Option<String>) {
+    let Some(settings_file) = settings_file else {
+        return (SecuritySettings::default(), None);
+    };
+
+    if settings_file.exists() {
+        return SecuritySettings::load_from_file_with_warning(settings_file);
+    }
+
+    if let Some(legacy_file) = first_existing_path(legacy_settings_files) {
+        return SecuritySettings::load_from_file_with_warning(legacy_file);
+    }
+
+    (SecuritySettings::default(), None)
 }
 
 pub(crate) fn load_history_store(
     settings: &SecuritySettings,
-    history_file: &Path,
-    legacy_history_file: &Path,
-) -> HistoryStore {
-    if settings.persist_history {
-        HistoryStore::load_from_files(history_file, legacy_history_file)
-    } else {
-        HistoryStore::new()
+    history_file: Option<&Path>,
+    legacy_history_files: &[PathBuf],
+) -> (HistoryStore, Option<String>) {
+    if !settings.persist_history {
+        return (HistoryStore::new(), None);
     }
+
+    let Some(history_file) = history_file else {
+        return (
+            HistoryStore::new(),
+            Some(
+                "Persistent history is enabled, but Fuseprobe could not resolve a local storage path."
+                    .to_string(),
+            ),
+        );
+    };
+
+    let legacy_file = first_existing_path(legacy_history_files)
+        .unwrap_or_else(|| Path::new("__missing_fuseprobe_legacy_history__"));
+
+    HistoryStore::load_from_files_with_warning(history_file, legacy_file)
 }
 
 pub(crate) fn sync_history_persistence(
     history: &HistoryStore,
-    history_file: &Path,
+    history_file: Option<&Path>,
     persist_history: bool,
-) -> io::Result<()> {
+) -> Option<String> {
     if persist_history {
-        return history.save_to_file(history_file);
+        let Some(history_file) = history_file else {
+            return Some(
+                "Persistent history is enabled, but Fuseprobe could not resolve a local storage path."
+                    .to_string(),
+            );
+        };
+
+        return history.save_to_file(history_file).err().map(|_| {
+            "Persistent history could not be saved. Session history remains available.".to_string()
+        });
     }
 
-    if history_file.exists() {
-        fs::remove_file(history_file)?;
+    let Some(history_file) = history_file else {
+        return None;
+    };
+
+    if history_file.exists() && fs::remove_file(history_file).is_err() {
+        return Some(
+            "Persistent history could not be removed. Session-only history remains active."
+                .to_string(),
+        );
     }
 
-    Ok(())
+    None
 }
 
-fn current_history_file() -> PathBuf {
-    config_dir(".fuseprobe").join("history.json")
-}
-
-fn legacy_history_file() -> PathBuf {
-    config_dir(".nanoman").join("history.json")
-}
-
-fn current_settings_file() -> PathBuf {
-    config_dir(".fuseprobe").join("settings.json")
-}
-
-fn config_dir(folder_name: &str) -> PathBuf {
-    home_dir().join(folder_name)
-}
-
-fn home_dir() -> PathBuf {
-    if let Some(home) = env::var_os("USERPROFILE").or_else(|| env::var_os("HOME")) {
-        return PathBuf::from(home);
+fn merge_warnings(current: Option<String>, next: Option<String>) -> Option<String> {
+    match (current, next) {
+        (Some(current), Some(next)) => Some(format!("{current} {next}")),
+        (Some(current), None) => Some(current),
+        (None, Some(next)) => Some(next),
+        (None, None) => None,
     }
+}
 
-    env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+fn first_existing_path(paths: &[PathBuf]) -> Option<&Path> {
+    paths
+        .iter()
+        .find(|path| path.exists())
+        .map(PathBuf::as_path)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{load_history_store, sync_history_persistence};
+    use super::{load_history_store, load_security_settings, sync_history_persistence};
     use fuseprobe_core::{HistoryEntry, HistoryStore, SecuritySettings};
     use serde_json::json;
     use std::fs;
@@ -108,16 +181,17 @@ mod tests {
         )
         .expect("write history");
 
-        let history = load_history_store(
+        let (history, warning) = load_history_store(
             &SecuritySettings {
                 allow_unsafe_targets: false,
                 persist_history: false,
             },
-            &history_file,
-            &legacy_history_file,
+            Some(&history_file),
+            std::slice::from_ref(&legacy_history_file),
         );
 
         assert!(history.all().is_empty());
+        assert!(warning.is_none());
     }
 
     #[test]
@@ -137,17 +211,39 @@ mod tests {
         )
         .expect("write history");
 
-        let history = load_history_store(
+        let (history, warning) = load_history_store(
             &SecuritySettings {
                 allow_unsafe_targets: false,
                 persist_history: true,
             },
-            &history_file,
-            &legacy_history_file,
+            Some(&history_file),
+            std::slice::from_ref(&legacy_history_file),
         );
 
         assert_eq!(history.all().len(), 1);
         assert!(history.all()[0].url.contains("token=%2A%2A%2A"));
+        assert!(warning.is_none());
+    }
+
+    #[test]
+    fn returns_warning_when_persistent_history_is_enabled_without_a_storage_path() {
+        let (history, warning) = load_history_store(
+            &SecuritySettings {
+                allow_unsafe_targets: false,
+                persist_history: true,
+            },
+            None,
+            &[],
+        );
+
+        assert!(history.all().is_empty());
+        assert_eq!(
+            warning,
+            Some(
+                "Persistent history is enabled, but Fuseprobe could not resolve a local storage path."
+                    .to_string()
+            ),
+        );
     }
 
     #[test]
@@ -157,9 +253,10 @@ mod tests {
         fs::write(&history_file, b"{\"history\":[]}").expect("write history");
 
         let history = HistoryStore::new();
-        sync_history_persistence(&history, &history_file, false).expect("sync should succeed");
+        let warning = sync_history_persistence(&history, Some(&history_file), false);
 
         assert!(!history_file.exists());
+        assert!(warning.is_none());
     }
 
     #[test]
@@ -172,12 +269,58 @@ mod tests {
             "https://api.example.com/items?page=2&token=secret#frag",
         ));
 
-        sync_history_persistence(&history, &history_file, true).expect("sync should save");
+        let warning = sync_history_persistence(&history, Some(&history_file), true);
 
         let saved_payload = fs::read_to_string(&history_file).expect("read history");
         assert!(saved_payload.contains("page=%2A%2A%2A"));
         assert!(saved_payload.contains("token=%2A%2A%2A"));
         assert!(!saved_payload.contains("#frag"));
+        assert!(warning.is_none());
+    }
+
+    #[test]
+    fn warns_when_persistent_history_has_no_storage_path() {
+        let history = HistoryStore::new();
+
+        let warning = sync_history_persistence(&history, None, true);
+
+        assert_eq!(
+            warning,
+            Some(
+                "Persistent history is enabled, but Fuseprobe could not resolve a local storage path."
+                    .to_string()
+            ),
+        );
+    }
+
+    #[test]
+    fn loads_legacy_settings_when_current_settings_are_missing() {
+        let temp_dir = TestDir::new("legacy-settings");
+        let legacy_settings_file = temp_dir.path().join("settings.json");
+
+        fs::write(
+            &legacy_settings_file,
+            serde_json::to_vec_pretty(&SecuritySettings {
+                allow_unsafe_targets: true,
+                persist_history: true,
+            })
+            .expect("serialize settings"),
+        )
+        .expect("write settings");
+
+        let (settings, warning) = load_security_settings(
+            Some(&temp_dir.path().join("missing.json")),
+            &[legacy_settings_file],
+        );
+
+        assert_eq!(
+            settings,
+            SecuritySettings {
+                allow_unsafe_targets: true,
+                persist_history: true,
+            }
+        );
+        assert!(warning.is_none());
     }
 
     struct TestDir {

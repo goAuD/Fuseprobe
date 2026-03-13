@@ -21,6 +21,7 @@ const BASE_RESPONSE = {
     "x-request-id": "req-42",
   },
   policyNote: "redirects disabled by policy",
+  persistenceWarning: null,
 };
 
 it("switches between formatted response, headers, and raw tabs", () => {

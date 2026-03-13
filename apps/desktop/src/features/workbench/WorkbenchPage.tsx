@@ -16,6 +16,7 @@ export default function WorkbenchPage() {
     response,
     isSending,
     error,
+    persistenceWarning,
     historyRevision,
     activeTemplateName,
     activeAuthPresetName,
@@ -75,6 +76,10 @@ export default function WorkbenchPage() {
         {error ? (
           <p className="shell-alert" role="alert">
             {error}
+          </p>
+        ) : persistenceWarning ? (
+          <p className="shell-warning" role="status">
+            {persistenceWarning}
           </p>
         ) : null}
         <div className="sidebar-column">

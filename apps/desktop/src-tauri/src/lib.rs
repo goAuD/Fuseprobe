@@ -1,4 +1,5 @@
 mod commands;
+mod paths;
 mod state;
 
 use state::AppState;

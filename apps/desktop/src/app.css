@@ -168,6 +168,16 @@ select.method-control {
   font-size: 13px;
 }
 
+.shell-warning {
+  margin: 0 0 -2px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 196, 107, 0.22);
+  background: rgba(255, 196, 107, 0.08);
+  color: #ffd49d;
+  font-size: 13px;
+}
+
 .sidebar-column,
 .content-column {
   display: grid;
@@ -457,6 +467,16 @@ select.method-control {
   border: 1px solid rgba(255, 117, 117, 0.18);
   background: rgba(255, 117, 117, 0.08);
   color: #ffb0b0;
+  font-size: 12px;
+}
+
+.history-warning {
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 196, 107, 0.22);
+  background: rgba(255, 196, 107, 0.08);
+  color: #ffd49d;
   font-size: 12px;
 }
 

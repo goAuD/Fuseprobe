@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
-  HistoryEntry,
+  HistoryCommandResult,
   SecuritySettings,
   SendRequestPayload,
   SendRequestResult,
@@ -21,16 +21,18 @@ export async function sendRequest(
   });
 }
 
-export async function loadHistory(): Promise<HistoryEntry[]> {
-  return await invoke<HistoryEntry[]>("load_history");
+export async function loadHistory(): Promise<HistoryCommandResult> {
+  return await invoke<HistoryCommandResult>("load_history");
 }
 
-export async function deleteHistoryEntry(index: number): Promise<HistoryEntry[]> {
-  return await invoke<HistoryEntry[]>("delete_history_entry", { index });
+export async function deleteHistoryEntry(
+  index: number,
+): Promise<HistoryCommandResult> {
+  return await invoke<HistoryCommandResult>("delete_history_entry", { index });
 }
 
-export async function clearHistory(): Promise<HistoryEntry[]> {
-  return await invoke<HistoryEntry[]>("clear_history");
+export async function clearHistory(): Promise<HistoryCommandResult> {
+  return await invoke<HistoryCommandResult>("clear_history");
 }
 
 export async function loadSecuritySettings(): Promise<SecuritySettings> {

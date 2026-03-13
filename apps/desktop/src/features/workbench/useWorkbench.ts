@@ -23,6 +23,7 @@ const IDLE_RESPONSE: SendRequestResult = {
   rawResponseText: "",
   responseHeaders: {},
   policyNote: "redirects disabled by policy",
+  persistenceWarning: null,
 };
 
 export function useWorkbench() {
@@ -33,6 +34,7 @@ export function useWorkbench() {
   const [response, setResponse] = useState<SendRequestResult>(IDLE_RESPONSE);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [persistenceWarning, setPersistenceWarning] = useState<string | null>(null);
   const [historyRevision, setHistoryRevision] = useState(0);
   const [activeTemplateName, setActiveTemplateName] = useState<string | null>(null);
   const [activeAuthPresetName, setActiveAuthPresetName] = useState("No Auth");
@@ -46,6 +48,7 @@ export function useWorkbench() {
 
     setIsSending(true);
     setError(null);
+    setPersistenceWarning(null);
 
     try {
       const result = await sendRequest({
@@ -55,6 +58,7 @@ export function useWorkbench() {
         headers,
       });
       setResponse(result);
+      setPersistenceWarning(result.persistenceWarning);
       setHistoryRevision((revision) => revision + 1);
     } catch (requestError) {
       const message =
@@ -96,6 +100,7 @@ export function useWorkbench() {
     response,
     isSending,
     error,
+    persistenceWarning,
     historyRevision,
     activeTemplateName,
     activeAuthPresetName,

@@ -844,6 +844,7 @@ name = "fuseprobe-desktop"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "dirs",
  "fuseprobe-core",
  "serde",
  "serde_json",

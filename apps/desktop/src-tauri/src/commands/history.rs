@@ -2,20 +2,30 @@ use fuseprobe_core::HistoryEntry;
 
 use crate::state::{sync_history_persistence, AppState};
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryCommandResult {
+    pub entries: Vec<HistoryEntry>,
+    pub persistence_warning: Option<String>,
+}
+
 #[tauri::command]
-pub fn load_history(state: tauri::State<'_, AppState>) -> Result<Vec<HistoryEntry>, String> {
+pub fn load_history(state: tauri::State<'_, AppState>) -> Result<HistoryCommandResult, String> {
     let history = state
         .history
         .lock()
         .map_err(|_| "history state is unavailable".to_string())?;
-    Ok(history.all().to_vec())
+    Ok(HistoryCommandResult {
+        entries: history.all().to_vec(),
+        persistence_warning: state.persistence_warning()?,
+    })
 }
 
 #[tauri::command]
 pub fn delete_history_entry(
     state: tauri::State<'_, AppState>,
     index: usize,
-) -> Result<Vec<HistoryEntry>, String> {
+) -> Result<HistoryCommandResult, String> {
     let persist_history = state
         .settings
         .lock()
@@ -26,13 +36,17 @@ pub fn delete_history_entry(
         .lock()
         .map_err(|_| "history state is unavailable".to_string())?;
     history.delete(index);
-    sync_history_persistence(&history, &state.history_file, persist_history)
-        .map_err(|error| format!("failed to sync history persistence: {error}"))?;
-    Ok(history.all().to_vec())
+    let persistence_warning =
+        sync_history_persistence(&history, state.history_file.as_deref(), persist_history);
+    state.set_persistence_warning(persistence_warning.clone())?;
+    Ok(HistoryCommandResult {
+        entries: history.all().to_vec(),
+        persistence_warning,
+    })
 }
 
 #[tauri::command]
-pub fn clear_history(state: tauri::State<'_, AppState>) -> Result<Vec<HistoryEntry>, String> {
+pub fn clear_history(state: tauri::State<'_, AppState>) -> Result<HistoryCommandResult, String> {
     let persist_history = state
         .settings
         .lock()
@@ -43,7 +57,11 @@ pub fn clear_history(state: tauri::State<'_, AppState>) -> Result<Vec<HistoryEnt
         .lock()
         .map_err(|_| "history state is unavailable".to_string())?;
     history.clear();
-    sync_history_persistence(&history, &state.history_file, persist_history)
-        .map_err(|error| format!("failed to sync history persistence: {error}"))?;
-    Ok(history.all().to_vec())
+    let persistence_warning =
+        sync_history_persistence(&history, state.history_file.as_deref(), persist_history);
+    state.set_persistence_warning(persistence_warning.clone())?;
+    Ok(HistoryCommandResult {
+        entries: history.all().to_vec(),
+        persistence_warning,
+    })
 }

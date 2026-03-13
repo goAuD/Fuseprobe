@@ -50,6 +50,7 @@ Completed so far:
 - fail-open desktop bridge behavior has been removed so request and history actions now surface real bridge errors instead of fabricating success
 - local, private, link-local, and metadata targets are now blocked by default in the Rust request path unless the persisted unsafe-mode setting is enabled
 - history persistence is now opt-in in the desktop state layer, and persisted URLs now strip fragments and redact every query value before disk storage
+- desktop persistence now resolves through the OS config directory, carries legacy migration fallbacks explicitly, and surfaces non-fatal persistence warnings back into the React shell instead of hiding them
 
 Still pending before MVP parity:
 

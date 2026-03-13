@@ -18,6 +18,11 @@ export interface HistoryEntry {
   time: string;
 }
 
+export interface HistoryCommandResult {
+  entries: HistoryEntry[];
+  persistenceWarning: string | null;
+}
+
 export interface SendRequestResult {
   request: SendRequestPayload;
   statusLine: string;
@@ -29,4 +34,5 @@ export interface SendRequestResult {
   rawResponseText: string;
   responseHeaders: Record<string, string>;
   policyNote: string;
+  persistenceWarning: string | null;
 }
