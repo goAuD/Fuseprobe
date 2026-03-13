@@ -156,6 +156,7 @@ Completed so far:
 - closed the Tauri MVP release-gate verification with explicit regression coverage for redirect policy, history redaction, binary fallback, and formatted JSON response rendering
 - added persisted desktop security settings with safe defaults in the Rust core, Tauri state layer, and React hook surface
 - removed fail-open desktop bridge behavior so request and history errors now surface explicitly in the React shell
+- enforced deny-by-default blocking for local/private/link-local/metadata targets in the Rust request path, with unsafe-mode override wiring in the desktop command layer
 
 The current state is now an interactive MVP shell with a real Rust/Tauri foundation. Request flow, response views, preset application, and local-history persistence all exist in the React desktop app, and the MVP release-gate checks are now explicitly covered. The next work can move away from parity closure and into follow-on UX and product iteration.
 
@@ -176,11 +177,12 @@ The first implementation slice of that gate is now complete:
 
 - persisted security settings baseline
 - fail-closed desktop bridge baseline
+- deny-by-default target policy baseline
 
 The next active slice is:
 
-- enforce deny-by-default local/private target policy
-- start wiring the explicit `Unsafe mode / Local targets` policy path
+- make history persistence opt-in
+- tighten persisted URL redaction
 
 ## Priorities
 

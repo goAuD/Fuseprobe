@@ -12,7 +12,7 @@ use reqwest::{
 };
 use serde_json::Value;
 
-use crate::{format_response_body, redact_url, validate_url};
+use crate::{format_response_body, redact_url, validate_url_with_unsafe_targets};
 
 pub const DEFAULT_MAX_RESPONSE_BYTES: usize = 1024 * 1024;
 
@@ -21,6 +21,7 @@ pub struct RequestOptions {
     pub follow_redirects: bool,
     pub max_response_bytes: usize,
     pub timeout_seconds: u64,
+    pub allow_unsafe_targets: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -45,6 +46,7 @@ impl Default for RequestOptions {
             follow_redirects: false,
             max_response_bytes: DEFAULT_MAX_RESPONSE_BYTES,
             timeout_seconds: 10,
+            allow_unsafe_targets: false,
         }
     }
 }
@@ -56,7 +58,7 @@ pub fn execute_request(
     headers_text: &str,
     options: &RequestOptions,
 ) -> Result<ExecutedResponse, String> {
-    validate_url(url)?;
+    validate_url_with_unsafe_targets(url, options.allow_unsafe_targets)?;
 
     let method = parse_method(method)?;
     let json_payload = parse_json_payload(payload)?;

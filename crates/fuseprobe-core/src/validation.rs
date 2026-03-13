@@ -1,8 +1,15 @@
-use std::net::IpAddr;
-
 use url::Url;
 
+use crate::network_policy::validate_target_policy;
+
 pub fn validate_url(input: &str) -> Result<(), String> {
+    validate_url_with_unsafe_targets(input, false)
+}
+
+pub fn validate_url_with_unsafe_targets(
+    input: &str,
+    allow_unsafe_targets: bool,
+) -> Result<(), String> {
     let trimmed = input.trim();
     if trimmed.is_empty() {
         return Err("URL cannot be empty".into());
@@ -26,34 +33,33 @@ pub fn validate_url(input: &str) -> Result<(), String> {
         return Err("URL credentials are not allowed".into());
     }
 
-    if host.eq_ignore_ascii_case("localhost") {
-        return Ok(());
-    }
+    if let url::Host::Domain(_) = parsed
+        .host()
+        .ok_or_else(|| "URL must include a host".to_string())?
+    {
+        for label in host.split('.') {
+            if label.is_empty() {
+                return Err("URL host labels cannot be empty".into());
+            }
 
-    if host.parse::<IpAddr>().is_ok() {
-        return Ok(());
-    }
+            if label.len() > 63 {
+                return Err("URL host labels cannot exceed 63 characters".into());
+            }
 
-    for label in host.split('.') {
-        if label.is_empty() {
-            return Err("URL host labels cannot be empty".into());
-        }
+            if label.starts_with('-') || label.ends_with('-') {
+                return Err("URL host labels cannot start or end with '-'".into());
+            }
 
-        if label.len() > 63 {
-            return Err("URL host labels cannot exceed 63 characters".into());
-        }
-
-        if label.starts_with('-') || label.ends_with('-') {
-            return Err("URL host labels cannot start or end with '-'".into());
-        }
-
-        if !label
-            .chars()
-            .all(|ch| ch.is_ascii_alphanumeric() || ch == '-')
-        {
-            return Err("URL host contains unsupported characters".into());
+            if !label
+                .chars()
+                .all(|ch| ch.is_ascii_alphanumeric() || ch == '-')
+            {
+                return Err("URL host contains unsupported characters".into());
+            }
         }
     }
+
+    validate_target_policy(&parsed, allow_unsafe_targets)?;
 
     Ok(())
 }

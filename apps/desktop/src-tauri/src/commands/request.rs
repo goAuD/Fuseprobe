@@ -35,7 +35,15 @@ pub async fn send_request(
     payload: SendRequestPayload,
 ) -> Result<SendRequestResult, String> {
     let payload_for_core = payload.clone();
-    let options = RequestOptions::default();
+    let allow_unsafe_targets = state
+        .settings
+        .lock()
+        .map_err(|_| "security settings are unavailable".to_string())?
+        .allow_unsafe_targets;
+    let options = RequestOptions {
+        allow_unsafe_targets,
+        ..RequestOptions::default()
+    };
 
     let executed = tauri::async_runtime::spawn_blocking(move || {
         execute_request(

@@ -1,4 +1,4 @@
-use fuseprobe_core::{redact_url, validate_url};
+use fuseprobe_core::{redact_url, validate_url, validate_url_with_unsafe_targets};
 
 #[test]
 fn rejects_urls_with_embedded_credentials() {
@@ -10,6 +10,23 @@ fn rejects_urls_with_embedded_credentials() {
 fn accepts_valid_intranet_style_urls() {
     assert!(validate_url("http://intranet/api").is_ok());
     assert!(validate_url("https://internal-api:3000").is_ok());
+}
+
+#[test]
+fn rejects_loopback_and_metadata_targets_by_default() {
+    let loopback = validate_url("http://127.0.0.1:8000").unwrap_err();
+    let localhost = validate_url("http://localhost:3000").unwrap_err();
+    let metadata = validate_url("http://169.254.169.254/latest/meta-data/").unwrap_err();
+
+    assert!(loopback.contains("Unsafe mode"));
+    assert!(localhost.contains("Unsafe mode"));
+    assert!(metadata.contains("Unsafe mode"));
+}
+
+#[test]
+fn allows_loopback_targets_when_unsafe_mode_is_enabled() {
+    assert!(validate_url_with_unsafe_targets("http://127.0.0.1:8000", true).is_ok());
+    assert!(validate_url_with_unsafe_targets("http://localhost:3000", true).is_ok());
 }
 
 #[test]

@@ -7,6 +7,7 @@ use tiny_http::{Header, Response, Server, StatusCode};
 fn defaults_to_no_redirect_following() {
     let options = RequestOptions::default();
     assert!(!options.follow_redirects);
+    assert!(!options.allow_unsafe_targets);
 }
 
 #[test]
@@ -46,7 +47,7 @@ fn executes_json_requests_and_formats_the_response() {
         &format!("{address}/users"),
         r#"{"name":"Dana"}"#,
         "Accept: application/json",
-        &RequestOptions::default(),
+        &unsafe_target_options(),
     )
     .expect("request should succeed");
 
@@ -97,7 +98,7 @@ fn truncates_large_text_responses() {
 
     let options = RequestOptions {
         max_response_bytes: 8,
-        ..RequestOptions::default()
+        ..unsafe_target_options()
     };
 
     let result =
@@ -132,7 +133,7 @@ fn does_not_follow_redirects_and_redacts_sensitive_location_values() {
         &format!("{address}/redirect"),
         "",
         "",
-        &RequestOptions::default(),
+        &unsafe_target_options(),
     )
     .expect("request should succeed");
 
@@ -161,7 +162,7 @@ fn omits_binary_responses_from_text_rendering() {
         request.respond(response).expect("response should be sent");
     });
 
-    let result = execute_request("GET", &address, "", "", &RequestOptions::default())
+    let result = execute_request("GET", &address, "", "", &unsafe_target_options())
         .expect("request should succeed");
 
     worker.join().expect("worker should exit");
@@ -173,4 +174,25 @@ fn omits_binary_responses_from_text_rendering() {
         .body
         .contains("[Binary response omitted: application/octet-stream"));
     assert_eq!(result.body, result.raw_body);
+}
+
+#[test]
+fn rejects_local_targets_by_default() {
+    let error = execute_request(
+        "GET",
+        "http://127.0.0.1:8080/health",
+        "",
+        "",
+        &RequestOptions::default(),
+    )
+    .expect_err("loopback target should be rejected");
+
+    assert!(error.contains("Unsafe mode / Local targets"));
+}
+
+fn unsafe_target_options() -> RequestOptions {
+    RequestOptions {
+        allow_unsafe_targets: true,
+        ..RequestOptions::default()
+    }
 }
