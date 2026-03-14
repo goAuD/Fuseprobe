@@ -1,36 +1,37 @@
 # Fuseprobe Usage and Security
 
-Fuseprobe is designed to stay local, predictable, and explicit about risky behavior. The desktop shell uses strict defaults on purpose.
+Fuseprobe is built as a security-first offline desktop API client. The defaults are intentionally conservative so the app is safer on everyday workstations, shared machines, and development laptops.
 
-## Security Defaults
+## Default Security Behavior
 
 ### Local and private targets are blocked by default
 
-The desktop shell blocks:
+Fuseprobe blocks these target classes unless you explicitly opt in:
 
 - `localhost`
+- loopback addresses
 - private IP ranges
-- link-local addresses
+- link-local ranges
 - metadata-style endpoints
 
-This helps reduce accidental local-network probing and makes the default behavior safer on everyday workstations.
+This reduces accidental local-network probing and makes the out-of-the-box desktop behavior safer.
 
-If you intentionally need those targets for development or internal testing, enable `Unsafe mode / Local targets` from the in-app security panel and confirm the warning.
+If you intentionally need local or internal targets, enable `Unsafe mode / Local targets` in the desktop security panel and confirm the warning.
 
 ### History persistence is off by default
 
-The desktop shell keeps request history in memory for the current session unless you explicitly enable `History persistence`.
+Fuseprobe keeps request history in memory for the current session unless you explicitly enable `History persistence`.
 
-This avoids writing request activity to disk on shared or sensitive machines unless you choose it.
+This avoids writing request activity to disk unless you deliberately choose that behavior for the current device.
 
-If you turn history persistence on, Fuseprobe asks for confirmation first.
+Enabling history persistence also requires explicit confirmation.
 
-## What Gets Stored When History Persistence Is Enabled
+## What Gets Stored
 
-Fuseprobe stores only a minimal, redacted history record:
+When history persistence is enabled, Fuseprobe stores a minimal history record:
 
 - HTTP method
-- request URL in redacted form
+- redacted request URL
 - response status
 - elapsed time
 - timestamp
@@ -38,30 +39,49 @@ Fuseprobe stores only a minimal, redacted history record:
 Fuseprobe does **not** persist:
 
 - request body
-- custom headers
-- bearer tokens or API keys from headers
+- custom request headers
+- bearer tokens from headers
+- API keys from headers
 
-Persisted URLs are also sanitized before they are written:
+Persisted URLs are sanitized before they are written:
 
 - fragments are removed
 - query values are redacted
 
-## Practical Use
+## What the Security Toggles Mean
 
-### Public APIs
+### Unsafe mode / Local targets
 
-For normal public API testing, the default settings should work without changes.
+Use this only when you intentionally need to test:
 
-### Local development servers and internal endpoints
+- local development servers
+- private/internal services
+- controlled lab or workstation targets
 
-If you need `localhost`, a private subnet, or another internal target, enable `Unsafe mode / Local targets` first. Keep it off when you do not actively need it.
+Leave it off the rest of the time.
 
-### Shared or sensitive machines
+### History persistence
 
-Leave `History persistence` off unless you explicitly want local request history on that device.
+Use this only when you explicitly want local request history to survive app restarts on that machine.
+
+On sensitive or shared devices, the safer choice is to leave it off.
+
+## Practical Guidance
+
+### Public API testing
+
+For normal public API work, the default security settings should usually be enough.
+
+### Local development workflows
+
+If you test `localhost` or internal endpoints often, enable unsafe targets deliberately, use them, then switch the setting back off.
+
+### Shared or high-sensitivity machines
+
+Keep `History persistence` off unless you have a specific reason to persist local history.
 
 ## Local Storage
 
-When enabled, desktop settings and persisted history are stored in Fuseprobe's local app config directory on your device.
+When persistence is enabled, Fuseprobe stores local settings and redacted history in its app config directory on the current machine.
 
-Fuseprobe does not require cloud storage or telemetry for normal operation.
+Fuseprobe does not require cloud storage, telemetry, or online synchronization for normal operation.

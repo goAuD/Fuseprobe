@@ -1,0 +1,56 @@
+# Fuseprobe v3.0.0
+
+Release date: TBD
+
+## Summary
+
+`v3.0.0` marks the platform cut-over to the Tauri desktop shell.
+
+Fuseprobe is now defined by:
+
+- a Tauri desktop shell
+- a React/Vite UI
+- a Rust request/security/history core
+
+This release is not a small UI refresh. It is the point where the modern desktop shell becomes the canonical product direction.
+
+## Highlights
+
+- Canonical desktop shell moved to `Tauri + React/Vite + Rust`
+- Security-first desktop defaults are now enforced in the primary app path
+- Local/private targets are blocked by default unless explicitly enabled
+- History persistence is off by default unless explicitly enabled
+- The desktop shell now supports English, German, and Hungarian UI strings
+- The desktop UI has been hardened with reusable controls, safer confirmation flows, and clearer non-blocking notices
+
+## Included Improvements
+
+- real Rust-backed request execution in the desktop shell
+- response, headers, and raw response inspection
+- template-driven request setup
+- persisted security settings
+- stricter history redaction before disk persistence
+- non-null production CSP and narrowed Tauri capability scope
+- request body/header ceilings and single-flight request backpressure
+- verified Windows release-candidate build path
+
+## Security Notes
+
+This release intentionally favors safer defaults over convenience:
+
+- local, private, link-local, and metadata-style targets are blocked by default
+- request history is session-only by default
+- risky settings require explicit confirmation before enablement
+
+These are product design choices, not omissions.
+
+## Upgrade Notes
+
+- the Tauri shell is now the primary desktop app
+- the older Python/Tkinter implementation remains legacy reference code only during the final cleanup window
+- legacy local history/settings can still be migrated forward when present
+
+## Docs
+
+- public usage/security notes: `docs/usage-and-security.md`
+- migration and architecture context: `docs/plans/`

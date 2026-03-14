@@ -1,77 +1,104 @@
 # Fuseprobe
 
-**Offline API Testing Client**
+**Security-first offline API workbench for desktop**
 
-Fuseprobe is a lightweight, privacy-focused API testing tool. No cloud, no bloat, just requests.
+Fuseprobe is a local-first API client built for deliberate testing, not cloud sync or team bloat. It runs as a Tauri desktop app with a React/Vite UI and a Rust request core.
 
-![Python](https://img.shields.io/badge/Made%20with-Python-blue)
-![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial-orange)
-![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
+![Desktop Shell](https://img.shields.io/badge/Desktop-Tauri%202-00c48c)
+![Core](https://img.shields.io/badge/Core-Rust-00d9a3)
+![UI](https://img.shields.io/badge/UI-React%20%2B%20Vite-11c7d9)
+![Mode](https://img.shields.io/badge/Mode-Offline%20First-00b894)
+![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial-18b7a3)
+![Platform](https://img.shields.io/badge/Release%20Candidate-Windows%20Verified-12c997)
 
 ![Fuseprobe Screenshot](assets/fuseprobe.png)
 
 Source-available for noncommercial use. Commercial use requires permission.
 
-## Desktop Shell
+## What Fuseprobe Is
 
-The canonical desktop app is now the `Tauri + React/Vite + Rust` shell under `apps/desktop/`.
+Fuseprobe is a focused desktop request workbench for:
 
-The older Python/Tkinter app remains in the repository only as a temporary legacy reference during the packaging cut-over. It is no longer the primary desktop direction and should be treated as a fallback baseline while the release candidate is being finalized.
+- sending HTTP requests without cloud services
+- inspecting formatted, header, and raw responses
+- testing auth/header combinations quickly
+- working with strict security defaults on local machines
+- keeping sensitive request activity off disk unless you explicitly allow it
 
-## Desktop Security Defaults
+It is intentionally not a cloud workspace, team collaboration suite, or Postman clone.
 
-The current desktop shell is intentionally strict by default:
+## Current Product Status
 
-- `Unsafe mode / Local targets` is **off** until you explicitly enable it
-- local, private, link-local, and metadata-style targets are blocked by default
-- `History persistence` is **off** until you explicitly enable it
-- both risky settings require an explicit confirmation before they switch on
+The canonical app is the `Tauri + React/Vite + Rust` desktop shell in `apps/desktop/`.
 
-These are deliberate security design choices, not missing features.
+Current verified status:
 
-See [docs/usage-and-security.md](docs/usage-and-security.md) for the public usage and security notes.
+- Windows desktop release-candidate build verified
+- cross-platform packaging remains a product goal, but is not documented here as already verified
+- the older Python/Tkinter implementation still exists in the repo only as temporary legacy reference code until the cut-over cleanup is finished
 
-## Features
+## Core Features
 
-* **Offline First:** Works without cloud services and keeps desktop data local
-* **Privacy Focused:** No telemetry, no cloud, your data stays local
-* **Full HTTP Support:** GET, POST, PUT, PATCH, DELETE methods
-* **JSON Syntax Highlighting:** Color-coded JSON responses (keys, strings, numbers)
-* **Request History:** Review and load previous requests with one click
-* **Auth Presets:** Quick setup for Bearer, Basic Auth, API Key authentication
-* **API Templates:** Pre-configured templates for Graph API, GitHub, HTTPBin, and more
-* **Threaded Requests:** UI never freezes, even on slow connections
-* **Security Focused:** Strict URL validation, no sensitive data in history
+- **Offline-first desktop app**: runs locally without cloud dependency
+- **Security-first request policy**: strict defaults for local/private targets
+- **Formatted response workflow**: switch between response, headers, and raw views
+- **Auth presets**: No Auth, Bearer, Basic, API Key header, API Key authorization
+- **API templates**: Localhost, Microsoft Graph, GitHub, JSONPlaceholder, HTTPBin, ReqRes
+- **Rust request core**: request validation, policy enforcement, response classification, history redaction
+- **Session-first history**: request history stays in-memory unless you explicitly enable persistence
+- **Desktop security controls**: persisted toggles with confirmations for risky settings
+- **UI locale support**: English, German, and Hungarian shell strings
+
+## Security Defaults
+
+Fuseprobe is intentionally strict by default:
+
+- `Unsafe mode / Local targets` is off
+- localhost, private IPs, link-local targets, and metadata-style endpoints are blocked by default
+- `History persistence` is off
+- risky settings require explicit confirmation before they switch on
+
+These are deliberate product decisions, not missing features.
+
+Public-facing usage and security notes live here:
+
+- [usage-and-security.md](docs/usage-and-security.md)
 
 ## Use Cases
 
-### Backend Development
-- Test your REST APIs during development
-- Verify endpoints before frontend integration
-- Debug API responses with pretty-printed JSON
+### Backend development
 
-### Learning & Education
-- Explore public APIs without installing Postman
-- Perfect for coding bootcamps and tutorials
-- Understand HTTP methods and responses
+- verify endpoints before wiring frontend code
+- inspect real responses without browser tooling noise
+- test auth/header combinations quickly
 
-### API Debugging
-- Quick requests without browser DevTools
-- Save custom headers for authenticated endpoints
-- Test local development servers
+### Security-oriented API testing
+
+- use a local desktop client with explicit unsafe-target controls
+- keep history session-only on sensitive machines
+- inspect raw headers and bodies while preserving strict defaults
+
+### Learning and demos
+
+- explore public APIs in a simpler tool than heavyweight API platforms
+- demonstrate HTTP methods, headers, auth presets, and response inspection
+- show request/response flows in a desktop app without cloud setup
 
 ## Requirements
 
 ### Canonical desktop shell
 
-* Node.js 20+
-* npm 10+
-* Rust stable toolchain
+- Node.js 20+
+- npm 10+
+- Rust stable toolchain
 
-### Legacy reference app
+### Legacy Python reference shell
 
-* Python 3.8+
-* Dependencies: `customtkinter`, `requests`
+- Python 3.8+
+- `customtkinter`
+- `requests`
+
+The Python path is legacy-only and should not be treated as the main desktop experience.
 
 ## Installation
 
@@ -93,45 +120,45 @@ npm --prefix apps/desktop run tauri:dev
 npm --prefix apps/desktop run tauri:build
 ```
 
-Expected Windows release artifact:
+Current verified Windows artifact:
 
 - `target/release/fuseprobe-desktop.exe`
 
-### Legacy Python reference app
+### Legacy Python reference shell
 
 ```bash
 pip install -r requirements.txt
 python main.py
 ```
 
-On Windows, prefer `python main.py` if `py` points to a different interpreter than the one where you installed dependencies.
+This is temporary reference code only and will be removed at the final cut-over.
 
-## Usage
+## Running Fuseprobe
 
 1. Launch the desktop shell with `npm --prefix apps/desktop run tauri:dev`
-2. Select HTTP method (GET, POST, PUT, PATCH, DELETE)
-3. Enter API URL
-4. (Optional) Add request body JSON in the request editor
-5. (Optional) Add custom headers in the request editor
-6. (Optional) Use the template chips for quick preset loading
-7. Click **Send**
+2. Choose the request method
+3. Enter the request URL
+4. Optionally add request body and headers
+5. Optionally apply a template preset
+6. Review the response in formatted, headers, or raw view
+7. Use the security panel for explicit opt-in settings when needed
 
-### Presets Tab
+## Templates and Auth Presets
 
-The Presets tab provides quick access to:
+### Auth presets
 
-**Auth Presets:**
-| Preset | Description |
-|--------|-------------|
-| No Auth | No authentication |
-| Bearer Token | JWT / OAuth2 tokens |
-| Basic Auth | Base64 username:password |
-| API Key (Header) | X-Api-Key header |
-| API Key (Authorization) | Authorization header |
+| Preset | Purpose |
+| --- | --- |
+| No Auth | No authentication headers |
+| Bearer Token | JWT / OAuth2 bearer token workflows |
+| Basic Auth | Base64 username/password auth |
+| API Key (Header) | `X-Api-Key` header pattern |
+| API Key (Authorization) | `Authorization: ApiKey ...` pattern |
 
-**API Templates:**
+### API templates
+
 | Template | Base URL |
-|----------|----------|
+| --- | --- |
 | Localhost | `http://localhost:8080` |
 | Microsoft Graph API | `https://graph.microsoft.com/v1.0` |
 | GitHub API | `https://api.github.com` |
@@ -139,86 +166,90 @@ The Presets tab provides quick access to:
 | HTTPBin | `https://httpbin.org` |
 | ReqRes | `https://reqres.in/api` |
 
-## Project Structure
-
-```
-Fuseprobe/
-├── apps/
-│   └── desktop/              # Canonical Tauri + React/Vite desktop shell
-├── crates/
-│   └── fuseprobe-core/       # Shared Rust request/history/security core
-├── assets/
-│   ├── fuseprobe.png         # App screenshot
-│   └── fuseprobe_social.png  # Social preview image
-├── docs/
-│   ├── release-v2.1.0.md     # Public release notes
-│   ├── usage-and-security.md # User-facing usage and security notes
-│   └── plans/                # Architecture, migration, roadmap, packaging gate
-├── main.py                   # Legacy Python reference entry point
-├── version.py                # Shared version metadata
-├── fuseprobe_theme.py        # Legacy Python theme module
-├── COMMERCIAL-USE.md         # Commercial licensing note
-├── requirements.txt          # Legacy Python dependencies
-├── src/                      # Legacy Python reference implementation
-└── tests/                    # Legacy Python reference tests
-```
-
 ## Data Storage
 
-Legacy Python reference app history is stored in your user config directory:
-- **Windows:** `%USERPROFILE%\\.fuseprobe\\history.json`
-- **Linux/macOS:** `~/.fuseprobe/history.json`
+Default behavior:
 
-The new Tauri desktop shell keeps request history session-only by default.
+- request history is session-only
+- nothing is written to disk unless `History persistence` is enabled
 
-If you enable `History persistence`, the desktop shell stores redacted history in the OS config directory under `Fuseprobe/history.json` and keeps security settings in `Fuseprobe/settings.json`.
+When history persistence is enabled:
 
-The desktop shell also reads legacy Fuseprobe and NanoMan history/settings when present, so older local state can be carried forward safely.
+- redacted history is stored under the local Fuseprobe app config directory
+- security settings are stored there as well
+- fragments are removed
+- query values are redacted before persistence
+- request bodies and headers are never persisted
 
-**Security:** Only method, URL, status code, and timing are saved. Headers and request body are never persisted to prevent leaking sensitive data.
+Fuseprobe also supports legacy state migration from older local history/settings locations when present.
 
-## Security
+## Project Structure
 
-| Threat | Prevention |
-|--------|------------|
-| XSS via URL | Only `http://` and `https://` allowed |
-| JavaScript injection | `javascript:` URLs rejected |
-| File access | `file://` URLs rejected |
-| Credential leaks | Headers/body not saved to history |
-| Local/internal probing | Desktop shell blocks local/private targets by default |
-| Accidental local persistence | Desktop shell keeps history session-only until enabled |
-| Request hanging | 10 second timeout |
-| UI freeze | Threaded requests |
+```text
+Fuseprobe/
+├── apps/
+│   └── desktop/                # Canonical Tauri + React/Vite desktop shell
+├── crates/
+│   └── fuseprobe-core/         # Shared Rust request/history/security core
+├── assets/
+│   ├── fuseprobe.png           # README screenshot
+│   ├── fuseprobe_social.png    # Social preview asset
+│   └── logo.png                # Optional local logo candidate (not required by app)
+├── docs/
+│   ├── releases/               # Release notes and release drafts
+│   ├── usage-and-security.md   # User-facing security guidance
+│   └── plans/                  # Architecture, migration, roadmap, packaging docs
+├── apps/desktop/public/        # Temporary desktop mark/favicon assets
+├── src/                        # Legacy Python reference implementation
+├── tests/                      # Legacy Python reference tests
+├── main.py                     # Legacy Python entry point
+├── fuseprobe_theme.py          # Legacy Python theme module
+├── requirements.txt            # Legacy Python dependencies
+├── Cargo.toml                  # Rust workspace root
+├── version.py                  # Shared version metadata
+├── CHANGELOG.md
+├── LICENSE
+└── COMMERCIAL-USE.md
+```
 
 ## Troubleshooting
 
-### "Invalid or unsafe URL" error
-- Make sure URL starts with `http://` or `https://`
-- Check for typos in the URL
-- Ensure no spaces in the URL
+### “Invalid or unsafe URL”
 
-### Request times out
-- Check if the server is running
-- Try increasing timeout (edit `logic.py`, line 109)
-- Verify network connection
+- use `http://` or `https://`
+- check for malformed URLs or whitespace
+- if you intentionally need `localhost` or private targets, enable `Unsafe mode / Local targets`
 
-### JSON not formatted
-- Response must use a JSON media type such as `application/json` or `application/problem+json`
-- Very large formatted responses fall back to plain view after 1000 lines to keep the UI responsive
-- If plain text, it will display as-is
+### History is empty after restart
 
-### Connection refused
-- Server might not be running
-- Check port number is correct
-- Firewall might be blocking
+- this is expected if `History persistence` is still off
+- enable it only if you explicitly want local persistence on that device
+
+### Slow startup in development
+
+- `tauri:dev` includes frontend dev-server and Rust rebuild overhead
+- compare against the packaged release build before treating it as a runtime bug
+
+### Response is not formatted as JSON
+
+- the response must be recognized as JSON
+- very large formatted responses may fall back to plain view for responsiveness
+- binary responses intentionally avoid text formatting
 
 ## Running Tests
 
 ```bash
-python -m pytest tests/ -v
 npm --prefix apps/desktop test -- --run
+npm --prefix apps/desktop run build
 cargo test
+python -m pytest tests -q
+python -m ruff check src tests
 ```
+
+## Release Notes
+
+- [release-v2.1.0.md](docs/releases/release-v2.1.0.md)
+- [release-v3.0.0.md](docs/releases/release-v3.0.0.md)
 
 ## License
 
@@ -226,7 +257,6 @@ Current branch and future versions are licensed under PolyForm Noncommercial 1.0
 
 `v2.1.0` and earlier released tags remain under their original MIT license terms.
 
-See `COMMERCIAL-USE.md` for the commercial-use note.
+See [COMMERCIAL-USE.md](COMMERCIAL-USE.md) for commercial-use notes.
 
 For commercial licensing or exceptions, open a GitHub issue.
-
