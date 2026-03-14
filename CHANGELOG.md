@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Repository-owned CodeQL workflow with Node 24-compatible GitHub Actions versions for JavaScript/TypeScript and Rust analysis
+
 ---
 
 ## [3.0.1] - 2026-03-14
