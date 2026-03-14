@@ -32,7 +32,7 @@ The next work is release-gate verification and follow-on polish rather than anot
 
 - [x] hardened desktop shell builds through `npm --prefix apps/desktop run tauri:build`
 - [x] Windows release-candidate executable produced at `target/release/fuseprobe-desktop.exe`
-- [ ] final legacy Python/Tkinter shell removal deferred until packaging cut-over
+- [x] final legacy Python/Tkinter shell removal completed at packaging cut-over
 
 ## Final MVP Release Gate
 

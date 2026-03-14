@@ -197,9 +197,14 @@ Post-gate UI hardening has also landed on the canonical desktop shell:
 
 The next active slice is:
 
-- legacy Python/Tkinter shell removal at packaging cut-over
-- release/versioning decisions for the first fully canonical Tauri desktop release
+- release/versioning follow-through for the first fully canonical Tauri desktop release
 - final logo asset replacement after the current temporary ASCII/SVG brand mark placeholder
+
+That packaging cut-over is now complete:
+
+- the canonical release line is now `v3.0.0`
+- the legacy Python/Tkinter shell has been removed from the mainline repository
+- the repo now documents and verifies a single desktop path centered on `apps/desktop/`
 
 ## Priorities
 

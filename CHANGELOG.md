@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [3.0.0] - 2026-03-14
+
 ### Added
 - Tauri + React/Vite desktop shell scaffold under `apps/desktop`
 - Rust workspace and `fuseprobe-core` migration baseline for validation, redaction, history, formatting, and request policy
@@ -32,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - explicit Tauri packaging scripts for the canonical desktop shell and verified Windows release-candidate build output
 - temporary ASCII/SVG desktop brand mark wired for both the topbar and browser-tab favicon until the final logo asset is ready
 - locale-backed desktop shell strings for English, German, and Hungarian, including a now-functional language selector in the Tauri workbench
+- public `v3.0.0` release notes under `docs/releases/release-v3.0.0.md`
 
 ### Changed
 - License changed from MIT to PolyForm Noncommercial 1.0.0 for post-`v2.1.0` development
@@ -40,6 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the desktop shell now documents security-first defaults explicitly instead of treating them as implicit behavior
 - README and planning docs now treat the Tauri shell as the canonical desktop app, while the Python shell is documented as temporary legacy reference only
 - the desktop shell UI now uses reusable dropdown controls, an accessible confirmation modal, and dismissible non-blocking notice banners instead of the earlier decorative locale selector and centered overlay alerts
+- the mainline repository now ships a single canonical desktop shell instead of split Python and Tauri desktop paths
+
+### Removed
+- Legacy Python/Tkinter desktop shell files, tests, and dependency entry points from the mainline repository
 
 ---
 

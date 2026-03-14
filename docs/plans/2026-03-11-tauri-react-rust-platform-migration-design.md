@@ -1,7 +1,7 @@
 # Fuseprobe Tauri/React/Rust Platform Migration Design
 
 Date: 2026-03-11
-Status: Approved design baseline, implementation in progress
+Status: Approved design baseline, MVP cut-over complete
 
 ## Canonical Role
 
@@ -56,13 +56,15 @@ Completed so far:
 - the desktop shell now exposes explicit security toggles for unsafe targets and history persistence, both guarded by confirmation and backed by user-facing security documentation
 - the Windows packaging gate has been exercised successfully with a real `tauri build`, producing a release-candidate desktop executable from the hardened shell
 - the desktop shell now has real `en / de / hu` UI string switching, reusable dropdown controls, dismissible non-blocking notice banners, and an accessible custom confirmation modal instead of the earlier decorative selector and centered overlay alerts
+- the `v3.0.0` cut-over is now reflected in public docs and release notes
+- the legacy Python/Tkinter shell has been removed from the mainline repository after the packaging gate cleared
 
 Still pending before MVP parity:
 
 - no remaining feature-level parity gaps
 - no remaining release-gate verification gaps for the MVP baseline
 
-The next active work is no longer feature parity. The post-MVP security hardening gate is closed, the packaging gate has been exercised for the current Windows release-candidate path, and the next work moves to release/versioning decisions plus the final legacy-shell cut-over tracked in:
+The next active work is no longer feature parity. The post-MVP security hardening gate is closed, the packaging gate has been exercised for the current Windows release-candidate path, and the legacy-shell cut-over is complete. The next work moves to post-cut-over product iteration tracked in:
 
 - `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
 
@@ -74,7 +76,7 @@ Fuseprobe should move to:
 - `frontend`: React + Vite
 - `core`: Rust library/crate
 
-The current Tkinter app remains the reference implementation until the new shell is functionally credible.
+The Tkinter app served as the migration reference implementation. The mainline repository is now centered on the Tauri shell.
 
 ## Why This Direction
 

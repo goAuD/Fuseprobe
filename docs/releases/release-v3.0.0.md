@@ -1,6 +1,6 @@
 # Fuseprobe v3.0.0
 
-Release date: TBD
+Release date: 2026-03-14
 
 ## Summary
 
@@ -46,8 +46,8 @@ These are product design choices, not omissions.
 
 ## Upgrade Notes
 
-- the Tauri shell is now the primary desktop app
-- the older Python/Tkinter implementation remains legacy reference code only during the final cleanup window
+- the Tauri shell is now the primary and only desktop app in the mainline repository
+- the older Python/Tkinter implementation has been removed from the shipping branch to reduce attack surface and eliminate dual-runtime drift
 - legacy local history/settings can still be migrated forward when present
 
 ## Docs

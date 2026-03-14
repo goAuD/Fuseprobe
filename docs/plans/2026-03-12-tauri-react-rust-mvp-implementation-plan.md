@@ -1687,7 +1687,7 @@ git commit -m "docs: add desktop security controls and user guidance"
 
 ### Task 21: Packaging Gate and Legacy Removal Prep
 
-Status: Completed on 2026-03-13.
+Status: Completed on 2026-03-14.
 
 This task stays blocked until Tasks 13 through 20 are complete.
 
@@ -1701,6 +1701,12 @@ This task stays blocked until Tasks 13 through 20 are complete.
 - [x] desktop security hardening tasks are green
 - [x] user-facing docs for security defaults exist
 - [x] packaged Tauri build has been verified for the current Windows release-candidate path
-- [ ] Python/Tkinter shell is no longer needed as a fallback
+- [x] Python/Tkinter shell is no longer needed as a fallback
+
+Follow-through completed:
+
+- version metadata moved to the canonical desktop/Rust release line
+- public docs and release notes were rewritten around the Tauri shell
+- legacy Python/Tkinter desktop shell files were removed from the mainline repository
 
 Only after that should the repo remove the legacy Python/Tkinter desktop shell to reduce attack surface.

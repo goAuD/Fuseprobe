@@ -35,7 +35,7 @@ Current verified status:
 
 - Windows desktop release-candidate build verified
 - cross-platform packaging remains a product goal, but is not documented here as already verified
-- the older Python/Tkinter implementation still exists in the repo only as temporary legacy reference code until the cut-over cleanup is finished
+- the legacy Python/Tkinter shell has been removed from the mainline repository after the packaging cut-over
 
 ## Core Features
 
@@ -92,14 +92,6 @@ Public-facing usage and security notes live here:
 - npm 10+
 - Rust stable toolchain
 
-### Legacy Python reference shell
-
-- Python 3.8+
-- `customtkinter`
-- `requests`
-
-The Python path is legacy-only and should not be treated as the main desktop experience.
-
 ## Installation
 
 ```bash
@@ -123,15 +115,6 @@ npm --prefix apps/desktop run tauri:build
 Current verified Windows artifact:
 
 - `target/release/fuseprobe-desktop.exe`
-
-### Legacy Python reference shell
-
-```bash
-pip install -r requirements.txt
-python main.py
-```
-
-This is temporary reference code only and will be removed at the final cut-over.
 
 ## Running Fuseprobe
 
@@ -193,20 +176,13 @@ Fuseprobe/
 │   └── fuseprobe-core/         # Shared Rust request/history/security core
 ├── assets/
 │   ├── fuseprobe.png           # README screenshot
-│   ├── fuseprobe_social.png    # Social preview asset
-│   └── logo.png                # Optional local logo candidate (not required by app)
+│   └── fuseprobe_social.png    # Social preview asset
 ├── docs/
 │   ├── releases/               # Release notes and release drafts
 │   ├── usage-and-security.md   # User-facing security guidance
 │   └── plans/                  # Architecture, migration, roadmap, packaging docs
 ├── apps/desktop/public/        # Temporary desktop mark/favicon assets
-├── src/                        # Legacy Python reference implementation
-├── tests/                      # Legacy Python reference tests
-├── main.py                     # Legacy Python entry point
-├── fuseprobe_theme.py          # Legacy Python theme module
-├── requirements.txt            # Legacy Python dependencies
 ├── Cargo.toml                  # Rust workspace root
-├── version.py                  # Shared version metadata
 ├── CHANGELOG.md
 ├── LICENSE
 └── COMMERCIAL-USE.md
@@ -242,8 +218,6 @@ Fuseprobe/
 npm --prefix apps/desktop test -- --run
 npm --prefix apps/desktop run build
 cargo test
-python -m pytest tests -q
-python -m ruff check src tests
 ```
 
 ## Release Notes
