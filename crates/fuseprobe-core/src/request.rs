@@ -11,6 +11,7 @@ use reqwest::{
     Method,
 };
 use serde_json::Value;
+use url::Url;
 
 use crate::{format_response_body, redact_url, validate_url_with_unsafe_targets};
 
@@ -273,10 +274,20 @@ fn map_request_error(error: reqwest::Error, url: &str, timeout_seconds: u64) -> 
 
     let sanitized = sanitize_error_message(&error.to_string(), url);
     if error.is_connect() {
-        format!("Connection failed: {sanitized}")
+        format_connection_failure(url, &sanitized)
     } else {
         format!("Request failed: {sanitized}")
     }
+}
+
+fn format_connection_failure(url: &str, detail: &str) -> String {
+    let guidance = if is_local_target_url(url) {
+        "Connection failed: the target was allowed, but no local service answered. Verify that the server is running and listening on the selected host and port."
+    } else {
+        "Connection failed: unable to reach the target. Verify that the host, port, and network path are correct."
+    };
+
+    format!("{guidance} Details: {detail}")
 }
 
 fn sanitize_error_message(message: &str, url: &str) -> String {
@@ -285,5 +296,44 @@ fn sanitize_error_message(message: &str, url: &str) -> String {
         message.to_string()
     } else {
         message.replace(url, &safe_url)
+    }
+}
+
+fn is_local_target_url(url: &str) -> bool {
+    let Ok(parsed_url) = Url::parse(url) else {
+        return false;
+    };
+
+    match parsed_url.host_str() {
+        Some("localhost") => true,
+        Some(host) => host.parse::<std::net::IpAddr>().map_or(false, |ip| ip.is_loopback()),
+        None => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::format_connection_failure;
+
+    #[test]
+    fn local_connection_failure_message_is_explicit() {
+        let message = format_connection_failure(
+            "http://localhost:8080/api/health",
+            "error sending request for url (http://localhost:8080/api/health)",
+        );
+
+        assert!(message.contains("the target was allowed"));
+        assert!(message.contains("server is running and listening"));
+    }
+
+    #[test]
+    fn remote_connection_failure_message_stays_generic() {
+        let message = format_connection_failure(
+            "https://api.example.com/users",
+            "error sending request for url (https://api.example.com/users)",
+        );
+
+        assert!(message.contains("unable to reach the target"));
+        assert!(!message.contains("target was allowed"));
     }
 }

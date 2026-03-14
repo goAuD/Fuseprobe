@@ -206,6 +206,12 @@ That packaging cut-over is now complete:
 - the legacy Python/Tkinter shell has been removed from the mainline repository
 - the repo now documents and verifies a single desktop path centered on `apps/desktop/`
 
+Post-cut-over release-readiness follow-up is now underway:
+
+- the response view is being re-tightened so formatted JSON regains readable brand-aware syntax coloring
+- the default public template list is being aligned with the security-first policy so it no longer leads with a blocked localhost target
+- final logo and tabbar branding are deferred until a clean production-ready asset is available
+
 ## Priorities
 
 ### P1: Hardening, Architecture Split, and Test Expansion

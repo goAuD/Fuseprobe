@@ -65,14 +65,14 @@ export const authPresets: Record<AuthPresetKey, AuthPreset> = {
 
 export const apiTemplates: ApiTemplate[] = [
   {
-    name: "Localhost",
-    baseUrl: "http://localhost:8080",
+    name: "Open-Meteo",
+    baseUrl: "https://api.open-meteo.com/v1",
     auth: "none",
-    description: "Local development server",
+    description: "Public weather forecast API",
     examples: [
-      { method: "GET", path: "/api/health", desc: "Health check" },
-      { method: "GET", path: "/api/status", desc: "Status endpoint" },
-      { method: "GET", path: "/api/v1/users", desc: "List users" },
+      { method: "GET", path: "/forecast?latitude=47.4979&longitude=19.0402&current=temperature_2m", desc: "Budapest current weather" },
+      { method: "GET", path: "/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m", desc: "Berlin hourly forecast" },
+      { method: "GET", path: "/forecast?latitude=48.2082&longitude=16.3738&daily=temperature_2m_max&timezone=auto", desc: "Vienna daily forecast" },
     ],
   },
   {

@@ -27,7 +27,9 @@ This release is not a small UI refresh. It is the point where the modern desktop
 
 - real Rust-backed request execution in the desktop shell
 - response, headers, and raw response inspection
+- formatted JSON response rendering with brand-aware syntax coloring in the response view
 - template-driven request setup
+- public template catalog updated so the first default template is a usable public endpoint instead of a localhost-only target
 - persisted security settings
 - stricter history redaction before disk persistence
 - non-null production CSP and narrowed Tauri capability scope

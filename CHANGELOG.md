@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README and planning docs now treat the Tauri shell as the canonical desktop app, while the Python shell is documented as temporary legacy reference only
 - the desktop shell UI now uses reusable dropdown controls, an accessible confirmation modal, and dismissible non-blocking notice banners instead of the earlier decorative locale selector and centered overlay alerts
 - the mainline repository now ships a single canonical desktop shell instead of split Python and Tauri desktop paths
+- the desktop response view again renders formatted JSON with brand-aware syntax coloring instead of plain monocolor text
+- the default public template catalog no longer ships a blocked `Localhost` template and now starts with Open-Meteo as a usable public endpoint
+
+### Fixed
+- local-target connect failures now explain that the destination was allowed but no local service answered, reducing confusion with policy blocks
 
 ### Removed
 - Legacy Python/Tkinter desktop shell files, tests, and dependency entry points from the mainline repository

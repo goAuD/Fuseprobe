@@ -43,7 +43,7 @@ Current verified status:
 - **Security-first request policy**: strict defaults for local/private targets
 - **Formatted response workflow**: switch between response, headers, and raw views
 - **Auth presets**: No Auth, Bearer, Basic, API Key header, API Key authorization
-- **API templates**: Localhost, Microsoft Graph, GitHub, JSONPlaceholder, HTTPBin, ReqRes
+- **API templates**: Open-Meteo, Microsoft Graph, GitHub, JSONPlaceholder, HTTPBin, ReqRes
 - **Rust request core**: request validation, policy enforcement, response classification, history redaction
 - **Session-first history**: request history stays in-memory unless you explicitly enable persistence
 - **Desktop security controls**: persisted toggles with confirmations for risky settings
@@ -142,7 +142,7 @@ Current verified Windows artifact:
 
 | Template | Base URL |
 | --- | --- |
-| Localhost | `http://localhost:8080` |
+| Open-Meteo | `https://api.open-meteo.com/v1` |
 | Microsoft Graph API | `https://graph.microsoft.com/v1.0` |
 | GitHub API | `https://api.github.com` |
 | JSONPlaceholder | `https://jsonplaceholder.typicode.com` |

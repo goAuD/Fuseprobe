@@ -640,6 +640,30 @@ button.method-control[aria-expanded="true"] {
   flex: 1;
 }
 
+.json-punctuation {
+  color: #9ba49e;
+}
+
+.json-key {
+  color: #6effba;
+}
+
+.json-string {
+  color: #e4e9e6;
+}
+
+.json-number {
+  color: #9cd9bd;
+}
+
+.json-boolean {
+  color: #7ddfb0;
+}
+
+.json-null {
+  color: #8f9892;
+}
+
 .history-list {
   display: grid;
   gap: var(--space-sm);

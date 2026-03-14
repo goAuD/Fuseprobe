@@ -25,9 +25,13 @@ const BASE_RESPONSE = {
 };
 
 it("switches between formatted response, headers, and raw tabs", () => {
-  render(<ResponsePanel response={BASE_RESPONSE} isSending={false} error={null} />);
+  const { container } = render(
+    <ResponsePanel response={BASE_RESPONSE} isSending={false} error={null} />,
+  );
 
   expect(screen.getByLabelText("response-panel")).toHaveTextContent('"ok": true');
+  expect(container.querySelector(".json-key")).toHaveTextContent('"ok"');
+  expect(container.querySelector(".json-boolean")).toHaveTextContent("true");
 
   fireEvent.click(screen.getByRole("button", { name: "Headers" }));
   expect(
