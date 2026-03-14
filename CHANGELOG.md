@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Windows release builds no longer open an extra console window alongside the desktop app
+
 ---
 
 ## [3.0.0] - 2026-03-14
