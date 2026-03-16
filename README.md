@@ -159,6 +159,13 @@ Tauri's current prerequisites state that WebView2 is already installed on Window
 - [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
 - [Tauri Windows installer docs](https://v2.tauri.app/distribute/windows-installer/)
 
+After installing the Microsoft build tools, open a fresh shell. On some Windows setups the safest option is to use:
+
+- `Developer PowerShell for VS 2022`
+- or `x64 Native Tools Command Prompt for VS 2022`
+
+Those shells initialize the MSVC build environment so tools such as `cl`, `link`, `rc`, and `mt` are available on `PATH`.
+
 ## Running Fuseprobe
 
 1. Launch the desktop shell with `npm --prefix apps/desktop run tauri:dev`
@@ -285,6 +292,8 @@ npm install
 - enable `Desktop development with C++`
 - include `MSVC v143` and a `Windows 10/11 SDK`
 - after installation, close the terminal, open a new one, and run the desktop commands again
+- on some systems you should launch `Developer PowerShell for VS 2022` or `x64 Native Tools Command Prompt for VS 2022` instead of a plain PowerShell window
+- if `where.exe cl`, `where.exe link`, `where.exe rc`, and `where.exe mt` still return nothing, the MSVC environment is not initialized correctly yet
 
 ### Response is not formatted as JSON
 

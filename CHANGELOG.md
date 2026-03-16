@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README now documents the NSIS setup executable as the intended Windows distribution artifact instead of the raw `target/release` binary
 - README now documents the required Windows MSVC/SDK build prerequisites for source builds of the Tauri desktop shell
 - README now explicitly calls out WebView2 as part of the Windows desktop runtime/build context for the Tauri shell
+- README now documents that Windows source builds may need a Visual Studio developer shell so `cl`, `link`, `rc`, and `mt` are available on `PATH`
 
 ---
 
