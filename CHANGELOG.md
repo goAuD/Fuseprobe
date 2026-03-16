@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Repo-owned CodeQL workflow now uses the Rust-supported `build-mode: none` path and a distinct workflow name to reduce confusion with GitHub default setup
 - README now documents the NSIS setup executable as the intended Windows distribution artifact instead of the raw `target/release` binary
+- README now documents the required Windows MSVC/SDK build prerequisites for source builds of the Tauri desktop shell
 
 ---
 

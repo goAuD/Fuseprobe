@@ -91,6 +91,9 @@ Public-facing usage and security notes live here:
 - Node.js 20+
 - npm 10+
 - Rust stable toolchain
+- Windows source builds also require `Visual Studio Build Tools 2022`
+- install the `Desktop development with C++` workload
+- make sure `MSVC v143` and a `Windows 10/11 SDK` are included
 
 ## Installation
 
@@ -99,11 +102,21 @@ git clone https://github.com/goAuD/Fuseprobe.git
 cd Fuseprobe
 ```
 
+All commands below assume your current working directory is the repository root, where `apps/desktop/package.json` exists.
+
 ### Desktop development shell
 
 ```bash
 npm --prefix apps/desktop install
 npm --prefix apps/desktop run tauri:dev
+```
+
+Equivalent step-by-step version:
+
+```bash
+cd apps/desktop
+npm install
+npm run tauri:dev
 ```
 
 ### Desktop release-candidate build
@@ -112,11 +125,32 @@ npm --prefix apps/desktop run tauri:dev
 npm --prefix apps/desktop run tauri:build
 ```
 
+Equivalent step-by-step version:
+
+```bash
+cd apps/desktop
+npm install
+npm run tauri:build
+```
+
 Preferred Windows distribution artifact:
 
 - `target/release/bundle/nsis/Fuseprobe_3.0.1_x64-setup.exe`
 
 The raw binary at `target/release/fuseprobe-desktop.exe` is a development/build artifact. It is not the recommended distribution target for other machines.
+
+### Windows build prerequisites
+
+If you are building Fuseprobe from source on Windows, install these before trying `tauri:dev` or `tauri:build`:
+
+1. Rust stable toolchain
+2. Node.js and npm
+3. Visual Studio Build Tools 2022
+4. `Desktop development with C++`
+5. `MSVC v143` toolset
+6. `Windows 10/11 SDK`
+
+Without the C++ build workload, the Tauri/Rust desktop build can fail with Windows linker errors such as `link.exe` failures during dependency compilation.
 
 ## Running Fuseprobe
 
@@ -224,6 +258,26 @@ Fuseprobe/
 - the setup executable can install the required WebView2 runtime when it is missing
 - if you run the raw exe directly, Windows WebView2 availability on that machine becomes your problem instead of Fuseprobe's installer handling it
 - first launch can still be delayed by SmartScreen or antivirus scanning on unsigned builds
+
+### `npm --prefix apps/desktop install` fails with `ENOENT`
+
+- make sure you are in the repository root before running the command
+- verify that `apps/desktop/package.json` exists from your current shell location
+- if it does not exist, you are in the wrong folder or did not open the cloned repo root
+- the direct fallback is:
+
+```bash
+cd Fuseprobe/apps/desktop
+npm install
+```
+
+### `tauri:dev` or `tauri:build` fails with `link.exe` / MSVC errors
+
+- this is usually a missing Windows native build prerequisite, not an npm dependency issue
+- install `Visual Studio Build Tools 2022`
+- enable `Desktop development with C++`
+- include `MSVC v143` and a `Windows 10/11 SDK`
+- after installation, close the terminal, open a new one, and run the desktop commands again
 
 ### Response is not formatted as JSON
 
