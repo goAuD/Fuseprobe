@@ -94,6 +94,7 @@ Public-facing usage and security notes live here:
 - Windows source builds also require `Visual Studio Build Tools 2022`
 - install the `Desktop development with C++` workload
 - make sure `MSVC v143` and a `Windows 10/11 SDK` are included
+- Microsoft Edge WebView2 runtime is also part of the Windows desktop stack for Tauri apps
 
 ## Installation
 
@@ -149,8 +150,14 @@ If you are building Fuseprobe from source on Windows, install these before tryin
 4. `Desktop development with C++`
 5. `MSVC v143` toolset
 6. `Windows 10/11 SDK`
+7. Microsoft Edge WebView2 Runtime if it is not already present on that machine
 
 Without the C++ build workload, the Tauri/Rust desktop build can fail with Windows linker errors such as `link.exe` failures during dependency compilation.
+
+Tauri's current prerequisites state that WebView2 is already installed on Windows 10 (from version 1803 onward) and Windows 11, but it is still worth calling out explicitly because desktop app startup depends on it. Sources:
+
+- [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
+- [Tauri Windows installer docs](https://v2.tauri.app/distribute/windows-installer/)
 
 ## Running Fuseprobe
 
