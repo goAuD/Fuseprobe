@@ -86,7 +86,7 @@ Public-facing usage and security notes live here:
 
 ## Requirements
 
-### Canonical desktop shell
+### Building from source
 
 - Node.js 20+
 - npm 10+
@@ -112,9 +112,11 @@ npm --prefix apps/desktop run tauri:dev
 npm --prefix apps/desktop run tauri:build
 ```
 
-Current verified Windows artifact:
+Preferred Windows distribution artifact:
 
-- `target/release/fuseprobe-desktop.exe`
+- `target/release/bundle/nsis/Fuseprobe_3.0.1_x64-setup.exe`
+
+The raw binary at `target/release/fuseprobe-desktop.exe` is a development/build artifact. It is not the recommended distribution target for other machines.
 
 ## Running Fuseprobe
 
@@ -125,6 +127,16 @@ Current verified Windows artifact:
 5. Optionally apply a template preset
 6. Review the response in formatted, headers, or raw view
 7. Use the security panel for explicit opt-in settings when needed
+
+### Running the packaged Windows app
+
+After `npm --prefix apps/desktop run tauri:build`, install and launch Fuseprobe from the generated NSIS setup executable:
+
+1. Open `target/release/bundle/nsis/`
+2. Run the generated `*-setup.exe`
+3. Launch Fuseprobe from the installed desktop/start-menu entry
+
+This is the intended Windows delivery path.
 
 ## Templates and Auth Presets
 
@@ -205,6 +217,13 @@ Fuseprobe/
 
 - `tauri:dev` includes frontend dev-server and Rust rebuild overhead
 - compare against the packaged release build before treating it as a runtime bug
+
+### Packaged app does not start on another Windows machine
+
+- use the NSIS setup executable from `target/release/bundle/nsis/`, not the raw `target/release/fuseprobe-desktop.exe`
+- the setup executable can install the required WebView2 runtime when it is missing
+- if you run the raw exe directly, Windows WebView2 availability on that machine becomes your problem instead of Fuseprobe's installer handling it
+- first launch can still be delayed by SmartScreen or antivirus scanning on unsigned builds
 
 ### Response is not formatted as JSON
 
