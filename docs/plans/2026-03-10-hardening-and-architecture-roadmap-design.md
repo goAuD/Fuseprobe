@@ -234,6 +234,11 @@ Approved temporary branding direction for the current desktop shell:
 - keep the visual treatment dark, compact, badge-like, and aligned with the existing green/black Fuseprobe UI direction
 - treat this as an interim asset only, not the final long-term logo system
 
+Current status:
+
+- the shared `FP` badge mark is already active in the navbar/favicon path
+- the desktop icon set has now been regenerated from that same mark so the packaged app no longer points at the earlier mismatched placeholder imagery
+
 ## Priorities
 
 ### P1: Hardening, Architecture Split, and Test Expansion

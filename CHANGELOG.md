@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README now explicitly calls out WebView2 as part of the Windows desktop runtime/build context for the Tauri shell
 - README now documents that Windows source builds may need a Visual Studio developer shell so `cl`, `link`, `rc`, and `mt` are available on `PATH`
 - README and release notes now treat GitHub release assets as the canonical Windows install path, with source builds explicitly framed as a developer workflow
+- the temporary in-house `FP` badge mark now drives the desktop icon set as well as the existing navbar/favicon mark
 
 ---
 
