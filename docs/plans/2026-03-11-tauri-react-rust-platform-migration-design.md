@@ -1,7 +1,7 @@
 # Fuseprobe Tauri/React/Rust Platform Migration Design
 
 Date: 2026-03-11
-Status: Approved design baseline, MVP cut-over complete
+Status: Approved design baseline, MVP cut-over complete, post-cut-over distribution design approved
 
 ## Canonical Role
 
@@ -68,6 +68,14 @@ The next active work is no longer feature parity. The post-MVP security hardenin
 
 - `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
 
+The next approved post-cut-over priority is:
+
+- release/distribution hardening so public users install a real Windows release artifact instead of cloning and building the repository
+
+The next approved functional slice after that is:
+
+- finish the desktop localization path so the existing `en / de / hu` selector is backed by complete production-ready translations
+
 ## Decision
 
 Fuseprobe should move to:
@@ -120,11 +128,20 @@ The migration must preserve these product constraints:
 - predictable local performance
 - small-tool mentality rather than "mini Postman platform"
 
+Post-cut-over distribution constraints:
+
+- end users should not need Rust, npm, MSVC, or SDK setup just to run Fuseprobe
+- source builds remain a developer workflow, not the primary public installation path
+- release notes and README should treat downloadable installer assets as the canonical Windows delivery path
+
 Additional direction confirmed during design:
 
 - cross-platform packaging is a goal from the beginning
 - a future CLI is desirable, but not part of the first migration release
 - the CLI should later reuse the same Rust core rather than become a separate implementation
+- the public repository should remain source-only rather than shipping built binaries in git
+- the end-user "double-click and launch" path should come from GitHub Release assets, not source-build instructions
+- the first automated publish target should be Windows only, while keeping the workflow structure ready for future Linux/macOS expansion
 
 Additional security direction confirmed after the MVP parity pass:
 
@@ -297,6 +314,18 @@ The canonical execution order for this phase belongs in:
 
 - `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
 
+### Phase 6: Release Distribution Hardening
+
+After the security gate and packaging cut-over:
+
+- automate Windows release installer builds for tag/release events
+- upload the generated NSIS setup executable as a GitHub Release asset
+- keep the repository source-only
+- make the public README clearly prefer installer download over source build
+- keep the workflow and docs ready for later Linux/macOS expansion, but do not activate those publish targets yet
+
+This phase exists because the public repo should not force end users into a local Rust/Tauri/MSVC build pipeline just to try the app.
+
 ## UI Direction
 
 The recommended UI is a request workbench, not a generic admin/dashboard shell.
@@ -359,6 +388,22 @@ Mitigation:
 
 - treat the first Tauri release as an MVP workbench
 - avoid turning Fuseprobe into a broad dashboard product
+
+### Risk: public users are pushed into source builds
+
+Mitigation:
+
+- treat GitHub Release installer assets as the canonical public install path
+- keep source-build instructions explicitly developer-oriented
+- automate Windows release packaging before widening public usage expectations
+
+### Risk: localization remains half-finished in a shipped shell
+
+Mitigation:
+
+- track localization as the first post-distribution functional slice
+- keep `en / de / hu` as the supported locale set
+- finish the production string layer rather than treating the selector as cosmetic UI
 
 ## Next Step
 
