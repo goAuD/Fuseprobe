@@ -212,6 +212,21 @@ Post-cut-over release-readiness follow-up is now underway:
 - the default public template list is being aligned with the security-first policy so it no longer leads with a blocked localhost target
 - final logo and tabbar branding are deferred until a clean production-ready asset is available
 
+The next active post-cut-over execution slice is now:
+
+- public distribution hardening so GitHub Releases become the real Windows install path
+
+That slice is complete only when:
+
+- a Windows release workflow exists for tagged versions
+- the NSIS setup executable is uploaded as a GitHub Release asset
+- the README prefers release download over source build
+- maintainers have a short checklist for validating the published Windows setup asset
+
+The next functional slice after that remains:
+
+- production localization completion for `en / de / hu`
+
 ## Priorities
 
 ### P1: Hardening, Architecture Split, and Test Expansion

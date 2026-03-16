@@ -1729,6 +1729,12 @@ Approved follow-on work after this distribution track:
 
 - complete the production localization pass for `en / de / hu`
 
+Distribution sprint exit condition:
+
+- the release workflow exists
+- Windows release assets are the canonical public install path in docs
+- maintainers have a minimal release-asset verification checklist
+
 ### Task 22: Add Windows Release Publish Workflow
 
 **Files:**

@@ -56,3 +56,7 @@ These are product design choices, not omissions.
 
 - public usage/security notes: `docs/usage-and-security.md`
 - migration and architecture context: `docs/plans/`
+
+## Install Note
+
+For Windows users, the intended delivery path is the release `*-setup.exe` asset attached to the GitHub Release. A raw repository clone is a source tree, not the normal end-user install path.

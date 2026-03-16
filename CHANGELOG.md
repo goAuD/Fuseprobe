@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Repository-owned CodeQL workflow with Node 24-compatible GitHub Actions versions for JavaScript/TypeScript and Rust analysis
 - Windows NSIS bundle configuration for the desktop shell with installer-managed WebView2 bootstrap support
+- Windows release workflow that publishes the NSIS setup executable as a GitHub release asset on version tags
 
 ### Changed
 - Repo-owned CodeQL workflow now uses the Rust-supported `build-mode: none` path and a distinct workflow name to reduce confusion with GitHub default setup
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README now documents the required Windows MSVC/SDK build prerequisites for source builds of the Tauri desktop shell
 - README now explicitly calls out WebView2 as part of the Windows desktop runtime/build context for the Tauri shell
 - README now documents that Windows source builds may need a Visual Studio developer shell so `cl`, `link`, `rc`, and `mt` are available on `PATH`
+- README and release notes now treat GitHub release assets as the canonical Windows install path, with source builds explicitly framed as a developer workflow
 
 ---
 

@@ -15,6 +15,16 @@ Fuseprobe is a local-first API client built for deliberate testing, not cloud sy
 
 Source-available for noncommercial use. Commercial use requires permission.
 
+## Download for Windows
+
+The intended end-user install path is the signed-off release installer, not a source build.
+
+- download the latest Windows installer from [GitHub Releases](https://github.com/goAuD/Fuseprobe/releases)
+- use the `Fuseprobe_*_x64-setup.exe` asset
+- install it, then launch Fuseprobe from the installed shortcut or Start menu entry
+
+If you only want to use Fuseprobe, stop here. The source-build path below is for contributors and local development.
+
 ## What Fuseprobe Is
 
 Fuseprobe is a focused desktop request workbench for:
@@ -84,6 +94,10 @@ Public-facing usage and security notes live here:
 - demonstrate HTTP methods, headers, auth presets, and response inspection
 - show request/response flows in a desktop app without cloud setup
 
+## Build From Source
+
+This section is for contributors and local source builds.
+
 ## Requirements
 
 ### Building from source
@@ -96,7 +110,7 @@ Public-facing usage and security notes live here:
 - make sure `MSVC v143` and a `Windows 10/11 SDK` are included
 - Microsoft Edge WebView2 runtime is also part of the Windows desktop stack for Tauri apps
 
-## Installation
+## Source Checkout
 
 ```bash
 git clone https://github.com/goAuD/Fuseprobe.git
