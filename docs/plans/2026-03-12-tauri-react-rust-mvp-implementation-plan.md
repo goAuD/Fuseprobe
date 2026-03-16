@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
-**Current State:** Tasks 1 through 21 are now complete. A post-gate UI hardening pass has also landed on the desktop shell for locale-backed `en/de/hu` strings, reusable dropdowns, dismissible notice banners, and accessible confirmation behavior. The next active work is release/versioning decisions and the legacy-shell removal cut-over. Do not treat the MVP parity milestone as fully shipped until those final cut-over decisions are made.
+**Current State:** Tasks 1 through 21 are now complete. A post-gate UI hardening pass has also landed on the desktop shell for locale-backed `en/de/hu` strings, reusable dropdowns, dismissible notice banners, and accessible confirmation behavior. The cut-over release line now exists and the legacy shell is removed. The next active work is post-cut-over release/distribution hardening so public users download a real Windows installer artifact instead of cloning and building the repository. After that, the next functional slice is completing the production localization layer for `en / de / hu`.
 
 ---
 
@@ -1710,3 +1710,291 @@ Follow-through completed:
 - legacy Python/Tkinter desktop shell files were removed from the mainline repository
 
 Only after that should the repo remove the legacy Python/Tkinter desktop shell to reduce attack surface.
+
+---
+
+## Post-Cut-Over Execution Track
+
+The Tauri MVP migration is functionally complete. The next execution track is public distribution hardening for the source-only repository.
+
+Goals:
+
+- make GitHub Releases the canonical end-user install path
+- publish a Windows NSIS installer asset on tagged releases
+- stop implying that public users should clone and build from source
+- keep the workflow structure ready for future Linux/macOS expansion without enabling those publish targets yet
+- preserve the existing developer source-build path separately from the public install path
+
+Approved follow-on work after this distribution track:
+
+- complete the production localization pass for `en / de / hu`
+
+### Task 22: Add Windows Release Publish Workflow
+
+**Files:**
+- Create: `.github/workflows/release-desktop.yml`
+- Reference: `apps/desktop/package.json`
+- Reference: `apps/desktop/src-tauri/tauri.conf.json`
+- Reference: `.github/workflows/codeql.yml`
+
+**Step 1: Write the failing workflow shape review**
+
+Before writing YAML, verify that no release workflow exists yet:
+
+```bash
+Get-ChildItem .github/workflows
+```
+
+Expected:
+
+- only `codeql.yml` exists
+- no Windows release publish workflow exists yet
+
+This is the intentional failing baseline for the distribution sprint.
+
+**Step 2: Create the Windows release workflow**
+
+Create `.github/workflows/release-desktop.yml` with this structure:
+
+```yaml
+name: Release Desktop
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-x64
+            artifact_name: fuseprobe-windows-x64
+            bundle_glob: target/release/bundle/nsis/*-setup.exe
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm --prefix apps/desktop ci
+
+      - name: Run frontend tests
+        run: npm --prefix apps/desktop test -- --run
+
+      - name: Run Rust tests
+        run: cargo test
+
+      - name: Build desktop installer
+        run: npm --prefix apps/desktop run tauri:build
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.bundle_glob }}
+
+      - name: Upload release asset
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.bundle_glob }}
+```
+
+Design constraints for this workflow:
+
+- release builds happen on tags, not every `main` push
+- `workflow_dispatch` is allowed for manual validation
+- Windows is the only active publish target
+- the matrix shape should stay ready for future Linux/macOS expansion
+- upload both a workflow artifact and a release asset for tagged builds
+
+**Step 3: Verify the workflow file locally**
+
+Run:
+
+```bash
+Get-Content .github/workflows/release-desktop.yml
+```
+
+Expected:
+
+- trigger is tag/release oriented
+- no `main` push build job exists
+- Windows installer upload path points at `target/release/bundle/nsis/*-setup.exe`
+
+**Step 4: Commit**
+
+```bash
+git add .github/workflows/release-desktop.yml
+git commit -m "ci: add Windows desktop release workflow"
+```
+
+### Task 23: Document GitHub Release as the Canonical Install Path
+
+**Files:**
+- Modify: `README.md`
+- Modify: `docs/releases/release-v3.0.1.md`
+- Modify: `docs/releases/release-v3.0.0.md`
+- Modify: `CHANGELOG.md`
+
+**Step 1: Write the failing docs review**
+
+Review the current README and release notes for this anti-pattern:
+
+- source-build instructions appear before installer download guidance
+- the public user path is not clearly separated from the developer path
+
+Expected current failure:
+
+- the README still reads primarily like a source-build document instead of a public app download document
+
+**Step 2: Reframe the public docs**
+
+Update `README.md` so the top install flow is:
+
+1. `Download for Windows`
+2. `Build from source`
+
+Required README changes:
+
+- add a short `Download for Windows` section near the top
+- point it to the GitHub Releases page
+- clearly label source builds as a developer workflow
+- keep the Windows prereq and troubleshooting notes, but move them under the source-build path
+- keep the existing security and feature sections intact
+
+In `docs/releases/release-v3.0.0.md` and `docs/releases/release-v3.0.1.md`, add a short install note that the intended Windows delivery path is the NSIS `*-setup.exe` release asset, not a raw repo clone.
+
+In `CHANGELOG.md`, add an `Unreleased` entry noting that public documentation now treats release assets as the canonical install path.
+
+**Step 3: Verify the docs layout**
+
+Run:
+
+```bash
+Get-Content README.md
+Get-Content docs/releases/release-v3.0.0.md
+Get-Content docs/releases/release-v3.0.1.md
+```
+
+Expected:
+
+- public download path appears before source build
+- source build is clearly marked as developer-oriented
+- release notes mention the setup executable as the intended Windows asset
+
+**Step 4: Commit**
+
+```bash
+git add README.md docs/releases/release-v3.0.0.md docs/releases/release-v3.0.1.md CHANGELOG.md
+git commit -m "docs: prioritize Windows release installer path"
+```
+
+### Task 24: Add Release Verification Notes for Maintainers
+
+**Files:**
+- Modify: `docs/releases/release-v3.0.1.md`
+- Modify: `docs/plans/2026-03-10-hardening-and-architecture-roadmap-design.md`
+- Modify: `docs/plans/2026-03-12-tauri-mvp-parity-checklist.md`
+
+**Step 1: Write the failing maintainer checklist review**
+
+Check whether the repo currently tells a maintainer how to verify a real published Windows release artifact.
+
+Expected current failure:
+
+- release verification is documented for local `tauri build`
+- release verification is not yet documented for downloaded GitHub release assets
+
+**Step 2: Add maintainer-facing verification notes**
+
+Update the docs with a concise maintainer checklist that covers:
+
+- confirm the GitHub Release contains the NSIS `*-setup.exe`
+- download the setup asset on a clean Windows machine
+- install and launch from the installed shortcut/start menu entry
+- verify the app starts without opening a console window
+- verify the release asset path matches the versioned tag
+
+Keep this maintainer-oriented. Do not turn it into a broad release playbook.
+
+**Step 3: Verify the updated release notes and roadmap**
+
+Run:
+
+```bash
+Get-Content docs/releases/release-v3.0.1.md
+Get-Content docs/plans/2026-03-10-hardening-and-architecture-roadmap-design.md
+Get-Content docs/plans/2026-03-12-tauri-mvp-parity-checklist.md
+```
+
+Expected:
+
+- release verification now includes downloaded asset validation, not only local builds
+- roadmap reflects that public distribution hardening is the active post-cut-over slice
+
+**Step 4: Commit**
+
+```bash
+git add docs/releases/release-v3.0.1.md docs/plans/2026-03-10-hardening-and-architecture-roadmap-design.md docs/plans/2026-03-12-tauri-mvp-parity-checklist.md
+git commit -m "docs: add release asset verification notes"
+```
+
+### Task 25: Prepare the Next Functional Slice Boundary
+
+**Files:**
+- Modify: `docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md`
+- Modify: `docs/plans/2026-03-10-hardening-and-architecture-roadmap-design.md`
+
+**Step 1: Record the exit condition for the distribution sprint**
+
+Add a short checkpoint note that this sprint is complete only when:
+
+- the release workflow exists
+- Windows release assets are the canonical public install path in docs
+- maintainers have a minimal release-asset verification checklist
+
+Also record the next slice explicitly:
+
+- production localization completion for `en / de / hu`
+
+**Step 2: Verify the plan boundary**
+
+Run:
+
+```bash
+Get-Content docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md
+Get-Content docs/plans/2026-03-10-hardening-and-architecture-roadmap-design.md
+```
+
+Expected:
+
+- the release/distribution sprint has a clear done-condition
+- localization is recorded as next, but not mixed into this sprint
+
+**Step 3: Commit**
+
+```bash
+git add docs/plans/2026-03-12-tauri-react-rust-mvp-implementation-plan.md docs/plans/2026-03-10-hardening-and-architecture-roadmap-design.md
+git commit -m "docs: record post-distribution localization boundary"
+```
