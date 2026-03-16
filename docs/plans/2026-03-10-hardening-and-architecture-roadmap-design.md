@@ -227,6 +227,13 @@ The next functional slice after that remains:
 
 - production localization completion for `en / de / hu`
 
+Approved temporary branding direction for the current desktop shell:
+
+- replace the mismatched placeholder/app icon imagery with a deterministic in-house `FP` badge mark
+- use the same `FP` mark for both the navbar brand mark and the temporary desktop/app icon set
+- keep the visual treatment dark, compact, badge-like, and aligned with the existing green/black Fuseprobe UI direction
+- treat this as an interim asset only, not the final long-term logo system
+
 ## Priorities
 
 ### P1: Hardening, Architecture Split, and Test Expansion
