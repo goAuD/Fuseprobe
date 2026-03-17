@@ -1,7 +1,7 @@
 # Fuseprobe v3.0.2 Localization and Release Implementation Plan
 
 Date: 2026-03-17
-Source spec: `docs/superpowers/specs/2026-03-16-v3-0-2-localization-and-release-design.md`
+Source design: `docs/plans/2026-03-16-v3-0-2-localization-and-release-design.md`
 Goal: ship `v3.0.2` with production-ready `en / de / hu` localization and a proven tag-based GitHub Release asset flow.
 
 ## Current Baseline

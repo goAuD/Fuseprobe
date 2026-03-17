@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale } from "../i18n/locale";
+import { formatByteCount } from "../i18n/messageText";
 import type { SendRequestResult } from "../../lib/contracts";
 
 interface ResponsePanelProps {
@@ -116,7 +117,7 @@ export default function ResponsePanel({
   isSending,
   error,
 }: ResponsePanelProps) {
-  const { strings } = useLocale();
+  const { locale, strings } = useLocale();
   const [activeTab, setActiveTab] = useState<"response" | "headers" | "raw">("response");
 
   useEffect(() => {
@@ -127,22 +128,35 @@ export default function ResponsePanel({
     ? strings.response.requestError
     : isSending
       ? strings.app.sending
-      : response.statusLine;
-  const responseBody = error ? error : response.responseText;
+      : response.statusCode === 0
+        ? strings.hooks.idleStatus
+        : response.reason
+          ? `${response.statusCode} ${response.reason}`
+          : `${response.statusCode}`;
+  const responseBody = error
+    ? error
+    : response.isBinary
+      ? strings.response.binaryResponseOmitted(
+          response.contentType || "unknown",
+          response.byteCount,
+        )
+      : buildResponseBody(strings, response);
   const responseHeaders = Object.entries(response.responseHeaders)
     .map(([key, value]) => `${key}: ${value}`)
     .join("\n");
   const parsedJson = useMemo(
-    () => (!error && activeTab === "response"
+    () => (!error && !response.isBinary && activeTab === "response"
       ? tryParseJsonPreview(response.contentType, response.responseText)
       : null),
-    [activeTab, error, response.contentType, response.responseText],
+    [activeTab, error, response.contentType, response.isBinary, response.responseText],
   );
   const previewText =
     activeTab === "headers"
       ? responseHeaders || strings.response.noHeadersYet
       : activeTab === "raw"
-        ? error || response.rawResponseText || strings.response.noRawYet
+        ? error
+          || buildRawResponseBody(strings, response)
+          || strings.response.noRawYet
         : responseBody;
 
   return (
@@ -156,12 +170,12 @@ export default function ResponsePanel({
         <div className="status-block">
           <span className={`status-badge${error ? " danger" : ""}`}>{statusLine}</span>
           <span>{isSending ? strings.response.working : `${response.durationMs} ms`}</span>
-          <span>{response.sizeLabel}</span>
+          <span>{formatByteCount(locale, response.byteCount)}</span>
         </div>
         <div className="meta-row">
           <span className="meta-chip">{response.contentType}</span>
           <span className="meta-chip">{response.charset}</span>
-          <span className="meta-chip">{response.policyNote}</span>
+          <span className="meta-chip">{strings.response.policies[response.policyCode]}</span>
         </div>
       </div>
 
@@ -194,4 +208,41 @@ export default function ResponsePanel({
       </pre>
     </section>
   );
+}
+
+function buildResponseBody(strings: ReturnType<typeof useLocale>["strings"], response: SendRequestResult) {
+  const segments: string[] = [];
+
+  if (response.redirectLocation) {
+    segments.push(strings.response.redirectNotFollowed(response.redirectLocation));
+  }
+
+  if (response.responseText) {
+    segments.push(response.responseText);
+  }
+
+  if (response.truncated) {
+    segments.push(strings.response.outputTruncated(response.byteCount));
+  }
+
+  return segments.join("\n\n");
+}
+
+function buildRawResponseBody(strings: ReturnType<typeof useLocale>["strings"], response: SendRequestResult) {
+  if (response.isBinary) {
+    return strings.response.binaryResponseOmitted(
+      response.contentType || "unknown",
+      response.byteCount,
+    );
+  }
+
+  const segments: string[] = [];
+  if (response.redirectLocation) {
+    segments.push(strings.response.redirectNotFollowed(response.redirectLocation));
+  }
+  if (response.rawResponseText) {
+    segments.push(response.rawResponseText);
+  }
+
+  return segments.join("\n\n");
 }

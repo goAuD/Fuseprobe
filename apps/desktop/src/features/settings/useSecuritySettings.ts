@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { SecuritySettings } from "../../lib/contracts";
 import { useLocale } from "../i18n/locale";
+import { formatCommandError } from "../i18n/messageText";
 import {
   loadSecuritySettings as loadSecuritySettingsFromBridge,
   updateSecuritySettings as updateSecuritySettingsFromBridge,
@@ -35,15 +36,10 @@ export function useSecuritySettings() {
           return;
         }
 
-        const message =
-          loadError instanceof Error
-            ? loadError.message
-            : typeof loadError === "string"
-              ? loadError
-              : strings.hooks.failedToLoadSecuritySettings;
-
         setSettings(DEFAULT_SECURITY_SETTINGS);
-        setError(message);
+        setError(
+          formatCommandError(strings, loadError, strings.hooks.failedToLoadSecuritySettings),
+        );
       })
       .finally(() => {
         if (isActive) {
@@ -66,14 +62,9 @@ export function useSecuritySettings() {
       setError(null);
       return updatedSettings;
     } catch (updateError) {
-      const message =
-        updateError instanceof Error
-          ? updateError.message
-          : typeof updateError === "string"
-            ? updateError
-            : strings.hooks.failedToUpdateSecuritySettings;
-
-      setError(message);
+      setError(
+        formatCommandError(strings, updateError, strings.hooks.failedToUpdateSecuritySettings),
+      );
       throw updateError;
     }
   }

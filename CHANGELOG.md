@@ -9,10 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [3.0.2] - 2026-03-17
+
 ### Added
 - Repository-owned CodeQL workflow with Node 24-compatible GitHub Actions versions for JavaScript/TypeScript and Rust analysis
 - Windows NSIS bundle configuration for the desktop shell with installer-managed WebView2 bootstrap support
 - Windows release workflow that publishes the NSIS setup executable as a GitHub release asset on version tags
+- persisted desktop locale selection across restarts
+- stable-key localization for auth presets and API templates instead of English-first display-key lookups
+- structured desktop request metadata and structured Tauri error/warning codes so response/policy/warning rendering is localized on the frontend
+- public `v3.0.2` release notes under `docs/releases/release-v3.0.2.md`
 
 ### Changed
 - Repo-owned CodeQL workflow now uses the Rust-supported `build-mode: none` path and a distinct workflow name to reduce confusion with GitHub default setup
@@ -22,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README now documents that Windows source builds may need a Visual Studio developer shell so `cl`, `link`, `rc`, and `mt` are available on `PATH`
 - README and release notes now treat GitHub release assets as the canonical Windows install path, with source builds explicitly framed as a developer workflow
 - the temporary in-house `FP` badge mark now drives the desktop icon set as well as the existing navbar/favicon mark
+- desktop UI copy is now production-ready across English, German, and Hungarian for notices, history/settings flows, auth/template presentation, and response metadata
+- locale choice now persists locally instead of resetting to English on restart
+- the desktop response/history/settings contract now prefers machine-readable metadata over backend-owned English UI prose
+
+### Fixed
+- unsafe-target validation now also blocks `localhost`-style alias domains and domains that resolve to loopback/private addresses while `Unsafe mode / Local targets` is off
+- the active desktop storage path no longer depends on the old `.nanoman` fallback directory
 
 ---
 

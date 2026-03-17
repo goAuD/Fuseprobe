@@ -9,9 +9,10 @@ const BASE_RESPONSE = {
     body: "",
     headers: "",
   },
-  statusLine: "200 OK",
+  statusCode: 200,
+  reason: "OK",
   durationMs: 28,
-  sizeLabel: "96 B",
+  byteCount: 96,
   contentType: "application/json",
   charset: "utf-8",
   responseText: '{\n  "ok": true\n}',
@@ -20,8 +21,11 @@ const BASE_RESPONSE = {
     "content-type": "application/json; charset=utf-8",
     "x-request-id": "req-42",
   },
-  policyNote: "redirects disabled by policy",
-  persistenceWarning: null,
+  policyCode: "redirects_disabled" as const,
+  isBinary: false,
+  truncated: false,
+  redirectLocation: null,
+  persistenceWarningCode: null,
 };
 
 it("switches between formatted response, headers, and raw tabs", () => {
@@ -49,8 +53,10 @@ it("shows the binary placeholder in the formatted response tab", () => {
       response={{
         ...BASE_RESPONSE,
         contentType: "application/octet-stream",
-        responseText: "[Binary response omitted: application/octet-stream, 4 bytes]",
-        rawResponseText: "[Binary response omitted: application/octet-stream, 4 bytes]",
+        byteCount: 4,
+        responseText: "",
+        rawResponseText: "",
+        isBinary: true,
       }}
       isSending={false}
       error={null}

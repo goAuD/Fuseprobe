@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "../i18n/locale";
+import {
+  formatCommandError,
+  formatPersistenceWarning,
+} from "../i18n/messageText";
 import type { SendRequestResult } from "../../lib/contracts";
 import {
+  type ApiTemplateKey,
+  type AuthPresetKey,
   applyAuthPresetHeaders,
-  getApiTemplateByName,
+  getApiTemplateByKey,
   getAuthPreset,
 } from "../presets/presets";
 import { sendRequest } from "../../lib/tauri";
@@ -19,18 +25,22 @@ export function useWorkbench() {
         body: "",
         headers: "",
       },
-      statusLine: strings.hooks.idleStatus,
+      statusCode: 0,
+      reason: "",
       durationMs: 0,
-      sizeLabel: "0 B",
+      byteCount: 0,
       contentType: "pending",
       charset: "utf-8",
       responseText: strings.hooks.idleResponseText,
       rawResponseText: "",
       responseHeaders: {},
-      policyNote: "redirects disabled by policy",
-      persistenceWarning: null,
+      policyCode: "redirects_disabled",
+      isBinary: false,
+      truncated: false,
+      redirectLocation: null,
+      persistenceWarningCode: null,
     }),
-    [strings.hooks.idleResponseText, strings.hooks.idleStatus],
+    [strings.hooks.idleResponseText],
   );
   const [method, setMethod] = useState("GET");
   const [url, setUrl] = useState("");
@@ -41,16 +51,15 @@ export function useWorkbench() {
   const [error, setError] = useState<string | null>(null);
   const [persistenceWarning, setPersistenceWarning] = useState<string | null>(null);
   const [historyRevision, setHistoryRevision] = useState(0);
-  const [activeTemplateName, setActiveTemplateName] = useState<string | null>(null);
-  const [activeAuthPresetName, setActiveAuthPresetName] = useState("No Auth");
-  const [authDescription, setAuthDescription] = useState("No authentication");
+  const [activeTemplateKey, setActiveTemplateKey] = useState<ApiTemplateKey | null>(null);
+  const [activeAuthPresetKey, setActiveAuthPresetKey] = useState<AuthPresetKey>("none");
 
   useEffect(() => {
     setResponse((currentResponse) => {
       const isIdleState =
         currentResponse.request.url === "" &&
         currentResponse.durationMs === 0 &&
-        currentResponse.sizeLabel === "0 B" &&
+        currentResponse.byteCount === 0 &&
         currentResponse.contentType === "pending" &&
         currentResponse.rawResponseText === "";
 
@@ -83,24 +92,20 @@ export function useWorkbench() {
       });
       setError(null);
       setResponse(result);
-      setPersistenceWarning(result.persistenceWarning);
+      setPersistenceWarning(
+        formatPersistenceWarning(strings, result.persistenceWarningCode),
+      );
       setHistoryRevision((revision) => revision + 1);
     } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : typeof requestError === "string"
-            ? requestError
-            : strings.hooks.requestFailed;
-      setError(message);
+      setError(formatCommandError(strings, requestError, strings.hooks.requestFailed));
     } finally {
       requestInFlightRef.current = false;
       setIsSending(false);
     }
   }
 
-  function applyTemplate(templateName: string) {
-    const template = getApiTemplateByName(templateName);
+  function applyTemplate(templateKey: ApiTemplateKey) {
+    const template = getApiTemplateByKey(templateKey);
     const firstExample = template.examples[0];
     const nextMethod = firstExample?.method ?? "GET";
     const nextUrl = `${template.baseUrl}${firstExample?.path ?? ""}`;
@@ -109,9 +114,8 @@ export function useWorkbench() {
     setMethod(nextMethod);
     setUrl(nextUrl);
     setHeaders((currentHeaders) => applyAuthPresetHeaders(currentHeaders, authPreset));
-    setActiveTemplateName(template.name);
-    setActiveAuthPresetName(authPreset.name);
-    setAuthDescription(authPreset.description);
+    setActiveTemplateKey(template.key);
+    setActiveAuthPresetKey(authPreset.key);
   }
 
   return {
@@ -128,9 +132,8 @@ export function useWorkbench() {
     error,
     persistenceWarning,
     historyRevision,
-    activeTemplateName,
-    activeAuthPresetName,
-    authDescription,
+    activeTemplateKey,
+    activeAuthPresetKey,
     applyTemplate,
     submitRequest,
   };

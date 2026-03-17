@@ -84,21 +84,9 @@ pub fn format_response_body(
     let charset = extract_charset(content_type);
 
     if format.kind == BodyKind::Binary {
-        let mime = if format.content_type.is_empty() {
-            "unknown".to_string()
-        } else {
-            format.content_type.clone()
-        };
-
         return FormattedResponse {
-            body: format!(
-                "[Binary response omitted: {mime}, {} bytes]",
-                raw_body.len()
-            ),
-            raw_text: format!(
-                "[Binary response omitted: {mime}, {} bytes]",
-                raw_body.len()
-            ),
+            body: String::new(),
+            raw_text: String::new(),
             is_json: false,
             is_binary: true,
             truncated,
@@ -114,13 +102,6 @@ pub fn format_response_body(
 
     if is_json {
         rendered_body = prettify_json(&rendered_body);
-    }
-
-    if truncated {
-        rendered_body.push_str(&format!(
-            "\n\n[Output truncated at {} bytes to keep Fuseprobe responsive.]",
-            raw_body.len()
-        ));
     }
 
     FormattedResponse {

@@ -2,7 +2,7 @@
 
 **Security-first offline API workbench for desktop**
 
-Fuseprobe is a local-first API client built for deliberate testing, not cloud sync or team bloat. It runs as a Tauri desktop app with a React/Vite UI and a Rust request core.
+Fuseprobe is a local-first desktop API client for deliberate request work. It runs as a Tauri app with a React/Vite UI and a Rust request core, with no cloud workspace model layered on top.
 
 ![Desktop Shell](https://img.shields.io/badge/Desktop-Tauri%202-00c48c)
 ![Core](https://img.shields.io/badge/Core-Rust-00d9a3)
@@ -17,11 +17,11 @@ Source-available for noncommercial use. Commercial use requires permission.
 
 ## Download for Windows
 
-The intended end-user install path is the signed-off release installer, not a source build.
+The intended end-user install path is the release installer, not a source build.
 
 - download the latest Windows installer from [GitHub Releases](https://github.com/goAuD/Fuseprobe/releases)
 - use the `Fuseprobe_*_x64-setup.exe` asset
-- install it, then launch Fuseprobe from the installed shortcut or Start menu entry
+- install it, then launch Fuseprobe from the installed shortcut or Start menu
 
 If you only want to use Fuseprobe, stop here. The source-build path below is for contributors and local development.
 
@@ -44,8 +44,9 @@ The canonical app is the `Tauri + React/Vite + Rust` desktop shell in `apps/desk
 Current verified status:
 
 - Windows desktop release-candidate build verified
+- desktop shell localization is implemented for `en / de / hu`, including persisted locale selection and localized warnings/response metadata
 - cross-platform packaging remains a product goal, but is not documented here as already verified
-- the legacy Python/Tkinter shell has been removed from the mainline repository after the packaging cut-over
+- the legacy desktop shell is no longer part of the mainline repository
 
 ## Core Features
 
@@ -57,7 +58,7 @@ Current verified status:
 - **Rust request core**: request validation, policy enforcement, response classification, history redaction
 - **Session-first history**: request history stays in-memory unless you explicitly enable persistence
 - **Desktop security controls**: persisted toggles with confirmations for risky settings
-- **UI locale support**: English, German, and Hungarian shell strings
+- **Localized desktop shell**: production-ready English, German, and Hungarian UI copy with persisted locale selection
 
 ## Security Defaults
 
@@ -98,8 +99,6 @@ Public-facing usage and security notes live here:
 
 This section is for contributors and local source builds.
 
-## Requirements
-
 ### Building from source
 
 - Node.js 20+
@@ -119,38 +118,34 @@ cd Fuseprobe
 
 All commands below assume your current working directory is the repository root, where `apps/desktop/package.json` exists.
 
-### Desktop development shell
+## Run Locally
+
+To launch the app for development, use the Tauri dev command:
 
 ```bash
 npm --prefix apps/desktop install
 npm --prefix apps/desktop run tauri:dev
 ```
 
-Equivalent step-by-step version:
+Use this when you want the desktop app window to open locally with the live frontend/Rust dev loop.
+
+## Build a Windows Package
+
+`build` compiles the frontend only. It does not launch the desktop app.
 
 ```bash
-cd apps/desktop
-npm install
-npm run tauri:dev
+npm --prefix apps/desktop run build
 ```
 
-### Desktop release-candidate build
+To build the actual Windows desktop executable and NSIS installer, use:
 
 ```bash
 npm --prefix apps/desktop run tauri:build
 ```
 
-Equivalent step-by-step version:
-
-```bash
-cd apps/desktop
-npm install
-npm run tauri:build
-```
-
 Preferred Windows distribution artifact:
 
-- `target/release/bundle/nsis/Fuseprobe_3.0.1_x64-setup.exe`
+- `target/release/bundle/nsis/Fuseprobe_3.0.2_x64-setup.exe`
 
 The raw binary at `target/release/fuseprobe-desktop.exe` is a development/build artifact. It is not the recommended distribution target for other machines.
 
@@ -238,7 +233,7 @@ When history persistence is enabled:
 - query values are redacted before persistence
 - request bodies and headers are never persisted
 
-Fuseprobe also supports legacy state migration from older local history/settings locations when present.
+Fuseprobe can still read prior local Fuseprobe state from older per-user storage locations when present.
 
 ## Project Structure
 
@@ -263,6 +258,13 @@ Fuseprobe/
 ```
 
 ## Troubleshooting
+
+### The app does not start and I used `npm --prefix apps/desktop run build`
+
+- `npm --prefix apps/desktop run build` only builds the frontend bundle
+- it does not open the desktop app
+- for local desktop runtime use `npm --prefix apps/desktop run tauri:dev`
+- for a packaged executable use `npm --prefix apps/desktop run tauri:build` and then launch the generated installer or built app
 
 ### “Invalid or unsafe URL”
 
@@ -328,6 +330,7 @@ cargo test
 - [release-v2.1.0.md](docs/releases/release-v2.1.0.md)
 - [release-v3.0.0.md](docs/releases/release-v3.0.0.md)
 - [release-v3.0.1.md](docs/releases/release-v3.0.1.md)
+- [release-v3.0.2.md](docs/releases/release-v3.0.2.md)
 
 ## License
 

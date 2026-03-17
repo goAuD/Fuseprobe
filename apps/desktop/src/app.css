@@ -106,7 +106,6 @@ body {
 .hint-text,
 .history-item strong,
 .history-item span,
-.workbench-tagline,
 .meta-chip,
 .panel-meta,
 .status-block span {
@@ -933,38 +932,6 @@ button.method-control[aria-expanded="true"] {
   color: var(--color-text-muted);
   font-size: 11px;
   line-height: 1.45;
-}
-
-/* tagline strip between topbar and grid */
-.workbench-tagline {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) 0 0;
-  color: var(--color-text-muted);
-  font-size: 11px;
-  letter-spacing: 0.01em;
-  flex-wrap: wrap;
-}
-
-.tagline-sep {
-  opacity: 0.4;
-}
-
-.tagline-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  box-shadow: 0 0 10px rgba(0, 255, 153, 0.5);
-  flex-shrink: 0;
-  animation: dot-pulse 2.8s ease-in-out infinite;
-}
-
-@keyframes dot-pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 10px rgba(0, 255, 153, 0.5); }
-  50%      { opacity: 0.35; box-shadow: 0 0 4px rgba(0, 255, 153, 0.2); }
 }
 
 /* ── responsive ── */

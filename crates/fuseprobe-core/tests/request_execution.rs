@@ -157,7 +157,7 @@ fn truncates_large_text_responses() {
     worker.join().expect("worker should exit");
 
     assert!(result.truncated);
-    assert!(result.body.contains("Output truncated at 8 bytes"));
+    assert_eq!(result.body, "aaaaaaaa");
 }
 
 #[test]
@@ -190,9 +190,12 @@ fn does_not_follow_redirects_and_redacts_sensitive_location_values() {
     worker.join().expect("worker should exit");
 
     assert_eq!(result.status_code, 302);
-    assert!(result.body.contains("Redirect not followed. Location:"));
-    assert!(result.body.contains("token=%2A%2A%2A"));
-    assert!(!result.body.contains("token=secret"));
+    let expected_redirect = format!("{address}/target?token=%2A%2A%2A");
+    assert_eq!(
+        result.redirect_location.as_deref(),
+        Some(expected_redirect.as_str())
+    );
+    assert!(result.body.is_empty());
 }
 
 #[test]
@@ -220,10 +223,8 @@ fn omits_binary_responses_from_text_rendering() {
     assert!(result.is_binary);
     assert!(!result.is_json);
     assert_eq!(result.content_type, "application/octet-stream");
-    assert!(result
-        .body
-        .contains("[Binary response omitted: application/octet-stream"));
-    assert_eq!(result.body, result.raw_body);
+    assert!(result.body.is_empty());
+    assert!(result.raw_body.is_empty());
 }
 
 #[test]

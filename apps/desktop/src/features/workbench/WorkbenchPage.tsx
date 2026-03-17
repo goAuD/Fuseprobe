@@ -67,9 +67,8 @@ export default function WorkbenchPage() {
     error,
     persistenceWarning,
     historyRevision,
-    activeTemplateName,
-    activeAuthPresetName,
-    authDescription,
+    activeTemplateKey,
+    activeAuthPresetKey,
     applyTemplate,
     submitRequest,
   } = useWorkbench();
@@ -158,26 +157,14 @@ export default function WorkbenchPage() {
         />
       ) : null}
 
-      <div className="workbench-tagline">
-        <span className="tagline-dot" />
-        <span>{strings.app.taglineWorkbench}</span>
-        <span className="tagline-sep" aria-hidden="true">·</span>
-        <span>{strings.app.taglineHistory}</span>
-        <span className="tagline-sep" aria-hidden="true">·</span>
-        <span>{strings.app.taglineNoCloud}</span>
-        <span className="tagline-sep" aria-hidden="true">·</span>
-        <span>{strings.app.taglineRustCore}</span>
-      </div>
-
       <section className="workspace-grid">
         <div className="sidebar-column">
           <RequestEditor
             body={body}
             headers={headers}
             isSending={isSending}
-            activeTemplateName={activeTemplateName}
-            activeAuthPresetName={activeAuthPresetName}
-            authDescription={authDescription}
+            activeTemplateKey={activeTemplateKey}
+            activeAuthPresetKey={activeAuthPresetKey}
             onBodyChange={setBody}
             onHeadersChange={setHeaders}
           />
@@ -189,7 +176,7 @@ export default function WorkbenchPage() {
           <SecuritySettingsPanel />
           <HistoryPanel
             refreshToken={historyRevision}
-            activeTemplateName={activeTemplateName}
+            activeTemplateKey={activeTemplateKey}
             onApplyTemplate={applyTemplate}
           />
         </div>

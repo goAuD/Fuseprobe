@@ -1,7 +1,7 @@
 # Fuseprobe Tauri MVP Parity Checklist
 
 Date: 2026-03-12
-Status: MVP parity, release-gate verification, and Windows packaging gate complete; public distribution hardening in progress
+Status: MVP parity, release-gate verification, and Windows packaging gate complete; only tagged release-asset verification remains on the public distribution side
 
 ## Current Migrated Pieces
 
@@ -38,7 +38,7 @@ The next work is release-gate verification and follow-on polish rather than anot
 ## Public Distribution Gate
 
 - [ ] GitHub Actions Windows release workflow publishes the NSIS setup executable on version tags
-- [ ] README treats GitHub Releases as the canonical Windows install path
+- [x] README treats GitHub Releases as the canonical Windows install path
 - [ ] release verification includes downloading and launching the published release asset on a clean Windows machine
 
 ## Final MVP Release Gate
@@ -58,3 +58,4 @@ The next work is release-gate verification and follow-on polish rather than anot
 - Desktop formatted/raw response presentation is covered in `apps/desktop/src/features/workbench/ResponsePanel.test.tsx`.
 - The current Windows release-candidate packaging path was verified with `npm --prefix apps/desktop run tauri:build`, producing `target/release/fuseprobe-desktop.exe`.
 - The next verification step is a published GitHub Release asset flow, not another source-build parity check.
+- The production localization implementation has moved out of parity follow-up and into the `v3.0.2` release slice.

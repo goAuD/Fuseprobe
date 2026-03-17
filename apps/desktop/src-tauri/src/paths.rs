@@ -15,12 +15,8 @@ pub fn resolve_storage_paths() -> Result<StoragePaths, String> {
     let app_dir = config_root.join("Fuseprobe");
     let (legacy_history_files, legacy_settings_files) = if let Some(home_root) = dirs::home_dir() {
         let legacy_fuseprobe_dir = home_root.join(".fuseprobe");
-        let legacy_nanoman_dir = home_root.join(".nanoman");
         (
-            vec![
-                legacy_fuseprobe_dir.join("history.json"),
-                legacy_nanoman_dir.join("history.json"),
-            ],
+            vec![legacy_fuseprobe_dir.join("history.json")],
             vec![legacy_fuseprobe_dir.join("settings.json")],
         )
     } else {

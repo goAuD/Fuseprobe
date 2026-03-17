@@ -43,6 +43,7 @@ pub struct ExecutedResponse {
     pub content_type: String,
     pub byte_count: usize,
     pub charset: String,
+    pub redirect_location: Option<String>,
 }
 
 impl Default for RequestOptions {
@@ -87,20 +88,13 @@ pub fn execute_request(
     let reason = status.canonical_reason().unwrap_or_default().to_string();
     let headers = collect_headers(&response);
     let content_type = headers.get("content-type").cloned().unwrap_or_default();
-    let location = headers.get("location").cloned();
     let (raw_body, truncated) = read_response_body(&mut response, options.max_response_bytes)?;
-    let mut formatted = format_response_body(&content_type, &raw_body, truncated);
-
-    if !options.follow_redirects && status.is_redirection() {
-        if let Some(location) = location {
-            let prefix = format!("Redirect not followed. Location: {}", redact_url(&location));
-            formatted.body = if formatted.body.is_empty() {
-                prefix
-            } else {
-                format!("{prefix}\n\n{}", formatted.body)
-            };
-        }
-    }
+    let formatted = format_response_body(&content_type, &raw_body, truncated);
+    let redirect_location = if !options.follow_redirects && status.is_redirection() {
+        headers.get("location").cloned().map(|location| redact_url(&location))
+    } else {
+        None
+    };
 
     Ok(ExecutedResponse {
         status_code: status.as_u16(),
@@ -115,6 +109,7 @@ pub fn execute_request(
         content_type: formatted.content_type,
         byte_count: formatted.byte_count,
         charset: formatted.charset,
+        redirect_location,
     })
 }
 

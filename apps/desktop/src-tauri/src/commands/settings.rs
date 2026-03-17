@@ -9,7 +9,7 @@ pub fn load_security_settings(
     let settings = state
         .settings
         .lock()
-        .map_err(|_| "security settings are unavailable".to_string())?;
+        .map_err(|_| "settings_unavailable".to_string())?;
 
     Ok(settings.clone())
 }
@@ -23,7 +23,7 @@ pub fn update_security_settings(
         let history = state
             .history
             .lock()
-            .map_err(|_| "history state is unavailable".to_string())?;
+            .map_err(|_| "history_unavailable".to_string())?;
         sync_history_persistence(
             &history,
             state.history_file.as_deref(),
@@ -33,19 +33,19 @@ pub fn update_security_settings(
     state.set_persistence_warning(persistence_warning)?;
 
     let settings_file = state.settings_file.as_deref().ok_or_else(|| {
-        "failed to save security settings: local settings storage is unavailable".to_string()
+        "settings_save_unavailable".to_string()
     })?;
 
     {
         settings
             .save_to_file(settings_file)
-            .map_err(|error| format!("failed to save security settings: {error}"))?;
+            .map_err(|_| "settings_save_failed".to_string())?;
     }
 
     let mut current = state
         .settings
         .lock()
-        .map_err(|_| "security settings are unavailable".to_string())?;
+        .map_err(|_| "settings_unavailable".to_string())?;
     *current = settings.clone();
 
     Ok(settings)

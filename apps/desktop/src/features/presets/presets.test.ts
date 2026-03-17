@@ -1,16 +1,16 @@
 import {
-  apiTemplateNames,
+  apiTemplateKeys,
   applyAuthPresetHeaders,
-  getApiTemplateByName,
+  getApiTemplateByKey,
   getAuthPreset,
 } from "./presets";
 
 it("includes jsonplaceholder in the desktop preset list", () => {
-  expect(apiTemplateNames).toContain("JSONPlaceholder");
+  expect(apiTemplateKeys).toContain("jsonplaceholder");
 });
 
 it("returns the GitHub API template with bearer auth", () => {
-  const template = getApiTemplateByName("GitHub API");
+  const template = getApiTemplateByKey("github");
   expect(template.baseUrl).toBe("https://api.github.com");
   expect(template.auth).toBe("bearer");
   expect(template.examples[0]?.path).toBe("/user");

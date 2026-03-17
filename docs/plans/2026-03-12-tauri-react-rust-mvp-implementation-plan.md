@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rust stable, Cargo workspace, Tauri 2, React, TypeScript, Vite, Vitest, existing Python reference app + pytest suite
 
-**Current State:** Tasks 1 through 21 are now complete. A post-gate UI hardening pass has also landed on the desktop shell for locale-backed `en/de/hu` strings, reusable dropdowns, dismissible notice banners, and accessible confirmation behavior. The cut-over release line now exists and the legacy shell is removed. The next active work is post-cut-over release/distribution hardening so public users download a real Windows installer artifact instead of cloning and building the repository. After that, the next functional slice is completing the production localization layer for `en / de / hu`.
+**Current State:** Tasks 1 through 21 are now complete. A post-gate UI hardening pass has also landed on the desktop shell for locale-backed `en/de/hu` strings, reusable dropdowns, dismissible notice banners, and accessible confirmation behavior. The cut-over release line now exists and the legacy shell is removed. Post-cut-over release/distribution hardening is in place locally, and the `v3.0.2` localization implementation is now complete in the desktop shell. The remaining operational gate is verifying the tagged GitHub Release installer path and clean-machine installer smoke check.
 
 ---
 

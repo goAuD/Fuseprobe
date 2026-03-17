@@ -27,7 +27,7 @@ beforeEach(() => {
 it("stays empty when the bridge returns no rows", async () => {
   mockedLoadHistory.mockResolvedValue({
     entries: [],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
 
   const { result } = renderHook(() => useHistory());
@@ -50,7 +50,7 @@ it("uses loaded history rows when the bridge returns data", async () => {
         time: "10:12:44",
       },
     ],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
 
   const { result } = renderHook(() => useHistory());
@@ -72,7 +72,7 @@ it("uses loaded history rows when the bridge returns data", async () => {
 
 it("reloads when the refresh token changes", async () => {
   mockedLoadHistory
-    .mockResolvedValueOnce({ entries: [], persistenceWarning: null })
+    .mockResolvedValueOnce({ entries: [], persistenceWarningCode: null })
     .mockResolvedValueOnce({
       entries: [
         {
@@ -83,7 +83,7 @@ it("reloads when the refresh token changes", async () => {
           time: "10:13:09",
         },
       ],
-      persistenceWarning: null,
+      persistenceWarningCode: null,
     });
 
   const { result, rerender } = renderHook(
@@ -137,7 +137,7 @@ it("deletes a history row through the bridge and updates local state", async () 
         time: "10:01:00",
       },
     ],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
   mockedDeleteHistoryEntry.mockResolvedValue({
     entries: [
@@ -149,7 +149,7 @@ it("deletes a history row through the bridge and updates local state", async () 
         time: "10:01:00",
       },
     ],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
 
   const { result } = renderHook(() => useHistory());
@@ -178,11 +178,11 @@ it("clears history through the bridge and empties local state", async () => {
         time: "10:00:00",
       },
     ],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
   mockedClearHistory.mockResolvedValue({
     entries: [],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
 
   const { result } = renderHook(() => useHistory());
@@ -210,11 +210,11 @@ it("accepts an empty bridge result after deleting the final history row", async 
         time: "10:00:00",
       },
     ],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
   mockedDeleteHistoryEntry.mockResolvedValue({
     entries: [],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
 
   const { result } = renderHook(() => useHistory());
@@ -241,7 +241,7 @@ it("keeps the current entries when deleting through the bridge fails", async () 
         time: "10:00:00",
       },
     ],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
   mockedDeleteHistoryEntry.mockRejectedValue(new Error("delete failed"));
 
@@ -270,7 +270,7 @@ it("keeps the current entries when clearing through the bridge fails", async () 
         time: "10:00:00",
       },
     ],
-    persistenceWarning: null,
+    persistenceWarningCode: null,
   });
   mockedClearHistory.mockRejectedValue(new Error("clear failed"));
 
@@ -291,8 +291,7 @@ it("keeps the current entries when clearing through the bridge fails", async () 
 it("surfaces non-fatal persistence warnings from the bridge", async () => {
   mockedLoadHistory.mockResolvedValue({
     entries: [],
-    persistenceWarning:
-      "Persistent history could not be saved. Session history remains available.",
+    persistenceWarningCode: "history_save_failed",
   });
 
   const { result } = renderHook(() => useHistory());

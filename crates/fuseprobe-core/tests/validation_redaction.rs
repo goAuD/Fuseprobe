@@ -18,10 +18,12 @@ fn accepts_valid_intranet_style_urls() {
 fn rejects_loopback_and_metadata_targets_by_default() {
     let loopback = validate_url("http://127.0.0.1:8000").unwrap_err();
     let localhost = validate_url("http://localhost:3000").unwrap_err();
+    let localhost_alias = validate_url("http://api.localhost:3000").unwrap_err();
     let metadata = validate_url("http://169.254.169.254/latest/meta-data/").unwrap_err();
 
     assert!(loopback.contains("Unsafe mode"));
     assert!(localhost.contains("Unsafe mode"));
+    assert!(localhost_alias.contains("Unsafe mode"));
     assert!(metadata.contains("Unsafe mode"));
 }
 

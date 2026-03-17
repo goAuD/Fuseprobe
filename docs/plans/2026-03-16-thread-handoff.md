@@ -22,6 +22,7 @@ Latest commits:
 
 - canonical app: `Tauri + React/Vite + Rust`
 - legacy Python/Tkinter shell is removed from mainline
+- NanoMan-era `.nanoman` history fallback has now been removed from the active storage path
 - security hardening gate is complete
 - Windows packaging gate is complete
 - temporary in-house `FP` badge branding is now aligned across:
@@ -95,7 +96,7 @@ Release workflow behavior:
 
 ### Product / feature
 
-- complete localization for the already present `en / de / hu` selector
+- the `en / de / hu` localization slice is now implemented locally under the `v3.0.2` plan; the remaining external gate is shipping and verifying it through the tagged Windows installer path
 - final real logo/brand system still open; current `FP` mark is intentionally temporary
 
 ### GitHub / infra
@@ -107,10 +108,10 @@ Release workflow behavior:
 
 If continuing product/distribution work:
 
-1. create or use the next version tag
+1. create or use the `v3.0.2` version tag
 2. verify that `Release Desktop` uploads the Windows `*-setup.exe` to the GitHub Release
 3. confirm the release page is now enough for a normal Windows user
-4. then start the localization slice
+4. smoke-check the published installer, including locale switching and locale persistence
 
 If continuing contributor/dev-experience work:
 

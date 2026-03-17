@@ -72,9 +72,11 @@ The next approved post-cut-over priority is:
 
 - release/distribution hardening so public users install a real Windows release artifact instead of cloning and building the repository
 
-The next approved functional slice after that is:
+The next approved functional slice after that was:
 
 - finish the desktop localization path so the existing `en / de / hu` selector is backed by complete production-ready translations
+
+That localization slice is now implemented locally under the `v3.0.2` release plan. The remaining operational gate is the real tagged-release asset verification path.
 
 ## Decision
 

@@ -6,7 +6,7 @@ use crate::state::{sync_history_persistence, AppState};
 #[serde(rename_all = "camelCase")]
 pub struct HistoryCommandResult {
     pub entries: Vec<HistoryEntry>,
-    pub persistence_warning: Option<String>,
+    pub persistence_warning_code: Option<String>,
 }
 
 #[tauri::command]
@@ -14,10 +14,10 @@ pub fn load_history(state: tauri::State<'_, AppState>) -> Result<HistoryCommandR
     let history = state
         .history
         .lock()
-        .map_err(|_| "history state is unavailable".to_string())?;
+        .map_err(|_| "history_unavailable".to_string())?;
     Ok(HistoryCommandResult {
         entries: history.all().to_vec(),
-        persistence_warning: state.persistence_warning()?,
+        persistence_warning_code: state.persistence_warning()?,
     })
 }
 
@@ -29,19 +29,19 @@ pub fn delete_history_entry(
     let persist_history = state
         .settings
         .lock()
-        .map_err(|_| "security settings are unavailable".to_string())?
+        .map_err(|_| "settings_unavailable".to_string())?
         .persist_history;
     let mut history = state
         .history
         .lock()
-        .map_err(|_| "history state is unavailable".to_string())?;
+        .map_err(|_| "history_unavailable".to_string())?;
     history.delete(index);
-    let persistence_warning =
+    let persistence_warning_code =
         sync_history_persistence(&history, state.history_file.as_deref(), persist_history);
-    state.set_persistence_warning(persistence_warning.clone())?;
+    state.set_persistence_warning(persistence_warning_code.clone())?;
     Ok(HistoryCommandResult {
         entries: history.all().to_vec(),
-        persistence_warning,
+        persistence_warning_code,
     })
 }
 
@@ -50,18 +50,18 @@ pub fn clear_history(state: tauri::State<'_, AppState>) -> Result<HistoryCommand
     let persist_history = state
         .settings
         .lock()
-        .map_err(|_| "security settings are unavailable".to_string())?
+        .map_err(|_| "settings_unavailable".to_string())?
         .persist_history;
     let mut history = state
         .history
         .lock()
-        .map_err(|_| "history state is unavailable".to_string())?;
+        .map_err(|_| "history_unavailable".to_string())?;
     history.clear();
-    let persistence_warning =
+    let persistence_warning_code =
         sync_history_persistence(&history, state.history_file.as_deref(), persist_history);
-    state.set_persistence_warning(persistence_warning.clone())?;
+    state.set_persistence_warning(persistence_warning_code.clone())?;
     Ok(HistoryCommandResult {
         entries: history.all().to_vec(),
-        persistence_warning,
+        persistence_warning_code,
     })
 }

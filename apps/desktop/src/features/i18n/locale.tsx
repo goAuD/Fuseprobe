@@ -2,11 +2,22 @@ import {
   createContext,
   type ReactNode,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
+import type {
+  ApiTemplateKey,
+  AuthPresetKey,
+} from "../presets/presets";
+import type {
+  CommandErrorCode,
+  PersistenceWarningCode,
+  RequestPolicyCode,
+} from "../../lib/contracts";
 
 export type LocaleCode = "en" | "de" | "hu";
+export const LOCALE_STORAGE_KEY = "fuseprobe.locale";
 
 export interface LocaleStrings {
   app: {
@@ -20,10 +31,6 @@ export interface LocaleStrings {
     interfaceLanguageLabel: string;
     languageOptionsLabel: string;
     dismissNotice: string;
-    taglineWorkbench: string;
-    taglineHistory: string;
-    taglineNoCloud: string;
-    taglineRustCore: string;
   };
   request: {
     title: string;
@@ -53,6 +60,10 @@ export interface LocaleStrings {
     working: string;
     noHeadersYet: string;
     noRawYet: string;
+    policies: Record<RequestPolicyCode, string>;
+    binaryResponseOmitted: (contentType: string, byteCount: number) => string;
+    outputTruncated: (byteCount: number) => string;
+    redirectNotFollowed: (location: string) => string;
   };
   history: {
     title: string;
@@ -103,6 +114,20 @@ export interface LocaleStrings {
     failedToLoadSecuritySettings: string;
     failedToUpdateSecuritySettings: string;
   };
+  presets: {
+    auth: Record<AuthPresetKey, {
+      name: string;
+      description: string;
+    }>;
+    templates: Record<ApiTemplateKey, {
+      name: string;
+      description: string;
+    }>;
+  };
+  messages: {
+    errors: Record<CommandErrorCode, string>;
+    warnings: Record<PersistenceWarningCode, string>;
+  };
 }
 
 const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
@@ -118,10 +143,6 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
       interfaceLanguageLabel: "Interface language",
       languageOptionsLabel: "Language options",
       dismissNotice: "Dismiss notice",
-      taglineWorkbench: "Focused request workbench, not a generic dashboard shell.",
-      taglineHistory: "history local",
-      taglineNoCloud: "no cloud",
-      taglineRustCore: "rust core staged",
     },
     request: {
       title: "Request",
@@ -151,6 +172,15 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
       working: "working...",
       noHeadersYet: "No response headers yet.",
       noRawYet: "No raw response yet.",
+      policies: {
+        redirects_disabled: "redirects disabled by policy",
+      },
+      binaryResponseOmitted: (contentType: string, byteCount: number) =>
+        `[Binary response omitted: ${contentType}, ${byteCount} bytes]`,
+      outputTruncated: (byteCount: number) =>
+        `[Output truncated at ${byteCount} bytes to keep Fuseprobe responsive.]`,
+      redirectNotFollowed: (location: string) =>
+        `Redirect not followed. Location: ${location}`,
     },
     history: {
       title: "History",
@@ -209,6 +239,93 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
       failedToLoadSecuritySettings: "Failed to load security settings.",
       failedToUpdateSecuritySettings: "Failed to update security settings.",
     },
+    presets: {
+      auth: {
+        none: {
+          name: "No Auth",
+          description: "No authentication",
+        },
+        bearer: {
+          name: "Bearer Token",
+          description: "JWT or OAuth2 bearer token",
+        },
+        basic: {
+          name: "Basic Auth",
+          description: "Base64 encoded username:password",
+        },
+        api_key_header: {
+          name: "API Key (Header)",
+          description: "API key in X-Api-Key header",
+        },
+        api_key_auth: {
+          name: "API Key (Authorization)",
+          description: "API key in Authorization header",
+        },
+      },
+      templates: {
+        open_meteo: {
+          name: "Open-Meteo",
+          description: "Public weather forecast API",
+        },
+        microsoft_graph: {
+          name: "Microsoft Graph API",
+          description: "Microsoft 365 & Azure AD API",
+        },
+        github: {
+          name: "GitHub API",
+          description: "GitHub REST API v3",
+        },
+        jsonplaceholder: {
+          name: "JSONPlaceholder",
+          description: "Free fake REST API for testing",
+        },
+        httpbin: {
+          name: "HTTPBin",
+          description: "HTTP request & response testing",
+        },
+        reqres: {
+          name: "ReqRes",
+          description: "Fake API for testing with auth flows",
+        },
+      },
+    },
+    messages: {
+      errors: {
+        request_in_progress: "A request is already in progress.",
+        request_invalid_url: "Invalid request URL.",
+        request_unsafe_target: "Local and private targets are blocked by default.",
+        request_invalid_body: "Request body is not valid.",
+        request_body_too_large: "Request body is too large.",
+        request_invalid_headers: "Request headers are not valid.",
+        request_headers_too_large: "Request headers are too large.",
+        request_timeout: "Request timed out.",
+        request_connection_local_unavailable: "Allowed local target did not respond.",
+        request_connection_failed: "Unable to reach the target.",
+        request_failed: "Request failed.",
+        request_worker_failed: "Desktop request worker failed.",
+        history_unavailable: "History state is unavailable.",
+        settings_unavailable: "Security settings are unavailable.",
+        settings_save_unavailable: "Local settings storage is unavailable.",
+        settings_save_failed: "Failed to save security settings.",
+        persistence_warning_unavailable: "Persistence warning state is unavailable.",
+      },
+      warnings: {
+        config_dir_unavailable:
+          "Fuseprobe could not resolve a local config directory. Persistent settings and history are unavailable.",
+        settings_parse_failed:
+          "Security settings could not be read. Safe defaults were restored.",
+        history_load_failed:
+          "History could not be loaded from disk. The current session will start empty.",
+        history_parse_failed:
+          "Saved history could not be parsed. The current session will start empty.",
+        history_path_unavailable:
+          "Persistent history is enabled, but Fuseprobe could not resolve a local storage path.",
+        history_save_failed:
+          "Persistent history could not be saved. Session history remains available.",
+        history_remove_failed:
+          "Persistent history could not be removed. Session-only history remains active.",
+      },
+    },
   },
   de: {
     app: {
@@ -222,10 +339,6 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
       interfaceLanguageLabel: "Sprache der Oberfläche",
       languageOptionsLabel: "Sprachoptionen",
       dismissNotice: "Hinweis schließen",
-      taglineWorkbench: "Fokussierte Request-Workbench, kein generisches Dashboard.",
-      taglineHistory: "Verlauf lokal",
-      taglineNoCloud: "keine Cloud",
-      taglineRustCore: "Rust-Core aktiv",
     },
     request: {
       title: "Anfrage",
@@ -255,6 +368,15 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
       working: "läuft...",
       noHeadersYet: "Noch keine Antwort-Header.",
       noRawYet: "Noch keine Rohantwort.",
+      policies: {
+        redirects_disabled: "Weiterleitungen sind per Richtlinie deaktiviert",
+      },
+      binaryResponseOmitted: (contentType: string, byteCount: number) =>
+        `[Binäre Antwort ausgelassen: ${contentType}, ${byteCount} Bytes]`,
+      outputTruncated: (byteCount: number) =>
+        `[Ausgabe bei ${byteCount} Bytes abgeschnitten, damit Fuseprobe reaktionsfähig bleibt.]`,
+      redirectNotFollowed: (location: string) =>
+        `Weiterleitung nicht gefolgt. Ziel: ${location}`,
     },
     history: {
       title: "Verlauf",
@@ -313,6 +435,93 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
       failedToLoadSecuritySettings: "Sicherheitseinstellungen konnten nicht geladen werden.",
       failedToUpdateSecuritySettings: "Sicherheitseinstellungen konnten nicht aktualisiert werden.",
     },
+    presets: {
+      auth: {
+        none: {
+          name: "Keine Auth",
+          description: "Keine Authentifizierung",
+        },
+        bearer: {
+          name: "Bearer-Token",
+          description: "JWT- oder OAuth2-Bearer-Token",
+        },
+        basic: {
+          name: "Basic Auth",
+          description: "Base64-codiertes username:password",
+        },
+        api_key_header: {
+          name: "API-Schlüssel (Header)",
+          description: "API-Schlüssel im X-Api-Key-Header",
+        },
+        api_key_auth: {
+          name: "API-Schlüssel (Authorization)",
+          description: "API-Schlüssel im Authorization-Header",
+        },
+      },
+      templates: {
+        open_meteo: {
+          name: "Open-Meteo",
+          description: "Öffentliche Wettervorhersage-API",
+        },
+        microsoft_graph: {
+          name: "Microsoft Graph API",
+          description: "Microsoft-365- und Azure-AD-API",
+        },
+        github: {
+          name: "GitHub API",
+          description: "GitHub-REST-API v3",
+        },
+        jsonplaceholder: {
+          name: "JSONPlaceholder",
+          description: "Freie Fake-REST-API für Tests",
+        },
+        httpbin: {
+          name: "HTTPBin",
+          description: "HTTP-Request- und Response-Tests",
+        },
+        reqres: {
+          name: "ReqRes",
+          description: "Fake-API zum Testen von Auth-Flows",
+        },
+      },
+    },
+    messages: {
+      errors: {
+        request_in_progress: "Eine Anfrage läuft bereits.",
+        request_invalid_url: "Ungültige Anfrage-URL.",
+        request_unsafe_target: "Lokale und private Ziele sind standardmäßig blockiert.",
+        request_invalid_body: "Der Request-Body ist ungültig.",
+        request_body_too_large: "Der Request-Body ist zu groß.",
+        request_invalid_headers: "Die Request-Header sind ungültig.",
+        request_headers_too_large: "Die Request-Header sind zu groß.",
+        request_timeout: "Zeitüberschreitung bei der Anfrage.",
+        request_connection_local_unavailable: "Ein erlaubtes lokales Ziel hat nicht geantwortet.",
+        request_connection_failed: "Das Ziel konnte nicht erreicht werden.",
+        request_failed: "Anfrage fehlgeschlagen.",
+        request_worker_failed: "Der Desktop-Request-Worker ist fehlgeschlagen.",
+        history_unavailable: "Der Verlaufszustand ist nicht verfügbar.",
+        settings_unavailable: "Die Sicherheitseinstellungen sind nicht verfügbar.",
+        settings_save_unavailable: "Der lokale Settings-Speicher ist nicht verfügbar.",
+        settings_save_failed: "Die Sicherheitseinstellungen konnten nicht gespeichert werden.",
+        persistence_warning_unavailable: "Der Zustand der Persistenzwarnung ist nicht verfügbar.",
+      },
+      warnings: {
+        config_dir_unavailable:
+          "Fuseprobe konnte kein lokales Konfigurationsverzeichnis auflösen. Persistente Einstellungen und Verlauf sind nicht verfügbar.",
+        settings_parse_failed:
+          "Sicherheitseinstellungen konnten nicht gelesen werden. Sichere Standardwerte wurden wiederhergestellt.",
+        history_load_failed:
+          "Der Verlauf konnte nicht vom Datenträger geladen werden. Die aktuelle Sitzung startet leer.",
+        history_parse_failed:
+          "Der gespeicherte Verlauf konnte nicht gelesen werden. Die aktuelle Sitzung startet leer.",
+        history_path_unavailable:
+          "Persistenter Verlauf ist aktiviert, aber Fuseprobe konnte keinen lokalen Speicherpfad auflösen.",
+        history_save_failed:
+          "Persistenter Verlauf konnte nicht gespeichert werden. Der Sitzungsverlauf bleibt verfügbar.",
+        history_remove_failed:
+          "Persistenter Verlauf konnte nicht entfernt werden. Der sitzungsbasierte Verlauf bleibt aktiv.",
+      },
+    },
   },
   hu: {
     app: {
@@ -326,10 +535,6 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
       interfaceLanguageLabel: "Felület nyelve",
       languageOptionsLabel: "Nyelvi opciók",
       dismissNotice: "Értesítés bezárása",
-      taglineWorkbench: "Fókuszált request workbench, nem generikus dashboard.",
-      taglineHistory: "lokális előzmény",
-      taglineNoCloud: "nincs felhő",
-      taglineRustCore: "rust core aktív",
     },
     request: {
       title: "Kérés",
@@ -359,6 +564,15 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
       working: "folyamatban...",
       noHeadersYet: "Még nincs válasz fejléc.",
       noRawYet: "Még nincs nyers válasz.",
+      policies: {
+        redirects_disabled: "az átirányítások policy alapján tiltva vannak",
+      },
+      binaryResponseOmitted: (contentType: string, byteCount: number) =>
+        `[Bináris válasz kihagyva: ${contentType}, ${byteCount} bájt]`,
+      outputTruncated: (byteCount: number) =>
+        `[A kimenet ${byteCount} bájtnál le lett vágva, hogy a Fuseprobe reszponzív maradjon.]`,
+      redirectNotFollowed: (location: string) =>
+        `Az átirányítás nem lett követve. Cél: ${location}`,
     },
     history: {
       title: "Előzmények",
@@ -417,6 +631,93 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
       failedToLoadSecuritySettings: "Nem sikerült betölteni a biztonsági beállításokat.",
       failedToUpdateSecuritySettings: "Nem sikerült frissíteni a biztonsági beállításokat.",
     },
+    presets: {
+      auth: {
+        none: {
+          name: "Nincs auth",
+          description: "Nincs hitelesítés",
+        },
+        bearer: {
+          name: "Bearer token",
+          description: "JWT vagy OAuth2 bearer token",
+        },
+        basic: {
+          name: "Basic auth",
+          description: "Base64 kódolt username:password",
+        },
+        api_key_header: {
+          name: "API kulcs (header)",
+          description: "API kulcs az X-Api-Key headerben",
+        },
+        api_key_auth: {
+          name: "API kulcs (Authorization)",
+          description: "API kulcs az Authorization headerben",
+        },
+      },
+      templates: {
+        open_meteo: {
+          name: "Open-Meteo",
+          description: "Nyilvános időjárás-előrejelző API",
+        },
+        microsoft_graph: {
+          name: "Microsoft Graph API",
+          description: "Microsoft 365 és Azure AD API",
+        },
+        github: {
+          name: "GitHub API",
+          description: "GitHub REST API v3",
+        },
+        jsonplaceholder: {
+          name: "JSONPlaceholder",
+          description: "Ingyenes fake REST API teszteléshez",
+        },
+        httpbin: {
+          name: "HTTPBin",
+          description: "HTTP kérés- és választesztelés",
+        },
+        reqres: {
+          name: "ReqRes",
+          description: "Fake API auth flow-k teszteléséhez",
+        },
+      },
+    },
+    messages: {
+      errors: {
+        request_in_progress: "Már fut egy kérés.",
+        request_invalid_url: "Érvénytelen kérés URL.",
+        request_unsafe_target: "A lokális és privát célpontok alapból tiltva vannak.",
+        request_invalid_body: "A kérés törzse érvénytelen.",
+        request_body_too_large: "A kérés törzse túl nagy.",
+        request_invalid_headers: "A kérés headerei érvénytelenek.",
+        request_headers_too_large: "A kérés headerei túl nagyok.",
+        request_timeout: "A kérés időtúllépés miatt megszakadt.",
+        request_connection_local_unavailable: "Az engedélyezett lokális célpont nem válaszolt.",
+        request_connection_failed: "A célpont nem érhető el.",
+        request_failed: "A kérés sikertelen volt.",
+        request_worker_failed: "A desktop request worker hibával leállt.",
+        history_unavailable: "Az előzményállapot nem érhető el.",
+        settings_unavailable: "A biztonsági beállítások nem érhetők el.",
+        settings_save_unavailable: "A helyi beállítástár nem érhető el.",
+        settings_save_failed: "Nem sikerült menteni a biztonsági beállításokat.",
+        persistence_warning_unavailable: "A perzisztencia-warning állapot nem érhető el.",
+      },
+      warnings: {
+        config_dir_unavailable:
+          "A Fuseprobe nem tudta feloldani a helyi konfigurációs könyvtárat. A perzisztens beállítások és előzmények nem érhetők el.",
+        settings_parse_failed:
+          "A biztonsági beállításokat nem sikerült beolvasni. A biztonságos alapértékek lettek visszaállítva.",
+        history_load_failed:
+          "Nem sikerült betölteni az előzményeket lemezről. Az aktuális session üresen indul.",
+        history_parse_failed:
+          "A mentett előzményeket nem sikerült feldolgozni. Az aktuális session üresen indul.",
+        history_path_unavailable:
+          "Az előzményperzisztálás be van kapcsolva, de a Fuseprobe nem tudott helyi tárolási útvonalat feloldani.",
+        history_save_failed:
+          "Nem sikerült menteni a perzisztens előzményeket. A session előzmény ettől még elérhető marad.",
+        history_remove_failed:
+          "Nem sikerült eltávolítani a perzisztens előzményeket. A csak-session előzmény aktív marad.",
+      },
+    },
   },
 };
 
@@ -432,8 +733,26 @@ const LocaleContext = createContext<LocaleContextValue>({
   strings: LOCALE_STRINGS.en,
 });
 
+function isLocaleCode(value: string | null): value is LocaleCode {
+  return value === "en" || value === "de" || value === "hu";
+}
+
+function readStoredLocale(): LocaleCode {
+  if (typeof window === "undefined") {
+    return "en";
+  }
+
+  const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+  return isLocaleCode(storedLocale) ? storedLocale : "en";
+}
+
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<LocaleCode>("en");
+  const [locale, setLocale] = useState<LocaleCode>(() => readStoredLocale());
+
+  useEffect(() => {
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  }, [locale]);
+
   const value = useMemo(
     () => ({
       locale,

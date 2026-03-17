@@ -29,8 +29,8 @@ impl AppState {
                     paths.legacy_history_files,
                     paths.legacy_settings_files,
                 ),
-                Err(error) => {
-                    startup_warning = Some(error);
+                Err(_) => {
+                    startup_warning = Some("config_dir_unavailable".to_string());
                     (None, None, Vec::new(), Vec::new())
                 }
             };
@@ -55,14 +55,14 @@ impl AppState {
         self.persistence_warning
             .lock()
             .map(|warning| warning.clone())
-            .map_err(|_| "persistence warning state is unavailable".to_string())
+            .map_err(|_| "persistence_warning_unavailable".to_string())
     }
 
     pub fn set_persistence_warning(&self, warning: Option<String>) -> Result<(), String> {
         let mut current = self
             .persistence_warning
             .lock()
-            .map_err(|_| "persistence warning state is unavailable".to_string())?;
+            .map_err(|_| "persistence_warning_unavailable".to_string())?;
         *current = warning;
         Ok(())
     }
@@ -70,7 +70,7 @@ impl AppState {
     pub fn try_begin_request(&self) -> Result<RequestFlightGuard<'_>, String> {
         self.request_in_flight
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-            .map_err(|_| "A request is already in progress.".to_string())?;
+            .map_err(|_| "request_in_progress".to_string())?;
 
         Ok(RequestFlightGuard {
             request_in_flight: &self.request_in_flight,
@@ -98,11 +98,13 @@ pub(crate) fn load_security_settings(
     };
 
     if settings_file.exists() {
-        return SecuritySettings::load_from_file_with_warning(settings_file);
+        let (settings, warning) = SecuritySettings::load_from_file_with_warning(settings_file);
+        return (settings, map_persistence_warning(warning));
     }
 
     if let Some(legacy_file) = first_existing_path(legacy_settings_files) {
-        return SecuritySettings::load_from_file_with_warning(legacy_file);
+        let (settings, warning) = SecuritySettings::load_from_file_with_warning(legacy_file);
+        return (settings, map_persistence_warning(warning));
     }
 
     (SecuritySettings::default(), None)
@@ -120,17 +122,15 @@ pub(crate) fn load_history_store(
     let Some(history_file) = history_file else {
         return (
             HistoryStore::new(),
-            Some(
-                "Persistent history is enabled, but Fuseprobe could not resolve a local storage path."
-                    .to_string(),
-            ),
+            Some("history_path_unavailable".to_string()),
         );
     };
 
     let legacy_file = first_existing_path(legacy_history_files)
         .unwrap_or_else(|| Path::new("__missing_fuseprobe_legacy_history__"));
 
-    HistoryStore::load_from_files_with_warning(history_file, legacy_file)
+    let (history, warning) = HistoryStore::load_from_files_with_warning(history_file, legacy_file);
+    (history, map_persistence_warning(warning))
 }
 
 pub(crate) fn sync_history_persistence(
@@ -140,15 +140,13 @@ pub(crate) fn sync_history_persistence(
 ) -> Option<String> {
     if persist_history {
         let Some(history_file) = history_file else {
-            return Some(
-                "Persistent history is enabled, but Fuseprobe could not resolve a local storage path."
-                    .to_string(),
-            );
+            return Some("history_path_unavailable".to_string());
         };
 
-        return history.save_to_file(history_file).err().map(|_| {
-            "Persistent history could not be saved. Session history remains available.".to_string()
-        });
+        return history
+            .save_to_file(history_file)
+            .err()
+            .map(|_| "history_save_failed".to_string());
     }
 
     let Some(history_file) = history_file else {
@@ -156,10 +154,7 @@ pub(crate) fn sync_history_persistence(
     };
 
     if history_file.exists() && fs::remove_file(history_file).is_err() {
-        return Some(
-            "Persistent history could not be removed. Session-only history remains active."
-                .to_string(),
-        );
+        return Some("history_remove_failed".to_string());
     }
 
     None
@@ -167,11 +162,26 @@ pub(crate) fn sync_history_persistence(
 
 fn merge_warnings(current: Option<String>, next: Option<String>) -> Option<String> {
     match (current, next) {
-        (Some(current), Some(next)) => Some(format!("{current} {next}")),
+        (Some(current), Some(_)) => Some(current),
         (Some(current), None) => Some(current),
         (None, Some(next)) => Some(next),
         (None, None) => None,
     }
+}
+
+fn map_persistence_warning(warning: Option<String>) -> Option<String> {
+    warning.and_then(|warning| match warning.as_str() {
+        "Security settings could not be read. Safe defaults were restored." => {
+            Some("settings_parse_failed".to_string())
+        }
+        "History could not be loaded from disk. The current session will start empty." => {
+            Some("history_load_failed".to_string())
+        }
+        "Saved history could not be parsed. The current session will start empty." => {
+            Some("history_parse_failed".to_string())
+        }
+        _ => None,
+    })
 }
 
 fn first_existing_path(paths: &[PathBuf]) -> Option<&Path> {
@@ -266,10 +276,7 @@ mod tests {
         assert!(history.all().is_empty());
         assert_eq!(
             warning,
-            Some(
-                "Persistent history is enabled, but Fuseprobe could not resolve a local storage path."
-                    .to_string()
-            ),
+            Some("history_path_unavailable".to_string()),
         );
     }
 
@@ -313,10 +320,7 @@ mod tests {
 
         assert_eq!(
             warning,
-            Some(
-                "Persistent history is enabled, but Fuseprobe could not resolve a local storage path."
-                    .to_string()
-            ),
+            Some("history_path_unavailable".to_string()),
         );
     }
 
@@ -363,7 +367,7 @@ mod tests {
 
         drop(first_guard);
 
-        assert_eq!(error, "A request is already in progress.");
+        assert_eq!(error, "request_in_progress");
         assert!(state.try_begin_request().is_ok());
     }
 

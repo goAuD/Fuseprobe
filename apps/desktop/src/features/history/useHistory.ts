@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "../i18n/locale";
+import {
+  formatCommandError,
+  formatPersistenceWarning,
+} from "../i18n/messageText";
 import type { HistoryEntry } from "../../lib/contracts";
 import {
   clearHistory as clearHistoryFromBridge,
@@ -27,7 +31,7 @@ export function useHistory(refreshToken = 0) {
         }
 
         setEntries(result.entries);
-        setWarning(result.persistenceWarning);
+        setWarning(formatPersistenceWarning(strings, result.persistenceWarningCode));
       })
       .catch((loadError) => {
         if (!isActive) {
@@ -36,13 +40,7 @@ export function useHistory(refreshToken = 0) {
 
         setEntries([]);
         setWarning(null);
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : typeof loadError === "string"
-              ? loadError
-              : strings.hooks.failedToLoadDesktopHistory,
-        );
+        setError(formatCommandError(strings, loadError, strings.hooks.failedToLoadDesktopHistory));
       })
       .finally(() => {
         if (isActive) {
@@ -62,15 +60,11 @@ export function useHistory(refreshToken = 0) {
     try {
       const result = await deleteHistoryEntryFromBridge(index);
       setEntries(result.entries);
-      setWarning(result.persistenceWarning);
+      setWarning(formatPersistenceWarning(strings, result.persistenceWarningCode));
     } catch (deleteError) {
       setWarning(null);
       setError(
-        deleteError instanceof Error
-          ? deleteError.message
-          : typeof deleteError === "string"
-            ? deleteError
-            : strings.hooks.failedToRemoveHistoryEntry,
+        formatCommandError(strings, deleteError, strings.hooks.failedToRemoveHistoryEntry),
       );
     }
   }
@@ -82,15 +76,11 @@ export function useHistory(refreshToken = 0) {
     try {
       const result = await clearHistoryFromBridge();
       setEntries(result.entries);
-      setWarning(result.persistenceWarning);
+      setWarning(formatPersistenceWarning(strings, result.persistenceWarningCode));
     } catch (clearError) {
       setWarning(null);
       setError(
-        clearError instanceof Error
-          ? clearError.message
-          : typeof clearError === "string"
-            ? clearError
-            : strings.hooks.failedToClearHistory,
+        formatCommandError(strings, clearError, strings.hooks.failedToClearHistory),
       );
     }
   }

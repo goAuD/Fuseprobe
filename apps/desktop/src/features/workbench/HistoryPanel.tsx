@@ -1,16 +1,16 @@
 import { useLocale } from "../i18n/locale";
 import { useHistory } from "../history/useHistory";
-import { apiTemplateNames } from "../presets/presets";
+import { type ApiTemplateKey, apiTemplateKeys } from "../presets/presets";
 
 interface HistoryPanelProps {
   refreshToken?: number;
-  activeTemplateName: string | null;
-  onApplyTemplate: (templateName: string) => void;
+  activeTemplateKey: ApiTemplateKey | null;
+  onApplyTemplate: (templateKey: ApiTemplateKey) => void;
 }
 
 export default function HistoryPanel({
   refreshToken = 0,
-  activeTemplateName,
+  activeTemplateKey,
   onApplyTemplate,
 }: HistoryPanelProps) {
   const { strings } = useLocale();
@@ -32,15 +32,15 @@ export default function HistoryPanel({
       <div className="preset-section">
         <p className="editor-label">{strings.history.templates}</p>
         <div className="template-grid">
-          {apiTemplateNames.map((name) => (
+          {apiTemplateKeys.map((templateKey) => (
             <button
-              key={name}
-              className={`template-chip${activeTemplateName === name ? " active" : ""}`}
+              key={templateKey}
+              className={`template-chip${activeTemplateKey === templateKey ? " active" : ""}`}
               type="button"
-              aria-pressed={activeTemplateName === name}
-              onClick={() => onApplyTemplate(name)}
+              aria-pressed={activeTemplateKey === templateKey}
+              onClick={() => onApplyTemplate(templateKey)}
             >
-              {name}
+              {strings.presets.templates[templateKey].name}
             </button>
           ))}
         </div>

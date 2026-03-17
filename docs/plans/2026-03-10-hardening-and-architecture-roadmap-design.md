@@ -223,9 +223,11 @@ That slice is complete only when:
 - the README prefers release download over source build
 - maintainers have a short checklist for validating the published Windows setup asset
 
-The next functional slice after that remains:
+The next functional slice after that was:
 
 - production localization completion for `en / de / hu`
+
+That localization slice is now implemented locally under the `v3.0.2` plan. The remaining next step is publishing and verifying the tagged Windows installer asset.
 
 Approved temporary branding direction for the current desktop shell:
 

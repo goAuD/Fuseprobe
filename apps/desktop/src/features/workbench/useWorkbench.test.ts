@@ -28,9 +28,10 @@ it("stores the mocked response after submit", async () => {
       body: "{\"hello\":true}",
       headers: "Accept: application/json",
     },
-    statusLine: "200 OK",
+    statusCode: 200,
+    reason: "OK",
     durationMs: 37,
-    sizeLabel: "128 B",
+    byteCount: 128,
     contentType: "application/json",
     charset: "utf-8",
     responseText: "{\"ok\":true}",
@@ -38,9 +39,11 @@ it("stores the mocked response after submit", async () => {
     responseHeaders: {
       "content-type": "application/json",
     },
-    policyNote: "redirects disabled by policy",
-    persistenceWarning:
-      "Persistent history could not be saved. Session history remains available.",
+    policyCode: "redirects_disabled",
+    isBinary: false,
+    truncated: false,
+    redirectLocation: null,
+    persistenceWarningCode: "history_save_failed",
   });
 
   const { result } = renderHook(() => useWorkbench());
@@ -62,7 +65,8 @@ it("stores the mocked response after submit", async () => {
     body: "{\"hello\":true}",
     headers: "Accept: application/json",
   });
-  expect(result.current.response.statusLine).toBe("200 OK");
+  expect(result.current.response.statusCode).toBe(200);
+  expect(result.current.response.reason).toBe("OK");
   expect(result.current.error).toBeNull();
   expect(result.current.persistenceWarning).toBe(
     "Persistent history could not be saved. Session history remains available.",
@@ -71,7 +75,7 @@ it("stores the mocked response after submit", async () => {
 });
 
 it("surfaces string-based request errors from the desktop bridge", async () => {
-  mockedSendRequest.mockRejectedValue("Invalid or unsafe URL. Only http:// and https:// are allowed.");
+  mockedSendRequest.mockRejectedValue("request_invalid_url");
 
   const { result } = renderHook(() => useWorkbench());
 
@@ -84,7 +88,7 @@ it("surfaces string-based request errors from the desktop bridge", async () => {
   });
 
   expect(result.current.error).toBe(
-    "Invalid or unsafe URL. Only http:// and https:// are allowed.",
+    "Invalid request URL.",
   );
 });
 
@@ -124,16 +128,20 @@ it("prevents a second submit while a request is already in progress", async () =
         body: "",
         headers: "",
       },
-      statusLine: "200 OK",
+      statusCode: 200,
+      reason: "OK",
       durationMs: 12,
-      sizeLabel: "42 B",
+      byteCount: 42,
       contentType: "application/json",
       charset: "utf-8",
       responseText: "{\"ok\":true}",
       rawResponseText: "{\"ok\":true}",
       responseHeaders: {},
-      policyNote: "redirects disabled by policy",
-      persistenceWarning: null,
+      policyCode: "redirects_disabled",
+      isBinary: false,
+      truncated: false,
+      redirectLocation: null,
+      persistenceWarningCode: null,
     });
   });
 
@@ -149,7 +157,7 @@ it("applies template defaults without keeping stale auth headers", () => {
 
   act(() => {
     result.current.setHeaders("Accept: application/json\nAuthorization: Bearer stale");
-    result.current.applyTemplate("GitHub API");
+    result.current.applyTemplate("github");
   });
 
   expect(result.current.method).toBe("GET");
@@ -157,9 +165,8 @@ it("applies template defaults without keeping stale auth headers", () => {
   expect(result.current.headers).toBe(
     "Accept: application/json\nAuthorization: Bearer <YOUR_TOKEN>",
   );
-  expect(result.current.activeTemplateName).toBe("GitHub API");
-  expect(result.current.activeAuthPresetName).toBe("Bearer Token");
-  expect(result.current.authDescription).toBe("JWT or OAuth2 bearer token");
+  expect(result.current.activeTemplateKey).toBe("github");
+  expect(result.current.activeAuthPresetKey).toBe("bearer");
 });
 
 type SendRequestReturn = Awaited<ReturnType<typeof sendRequest>>;
