@@ -1,0 +1,32 @@
+version: 2
+multi-ecosystem-groups:
+  weekly-batch:
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: Europe/Vienna
+    labels:
+      - dependencies
+
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    patterns:
+      - "*"
+    multi-ecosystem-group: weekly-batch
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /apps/desktop
+    patterns:
+      - "*"
+    multi-ecosystem-group: weekly-batch
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    patterns:
+      - "*"
+    multi-ecosystem-group: weekly-batch
+    open-pull-requests-limit: 5
