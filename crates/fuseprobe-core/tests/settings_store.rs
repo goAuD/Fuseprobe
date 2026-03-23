@@ -38,6 +38,33 @@ fn saves_and_loads_security_settings() {
     }
 }
 
+#[test]
+fn save_to_file_overwrites_existing_settings_without_leaving_a_gap() {
+    let settings_path = unique_settings_path("overwrite");
+    let initial = SecuritySettings {
+        allow_unsafe_targets: false,
+        persist_history: false,
+    };
+    let updated = SecuritySettings {
+        allow_unsafe_targets: true,
+        persist_history: true,
+    };
+
+    initial
+        .save_to_file(&settings_path)
+        .expect("initial settings should save");
+    updated
+        .save_to_file(&settings_path)
+        .expect("updated settings should overwrite");
+
+    let loaded = SecuritySettings::load_from_file(&settings_path);
+    assert_eq!(loaded, updated);
+
+    if settings_path.exists() {
+        fs::remove_file(&settings_path).expect("settings file cleanup should succeed");
+    }
+}
+
 fn unique_settings_path(suffix: &str) -> PathBuf {
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)

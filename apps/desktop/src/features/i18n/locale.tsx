@@ -300,6 +300,8 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
         request_headers_too_large: "Request headers are too large.",
         request_timeout: "Request timed out.",
         request_connection_local_unavailable: "Allowed local target did not respond.",
+        request_unresolvable_host:
+          "The target host could not be resolved during validation.",
         request_connection_failed: "Unable to reach the target.",
         request_failed: "Request failed.",
         request_worker_failed: "Desktop request worker failed.",
@@ -496,6 +498,8 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
         request_headers_too_large: "Die Request-Header sind zu groß.",
         request_timeout: "Zeitüberschreitung bei der Anfrage.",
         request_connection_local_unavailable: "Ein erlaubtes lokales Ziel hat nicht geantwortet.",
+        request_unresolvable_host:
+          "Der Zielhost konnte während der Validierung nicht aufgelöst werden.",
         request_connection_failed: "Das Ziel konnte nicht erreicht werden.",
         request_failed: "Anfrage fehlgeschlagen.",
         request_worker_failed: "Der Desktop-Request-Worker ist fehlgeschlagen.",
@@ -692,6 +696,8 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
         request_headers_too_large: "A kérés headerei túl nagyok.",
         request_timeout: "A kérés időtúllépés miatt megszakadt.",
         request_connection_local_unavailable: "Az engedélyezett lokális célpont nem válaszolt.",
+        request_unresolvable_host:
+          "A célhostot nem sikerült feloldani az ellenőrzés során.",
         request_connection_failed: "A célpont nem érhető el.",
         request_failed: "A kérés sikertelen volt.",
         request_worker_failed: "A desktop request worker hibával leállt.",

@@ -9,9 +9,9 @@ fn rejects_urls_with_embedded_credentials() {
 }
 
 #[test]
-fn accepts_valid_intranet_style_urls() {
-    assert!(validate_url("http://intranet/api").is_ok());
-    assert!(validate_url("https://internal-api:3000").is_ok());
+fn accepts_resolvable_public_urls() {
+    assert!(validate_url("http://example.com/api").is_ok());
+    assert!(validate_url("https://api.github.com").is_ok());
 }
 
 #[test]
@@ -37,6 +37,12 @@ fn allows_loopback_targets_when_unsafe_mode_is_enabled() {
 fn rejects_invalid_schemes_and_whitespace() {
     assert!(validate_url("ftp://example.com/file").is_err());
     assert!(validate_url("https://bad host.example.com").is_err());
+}
+
+#[test]
+fn rejects_domains_that_cannot_be_resolved_during_validation() {
+    let error = validate_url("https://fuseprobe-resolution-test.invalid/api").unwrap_err();
+    assert!(error.contains("unable to resolve the target host"));
 }
 
 #[test]

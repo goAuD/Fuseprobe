@@ -142,6 +142,12 @@ fn map_request_error_code(error: &str) -> String {
         return "request_timeout".to_string();
     }
 
+    if error.starts_with(
+        "Connection failed: unable to resolve the target host during security validation.",
+    ) {
+        return "request_unresolvable_host".to_string();
+    }
+
     if error.starts_with("Connection failed: the target was allowed") {
         return "request_connection_local_unavailable".to_string();
     }
@@ -151,4 +157,27 @@ fn map_request_error_code(error: &str) -> String {
     }
 
     "request_failed".to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::map_request_error_code;
+
+    #[test]
+    fn maps_security_validation_dns_failures_to_a_distinct_error_code() {
+        assert_eq!(
+            map_request_error_code(
+                "Connection failed: unable to resolve the target host during security validation."
+            ),
+            "request_unresolvable_host"
+        );
+    }
+
+    #[test]
+    fn keeps_runtime_connection_failures_on_the_generic_connection_code() {
+        assert_eq!(
+            map_request_error_code("Connection failed: unable to reach the target. socket hang up"),
+            "request_connection_failed"
+        );
+    }
 }

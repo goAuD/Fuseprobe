@@ -34,6 +34,10 @@ fn tauri_config_uses_a_non_null_csp() {
         csp.contains("object-src 'none'"),
         "csp should disable legacy plugin/object execution"
     );
+    assert!(
+        !csp.contains("'unsafe-inline'"),
+        "csp should not allow inline script or style execution"
+    );
 }
 
 #[test]

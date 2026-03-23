@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- release workflow now publishes companion SHA-256 checksum files next to tagged Windows installer assets
+
+### Changed
+- desktop CSP no longer allows inline styles
+- release workflow now scopes `contents: write` to the Windows release job and pins third-party GitHub Actions by commit SHA
+- desktop request errors now distinguish validation-time host resolution failures from generic runtime connection failures
+
+### Fixed
+- hostname resolution failures during unsafe-target validation no longer bypass the request target policy
+- settings and history persistence no longer delete the destination file before the temp-file rename step
+
 ---
 
 ## [3.0.2] - 2026-03-17

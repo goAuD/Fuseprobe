@@ -4,6 +4,8 @@ use url::{Host, Url};
 
 const UNSAFE_TARGET_MESSAGE: &str =
     "Local and private targets are blocked by default. Enable Unsafe mode / Local targets to allow them.";
+const DNS_RESOLUTION_FAILURE_MESSAGE: &str =
+    "Connection failed: unable to resolve the target host during security validation.";
 
 pub fn validate_target_policy(parsed: &Url, allow_unsafe_targets: bool) -> Result<(), String> {
     if allow_unsafe_targets {
@@ -16,12 +18,11 @@ pub fn validate_target_policy(parsed: &Url, allow_unsafe_targets: bool) -> Resul
 
     match host {
         Host::Domain(domain) => {
-            if is_reserved_unsafe_domain(domain)
-                || resolved_domain_contains_unsafe_ip(
-                    domain,
-                    parsed.port_or_known_default(),
-                )
-            {
+            if is_reserved_unsafe_domain(domain) {
+                return Err(UNSAFE_TARGET_MESSAGE.to_string());
+            }
+
+            if resolved_domain_contains_unsafe_ip(domain, parsed.port_or_known_default())? {
                 return Err(UNSAFE_TARGET_MESSAGE.to_string());
             }
         }
@@ -47,15 +48,15 @@ fn is_reserved_unsafe_domain(domain: &str) -> bool {
         || normalized == "metadata.google.internal"
 }
 
-fn resolved_domain_contains_unsafe_ip(domain: &str, port: Option<u16>) -> bool {
+fn resolved_domain_contains_unsafe_ip(domain: &str, port: Option<u16>) -> Result<bool, String> {
     let Some(port) = port else {
-        return false;
+        return Err(DNS_RESOLUTION_FAILURE_MESSAGE.to_string());
     };
 
     (domain, port)
         .to_socket_addrs()
         .map(|addrs| contains_unsafe_ip(addrs.map(|addr| addr.ip())))
-        .unwrap_or(false)
+        .map_err(|_| DNS_RESOLUTION_FAILURE_MESSAGE.to_string())
 }
 
 fn contains_unsafe_ip(addresses: impl IntoIterator<Item = IpAddr>) -> bool {
@@ -83,7 +84,10 @@ fn is_unsafe_ipv6(address: Ipv6Addr) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{contains_unsafe_ip, is_reserved_unsafe_domain};
+    use super::{
+        contains_unsafe_ip, is_reserved_unsafe_domain, resolved_domain_contains_unsafe_ip,
+        DNS_RESOLUTION_FAILURE_MESSAGE,
+    };
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
     #[test]
@@ -102,5 +106,14 @@ mod tests {
         ]));
         assert!(contains_unsafe_ip([IpAddr::V6(Ipv6Addr::LOCALHOST)]));
         assert!(!contains_unsafe_ip([IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8))]));
+    }
+
+    #[test]
+    fn treats_unresolvable_domains_as_resolution_failures() {
+        let error =
+            resolved_domain_contains_unsafe_ip("fuseprobe-resolution-test.invalid", Some(443))
+                .unwrap_err();
+
+        assert_eq!(error, DNS_RESOLUTION_FAILURE_MESSAGE);
     }
 }

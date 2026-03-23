@@ -21,7 +21,10 @@ The intended end-user install path is the release installer, not a source build.
 
 - download the latest Windows installer from [GitHub Releases](https://github.com/goAuD/Fuseprobe/releases)
 - use the `Fuseprobe_*_x64-setup.exe` asset
+- when a companion `*.sha256` asset is present, verify the installer hash before distributing it further
 - install it, then launch Fuseprobe from the installed shortcut or Start menu
+
+Current Windows installers are not code-signed yet, so SmartScreen may still show an unknown publisher warning.
 
 If you only want to use Fuseprobe, stop here. The source-build path below is for contributors and local development.
 
@@ -66,6 +69,7 @@ Fuseprobe is intentionally strict by default:
 
 - `Unsafe mode / Local targets` is off
 - localhost, private IPs, link-local targets, and metadata-style endpoints are blocked by default
+- hostnames that cannot be resolved during request validation fail closed instead of bypassing the target policy
 - `History persistence` is off
 - risky settings require explicit confirmation before they switch on
 
@@ -146,6 +150,7 @@ npm --prefix apps/desktop run tauri:build
 Preferred Windows distribution artifact:
 
 - `target/release/bundle/nsis/Fuseprobe_3.0.2_x64-setup.exe`
+- on tagged releases, the workflow also emits a companion `*.sha256` checksum file for installer verification
 
 The raw binary at `target/release/fuseprobe-desktop.exe` is a development/build artifact. It is not the recommended distribution target for other machines.
 
@@ -174,6 +179,16 @@ After installing the Microsoft build tools, open a fresh shell. On some Windows 
 - or `x64 Native Tools Command Prompt for VS 2022`
 
 Those shells initialize the MSVC build environment so tools such as `cl`, `link`, `rc`, and `mt` are available on `PATH`.
+
+## Verify A Release Installer
+
+When a release includes a companion `*.sha256` asset, you can verify the installer before running it:
+
+```powershell
+Get-FileHash .\Fuseprobe_3.0.2_x64-setup.exe -Algorithm SHA256
+```
+
+Compare the printed hash with the contents of the matching `.sha256` release asset.
 
 ## Running Fuseprobe
 

@@ -203,6 +203,37 @@ fn save_to_file_strips_fragments_from_persisted_history() {
     assert!(!saved_payload.contains("#secret-fragment"));
 }
 
+#[test]
+fn save_to_file_overwrites_existing_history() {
+    let temp_dir = TestDir::new("overwrite-history");
+    let history_file = temp_dir.path().join("history.json");
+    let legacy_history_file = temp_dir.path().join("legacy-history.json");
+    let mut initial = HistoryStore::new();
+    let mut updated = HistoryStore::new();
+
+    initial.add(HistoryEntry::new(
+        "GET",
+        "https://api.example.com/items?page=1",
+    ));
+    updated.add(HistoryEntry::new(
+        "POST",
+        "https://api.example.com/items?token=secret",
+    ));
+
+    initial
+        .save_to_file(&history_file)
+        .expect("save initial history to disk");
+    updated
+        .save_to_file(&history_file)
+        .expect("overwrite history on disk");
+
+    let loaded = HistoryStore::load_from_files(&history_file, &legacy_history_file);
+    assert_eq!(loaded.all().len(), 1);
+    assert_eq!(loaded.all()[0].method, "POST");
+    assert!(loaded.all()[0].url.contains("token=%2A%2A%2A"));
+    assert!(!loaded.all()[0].url.contains("page=1"));
+}
+
 struct TestDir {
     path: PathBuf,
 }

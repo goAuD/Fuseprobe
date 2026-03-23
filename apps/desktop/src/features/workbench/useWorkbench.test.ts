@@ -92,6 +92,24 @@ it("surfaces string-based request errors from the desktop bridge", async () => {
   );
 });
 
+it("surfaces a dedicated message for validation-time host resolution failures", async () => {
+  mockedSendRequest.mockRejectedValue("request_unresolvable_host");
+
+  const { result } = renderHook(() => useWorkbench());
+
+  act(() => {
+    result.current.setUrl("https://fuseprobe-resolution-test.invalid/api");
+  });
+
+  await act(async () => {
+    await result.current.submitRequest();
+  });
+
+  expect(result.current.error).toBe(
+    "The target host could not be resolved during validation.",
+  );
+});
+
 it("prevents a second submit while a request is already in progress", async () => {
   let resolveRequest: ((value: SendRequestReturn) => void) | null = null;
   mockedSendRequest.mockImplementation(

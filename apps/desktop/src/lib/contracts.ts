@@ -24,6 +24,7 @@ export type CommandErrorCode =
   | "request_headers_too_large"
   | "request_timeout"
   | "request_connection_local_unavailable"
+  | "request_unresolvable_host"
   | "request_connection_failed"
   | "request_failed"
   | "request_worker_failed"

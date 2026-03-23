@@ -18,6 +18,8 @@ This reduces accidental local-network probing and makes the out-of-the-box deskt
 
 If you intentionally need local or internal targets, enable `Unsafe mode / Local targets` in the desktop security panel and confirm the warning.
 
+Fuseprobe also treats hostname resolution failures as hard failures during request validation. If the app cannot resolve a host safely at validation time, it does not continue with a best-effort request.
+
 ### History persistence is off by default
 
 Fuseprobe keeps request history in memory for the current session unless you explicitly enable `History persistence`.
@@ -85,3 +87,17 @@ Keep `History persistence` off unless you have a specific reason to persist loca
 When persistence is enabled, Fuseprobe stores local settings and redacted history in its app config directory on the current machine.
 
 Fuseprobe does not require cloud storage, telemetry, or online synchronization for normal operation.
+
+Fuseprobe assumes the local user profile and app config directory are part of the trusted machine boundary. If another local user process or malware can already modify those files, it can also alter local app settings.
+
+## Release Integrity
+
+Windows installers are currently distributed as unsigned binaries, so Windows SmartScreen may still warn about an unknown publisher on first launch.
+
+When a tagged release includes a companion `*.sha256` asset, verify it before redistribution or manual mirroring:
+
+```powershell
+Get-FileHash .\Fuseprobe_<version>_x64-setup.exe -Algorithm SHA256
+```
+
+Compare the output with the published checksum file from the same GitHub release.

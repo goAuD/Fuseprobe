@@ -143,9 +143,6 @@ impl HistoryStore {
             .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
 
         fs::write(&temp_path, encoded)?;
-        if history_file.exists() {
-            fs::remove_file(history_file)?;
-        }
         fs::rename(&temp_path, history_file)?;
         Ok(())
     }

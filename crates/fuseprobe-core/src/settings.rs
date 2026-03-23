@@ -52,9 +52,6 @@ impl SecuritySettings {
             .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
 
         fs::write(&temp_path, encoded)?;
-        if settings_file.exists() {
-            fs::remove_file(settings_file)?;
-        }
         fs::rename(&temp_path, settings_file)?;
         Ok(())
     }

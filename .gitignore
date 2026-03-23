@@ -33,6 +33,8 @@ history.json
 INTERNAL_ENGINEERING_LOG.md
 docs/internal-*.md
 docs/private-*.md
+docs/plans/
+docs/reviews/
 skills.json
 
 # Sensitive local files
