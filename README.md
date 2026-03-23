@@ -48,6 +48,7 @@ Current verified status:
 
 - Windows desktop release-candidate build verified
 - desktop shell localization is implemented for `en / de / hu`, including persisted locale selection and localized warnings/response metadata
+- current desktop shell tuning favors a calmer low-glare palette and a denser first-screen layout for day-to-day use
 - cross-platform packaging remains a product goal, but is not documented here as already verified
 - the legacy desktop shell is no longer part of the mainline repository
 
@@ -62,6 +63,7 @@ Current verified status:
 - **Session-first history**: request history stays in-memory unless you explicitly enable persistence
 - **Desktop security controls**: persisted toggles with confirmations for risky settings
 - **Localized desktop shell**: production-ready English, German, and Hungarian UI copy with persisted locale selection
+- **Low-glare shell tuning**: calmer syntax colors, softer bright text, and tighter viewport fit on first launch
 
 ## Security Defaults
 
@@ -149,7 +151,7 @@ npm --prefix apps/desktop run tauri:build
 
 Preferred Windows distribution artifact:
 
-- `target/release/bundle/nsis/Fuseprobe_3.0.2_x64-setup.exe`
+- `target/release/bundle/nsis/Fuseprobe_3.0.3_x64-setup.exe`
 - on tagged releases, the workflow also emits a companion `*.sha256` checksum file for installer verification
 
 The raw binary at `target/release/fuseprobe-desktop.exe` is a development/build artifact. It is not the recommended distribution target for other machines.
@@ -185,7 +187,7 @@ Those shells initialize the MSVC build environment so tools such as `cl`, `link`
 When a release includes a companion `*.sha256` asset, you can verify the installer before running it:
 
 ```powershell
-Get-FileHash .\Fuseprobe_3.0.2_x64-setup.exe -Algorithm SHA256
+Get-FileHash .\Fuseprobe_3.0.3_x64-setup.exe -Algorithm SHA256
 ```
 
 Compare the printed hash with the contents of the matching `.sha256` release asset.
@@ -346,6 +348,7 @@ cargo test
 - [release-v3.0.0.md](docs/releases/release-v3.0.0.md)
 - [release-v3.0.1.md](docs/releases/release-v3.0.1.md)
 - [release-v3.0.2.md](docs/releases/release-v3.0.2.md)
+- [release-v3.0.3.md](docs/releases/release-v3.0.3.md)
 
 ## License
 

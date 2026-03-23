@@ -39,7 +39,7 @@ export default function RequestEditor({
         <span className="pill">{strings.request.tabs.auth}</span>
       </div>
 
-      <div className="editor-card">
+      <div className="editor-card editor-card-body">
         <label className="editor-label" htmlFor="request-body">
           {strings.request.bodyLabel}
         </label>
@@ -53,7 +53,7 @@ export default function RequestEditor({
         />
       </div>
 
-      <div className="editor-card">
+      <div className="editor-card editor-card-headers">
         <label className="editor-label" htmlFor="request-headers">
           {strings.request.headersLabel}
         </label>
@@ -67,7 +67,7 @@ export default function RequestEditor({
         />
       </div>
 
-      <div className="editor-card compact">
+      <div className="editor-card compact editor-card-auth">
         <label className="editor-label">{strings.request.authPresetLabel}</label>
         <div className="auth-summary">
           <p className="hint-text">{localizedAuthPreset.name}</p>
