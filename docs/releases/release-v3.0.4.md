@@ -13,7 +13,8 @@ This release does not change the product surface or the request security posture
 - resolved outstanding Dependabot security alerts on transitive Rust dependencies (`rand 0.9.2 → 0.9.3`, `rustls-webpki 0.103.10 → 0.103.12`)
 - the Dependabot config is now a valid `version: 2` multi-ecosystem setup covering `cargo`, `npm` (desktop), and `github-actions` under a single weekly batch
 - every third-party GitHub Action on the CI and release paths is now pinned by full commit SHA, with the floating `@v*` refs gone
-- replaced the blocked `dtolnay/rust-toolchain` action in CI and the release workflow with a direct `rustup toolchain install stable --profile minimal` step, so the tag-triggered Windows build no longer fails before it starts
+- replaced the blocked `dtolnay/rust-toolchain` action in CI and the release workflow with a direct `rustup toolchain install stable --profile minimal` step
+- replaced the blocked `softprops/action-gh-release` third-party action with the preinstalled `gh release` CLI path, so the tag-triggered Windows build no longer fails at workflow startup against the repo's selected-actions + required-SHA-pinning policy
 
 ## Notes
 
@@ -31,16 +32,12 @@ This release does not change the product surface or the request security posture
 
 ## CI Fix
 
-The previous tag-triggered `Release Desktop` run was blocked because the `dtolnay/rust-toolchain` action was not on the repository's allowed-actions list under the new SHA-pinning posture. The CI and release workflows now use a direct `rustup` invocation:
+The previous tag-triggered `Release Desktop` run was blocked at workflow startup because the repository enforces `allowed_actions: selected` plus `sha_pinning_required: true`, and two third-party actions (`dtolnay/rust-toolchain` and `softprops/action-gh-release`) were not on the allow-list under that policy. Both actions are now gone from the release path:
 
-```yaml
-- name: Setup Rust
-  run: |
-    rustup toolchain install stable --profile minimal
-    rustup default stable
-```
+- Rust toolchain setup runs `rustup` directly instead of the third-party action
+- release asset creation and upload now use the `gh release create` / `gh release upload` CLI that ships preinstalled on GitHub runners, authenticated with the built-in `GITHUB_TOKEN`
 
-This keeps the build reproducible without introducing a third-party action into the release path.
+This keeps the Windows installer build reproducible with zero third-party actions on the release path.
 
 ## Local Verification
 

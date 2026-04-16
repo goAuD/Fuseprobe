@@ -17,14 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dependabot config rewritten as a valid `version: 2` multi-ecosystem setup covering `cargo`, `npm` (desktop), and `github-actions` under a single weekly batch
 - CI and release workflows now pin every third-party GitHub Action by full commit SHA instead of a floating `@v*` ref
 - CI and release workflows now bootstrap the Rust toolchain via a direct `rustup toolchain install stable --profile minimal` step instead of the third-party `dtolnay/rust-toolchain` action
+- release workflow now creates the GitHub Release and uploads the Windows installer + checksum assets via the preinstalled `gh release` CLI instead of the third-party `softprops/action-gh-release` action
 - public `v3.0.4` release notes live under `docs/releases/release-v3.0.4.md`
 
 ### Security
 - Cargo dependency tree bumped to clear Dependabot security alerts: `rand 0.9.2 → 0.9.3` and `rustls-webpki 0.103.10 → 0.103.12`
-- removed the last third-party action from the tag-triggered Windows installer build path so the release workflow no longer depends on an external action allow-list entry for the Rust toolchain step
+- removed the last two third-party actions from the tag-triggered Windows installer build path so the release workflow no longer depends on an external action allow-list entry
 
 ### Fixed
-- the tag-triggered `Release Desktop` workflow now runs end-to-end again after the previous run was blocked by the allowed-actions policy on `dtolnay/rust-toolchain`
+- the tag-triggered `Release Desktop` workflow now runs end-to-end again after the previous run was blocked at startup by the repo's `allowed_actions: selected` policy on `dtolnay/rust-toolchain` and `softprops/action-gh-release`
 
 ---
 
