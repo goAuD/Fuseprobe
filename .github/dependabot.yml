@@ -6,6 +6,7 @@ multi-ecosystem-groups:
       day: monday
       time: "03:00"
       timezone: Europe/Vienna
+    open-pull-requests-limit: 5
     labels:
       - dependencies
 
@@ -20,7 +21,6 @@ updates:
         patterns:
           - "*"
     multi-ecosystem-group: weekly-batch
-    open-pull-requests-limit: 5
 
   - package-ecosystem: npm
     directory: /apps/desktop
@@ -32,7 +32,6 @@ updates:
         patterns:
           - "*"
     multi-ecosystem-group: weekly-batch
-    open-pull-requests-limit: 5
 
   - package-ecosystem: github-actions
     directory: /
@@ -44,4 +43,3 @@ updates:
         patterns:
           - "*"
     multi-ecosystem-group: weekly-batch
-    open-pull-requests-limit: 5
