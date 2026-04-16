@@ -36,7 +36,9 @@ jobs:
           cache-dependency-path: apps/desktop/package-lock.json
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@631a55b12751854ce901bb631d5902ceb48146f7 # stable
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
 
       - name: Install frontend dependencies
         run: npm --prefix apps/desktop ci
