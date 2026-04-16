@@ -14,6 +14,11 @@ updates:
     directory: /
     patterns:
       - "*"
+    groups:
+      cargo-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     multi-ecosystem-group: weekly-batch
     open-pull-requests-limit: 5
 
@@ -21,6 +26,11 @@ updates:
     directory: /apps/desktop
     patterns:
       - "*"
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     multi-ecosystem-group: weekly-batch
     open-pull-requests-limit: 5
 
@@ -28,5 +38,10 @@ updates:
     directory: /
     patterns:
       - "*"
+    groups:
+      github-actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     multi-ecosystem-group: weekly-batch
     open-pull-requests-limit: 5
