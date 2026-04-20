@@ -963,27 +963,14 @@ button.method-control[aria-expanded="true"] {
     overflow: auto;
   }
 
-  .request-panel .editor-card {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  .request-panel .editor-card-body {
-    flex: 1.35 1 0;
-  }
-
-  .request-panel .editor-card-headers {
-    flex: 0.85 1 0;
-  }
-
-  .request-panel .editor-card-auth {
-    flex: 0 0 auto;
-  }
-
   .request-panel .editor-input {
-    flex: 1;
-    max-height: none;
+    min-height: 160px;
+    max-height: 60vh;
+  }
+
+  .request-panel .editor-input-compact {
+    min-height: 110px;
+    max-height: 40vh;
   }
 
   .aside-column {
@@ -1038,12 +1025,12 @@ button.method-control[aria-expanded="true"] {
     padding: 12px 14px;
   }
 
-  .request-panel .editor-card-body {
-    flex: 1.15 1 0;
+  .request-panel .editor-input {
+    min-height: 140px;
   }
 
-  .request-panel .editor-card-headers {
-    flex: 0.75 1 0;
+  .request-panel .editor-input-compact {
+    min-height: 92px;
   }
 }
 
