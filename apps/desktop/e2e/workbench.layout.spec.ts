@@ -25,7 +25,7 @@ for (const viewport of VIEWPORTS) {
       expect(bodyBox, "body textarea should have a layout box").not.toBeNull();
       expect(headersBox, "headers textarea should have a layout box").not.toBeNull();
       expect(bodyBox!.height).toBeGreaterThanOrEqual(110);
-      expect(headersBox!.height).toBeGreaterThanOrEqual(80);
+      expect(headersBox!.height).toBeGreaterThanOrEqual(90);
     });
 
     test("request panel does not overflow horizontally", async ({ page }) => {
@@ -38,7 +38,10 @@ for (const viewport of VIEWPORTS) {
       expect(horizontalOverflow).toBeLessThanOrEqual(1);
     });
 
-    test("resize grip actually enlarges the body textarea", async ({ page }) => {
+    test("editor-input honors explicit height after layout", async ({ page }) => {
+      // Proxy for the resize grip: browsers implement `resize: vertical` by
+      // setting inline `height` on drag. Previous bug was a flex:1 override
+      // with flex-basis:0 that discarded that inline height.
       await page.goto("/");
 
       const body = page.locator("#request-body");
