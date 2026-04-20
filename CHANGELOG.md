@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.5] - 2026-04-20
+
+### Fixed
+- request panel body and headers textareas are no longer collapsed in the default desktop window, and their `resize: vertical` grip enlarges the editor again instead of being overridden by the surrounding flex layout
+
+### Added
+- Playwright end-to-end suite (`apps/desktop/e2e/workbench.layout.spec.ts`) running against the production Vite preview at three viewports (1400×900, 1280×720, 1024×700), covering textarea sizing, horizontal-overflow guards, and explicit-height retention
+- dedicated `Frontend E2E` CI job that installs Chromium via `playwright install --with-deps` and uploads the Playwright report artifact on failure
+
+### Changed
+- `apps/desktop` frontend dependencies bumped via the Dependabot weekly batch: `react` / `react-dom` `19.2.4 → 19.2.5`, `@vitejs/plugin-react` `6.0.0 → 6.0.1`, `jsdom` `28.1.0 → 29.0.2`, `typescript` `5.9.3 → 6.0.3`, `vitest` `4.1.0 → 4.1.4`
+- CI and release workflow GitHub Actions bumped via the Dependabot weekly batch: `actions/checkout` `5.0.1 → 6.0.2`, `actions/setup-node` `4.4.0 → 6.3.0`, `actions/upload-artifact` `4.6.2 → 7.0.1`
+- public `v3.0.5` release notes live under `docs/releases/release-v3.0.5.md`
+
+---
+
 ## [3.0.4] - 2026-04-16
 
 ### Changed
