@@ -28,6 +28,10 @@ build/
 apps/desktop/src-tauri/gen/
 apps/desktop/src-tauri/icon-source.png
 
+# Playwright
+apps/desktop/playwright-report/
+apps/desktop/test-results/
+
 # App data
 history.json
 INTERNAL_ENGINEERING_LOG.md
