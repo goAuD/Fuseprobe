@@ -1,0 +1,62 @@
+name: Semgrep
+
+# Kept in its own workflow rather than added to ci.yml on purpose. The four
+# contexts the main ruleset requires all come from ci.yml and codeql.yml, and
+# this scan is deliberately not one of them, so it stays separate and cannot
+# affect whether a pull request is mergeable.
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "23 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  scan:
+    name: Semgrep Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # setup-python rather than the runner's system interpreter: Ubuntu marks
+      # that one externally managed, so a plain pip install into it fails.
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install semgrep
+        # Pinned for the same reason every action here is pinned. Bump by hand;
+        # Dependabot does not track versions written inline in a run step.
+        run: pip install semgrep==1.172.0
+
+      - name: Run semgrep
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: semgrep ci --sarif --output=semgrep.sarif
+
+      - name: Upload results to code scanning
+        # Runs even when the scan exits non-zero on blocking findings, which is
+        # exactly the case where the results are worth reading. The hashFiles
+        # guard keeps this from erroring when the scan died before writing.
+        if: ${{ !cancelled() && hashFiles('semgrep.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
