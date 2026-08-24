@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuseprobe</title>
+<meta name="description" content="A local-first desktop API client for deliberate request work. Offline by default, strict by default, Windows installer.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Fuseprobe">
+<meta property="og:description" content="No Cloud. No Bloat. Just Requests. A local-first desktop API client with a Rust request core.">
+<meta property="og:image" content="fuseprobe_social.png">
+<meta property="og:url" content="https://goaud.github.io/Fuseprobe/">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect x='6' y='6' width='84' height='84' rx='20' fill='%230B0F12'/%3E%3Cg fill='none' stroke='%2300FF99' stroke-linecap='round' stroke-linejoin='round' stroke-width='7'%3E%3Cpath d='M29 30V66'/%3E%3Cpath d='M29 30H44'/%3E%3Cpath d='M29 48H41'/%3E%3Cpath d='M49 66V30H58C64.075 30 69 34.925 69 41C69 47.075 64.075 52 58 52H49'/%3E%3C/g%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<style>
+/* Fuseprobe commits to a single dark surface, the same low glare world the app runs in. */
+:root {
+  --ground:      #0B0F12;
+  --surface:     #111A1D;
+  --raised:      #162125;
+  --ink:         #CFD6D1;
+  --ink-mid:     #9AA5A0;
+  --ink-soft:    #77827D;
+  --accent:      #00FF99;
+  --accent-dim:  #66DBA4;
+  --accent-deep: #0F2620;
+  --line:        #1E2A2E;
+  --line-soft:   #172125;
+  --maxw: 68rem;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 1.5rem; }
+
+h1, h2, h3, .ui {
+  font-family: "Archivo", system-ui, -apple-system, sans-serif;
+  letter-spacing: -.015em;
+}
+
+.mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+a { color: var(--accent-dim); text-underline-offset: 3px; }
+a:hover { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* ---------- header ---------- */
+header.site {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(11, 15, 18, .82);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  height: 60px;
+}
+
+.logo { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--ink); }
+.logo svg { width: 26px; height: 26px; display: block; }
+.logo span {
+  font-family: "Archivo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: -.01em;
+}
+
+nav.site { margin-left: auto; display: flex; align-items: center; gap: 1.5rem; }
+
+/* Scoped to .navlink on purpose: a bare `nav.site a` rule outranks the .btn
+   classes below and would repaint the header button's label. */
+nav.site a.navlink {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .76rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+  text-decoration: none;
+}
+nav.site a.navlink:hover { color: var(--accent); }
+
+.btn {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-decoration: none;
+  padding: .55rem 1rem;
+  border-radius: 3px;
+  display: inline-block;
+  white-space: nowrap;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.btn-primary { background: var(--accent); color: #04120C; border: 1px solid var(--accent); }
+.btn-primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); color: #04120C; }
+
+.btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- hero ---------- */
+.hero { padding: 5.5rem 0 3rem; }
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .74rem;
+  font-weight: 500;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 1.4rem;
+}
+
+.hero h1 {
+  font-weight: 700;
+  font-size: clamp(2.6rem, 7.5vw, 4.6rem);
+  line-height: .98;
+  letter-spacing: -.032em;
+  margin: 0;
+  max-width: 16ch;
+  text-wrap: balance;
+}
+
+.hero .lede {
+  font-size: 1.15rem;
+  color: var(--ink-mid);
+  max-width: 44rem;
+  margin: 1.6rem 0 0;
+}
+
+.cta-row { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2.2rem; }
+
+.hero-meta {
+  margin-top: 1.4rem;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .75rem;
+  letter-spacing: .05em;
+  color: var(--ink-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem .9rem;
+}
+
+/* ---------- shot ---------- */
+.shot { padding: 1.5rem 0 4.5rem; }
+
+.shot figure {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+}
+
+.shot img { display: block; width: 100%; height: auto; }
+
+.shot figcaption {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .72rem;
+  letter-spacing: .05em;
+  color: var(--ink-soft);
+  padding: .7rem .95rem;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+/* ---------- sections ---------- */
+section { padding: 4.5rem 0; border-top: 1px solid var(--line-soft); }
+
+.sec-head { margin-bottom: 2.5rem; max-width: 46rem; }
+
+.sec-head .label {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: .8rem;
+}
+
+.sec-head h2 {
+  font-weight: 600;
+  font-size: clamp(1.7rem, 3.6vw, 2.3rem);
+  line-height: 1.12;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.sec-head p { color: var(--ink-mid); margin: .9rem 0 0; }
+
+/* ---------- positioning ---------- */
+.stance { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 2.5rem; }
+
+.stance h3 {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .74rem;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  margin: 0 0 1.1rem;
+  padding-bottom: .7rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.stance .is h3 { color: var(--accent); }
+.stance .isnt h3 { color: var(--ink-soft); }
+
+.stance ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
+
+.stance li { display: flex; gap: .7rem; align-items: baseline; }
+
+.stance li::before {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .8rem;
+  flex: none;
+}
+.stance .is li::before { content: "+"; color: var(--accent); }
+.stance .isnt li::before { content: "\00d7"; color: var(--ink-soft); }
+.stance .isnt li { color: var(--ink-mid); }
+
+/* ---------- features ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+
+.cell { background: var(--surface); padding: 1.6rem 1.5rem 1.75rem; }
+
+.cell h3 {
+  font-weight: 600;
+  font-size: 1.03rem;
+  margin: 0 0 .5rem;
+}
+
+.cell p { margin: 0; color: var(--ink-mid); font-size: .96rem; }
+
+/* ---------- security ---------- */
+.defaults { border: 1px solid var(--line); }
+
+.def {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem 1.5rem;
+  align-items: center;
+  padding: 1.05rem 1.4rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.def:last-child { border-bottom: 0; }
+
+.def p { margin: 0; font-size: .98rem; }
+
+.state {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .11em;
+  padding: .3rem .6rem;
+  border-radius: 2px;
+  white-space: nowrap;
+  color: var(--accent);
+  background: var(--accent-deep);
+  border: 1px solid rgba(0, 255, 153, .22);
+}
+
+.aside {
+  margin-top: 1.6rem;
+  color: var(--ink-soft);
+  font-size: .96rem;
+  font-style: italic;
+}
+
+/* ---------- download ---------- */
+.dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 2.5rem; align-items: start; }
+
+.steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1.1rem; }
+
+.steps li { counter-increment: s; display: flex; gap: 1rem; }
+
+.steps li::before {
+  content: counter(s);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--accent);
+  border: 1px solid var(--line);
+  background: var(--raised);
+  width: 1.7rem;
+  height: 1.7rem;
+  display: grid;
+  place-items: center;
+  border-radius: 3px;
+  flex: none;
+  margin-top: .15rem;
+}
+
+.steps p { margin: 0; font-size: .98rem; }
+.steps code { font-size: .88em; }
+
+code {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  background: var(--accent-deep);
+  color: var(--accent-dim);
+  padding: .1em .35em;
+  border-radius: 2px;
+  font-size: .88em;
+}
+
+.notice {
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent-dim);
+  padding: 1.1rem 1.2rem;
+}
+
+.notice h3 {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent-dim);
+  margin: 0 0 .55rem;
+}
+
+.notice p { margin: 0; font-size: .95rem; color: var(--ink-mid); }
+
+/* ---------- footer ---------- */
+footer.site { border-top: 1px solid var(--line); padding: 3rem 0 4rem; }
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2.5rem;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.foot-links { display: flex; flex-wrap: wrap; gap: 1.4rem; }
+
+.foot-links a {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .76rem;
+  letter-spacing: .05em;
+  text-decoration: none;
+  color: var(--ink-mid);
+}
+.foot-links a:hover { color: var(--accent); }
+
+.foot-legal { font-size: .88rem; color: var(--ink-soft); max-width: 30rem; }
+.foot-legal p { margin: 0 0 .4rem; }
+.foot-legal p:last-child { margin: 0; }
+
+@media (max-width: 44rem) {
+  nav.site a.navlink { display: none; }
+  .hero { padding: 3.5rem 0 2rem; }
+  body { font-size: 16px; }
+  .def { grid-template-columns: 1fr; gap: .6rem; }
+  .state { justify-self: start; }
+}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap bar">
+    <a class="logo" href="#top">
+      <svg viewBox="0 0 96 96" fill="none" aria-hidden="true">
+        <rect x="6" y="6" width="84" height="84" rx="20" fill="#0B0F12"></rect>
+        <rect x="6.75" y="6.75" width="82.5" height="82.5" rx="19.25" stroke="#00FF99" stroke-opacity="0.22" stroke-width="1.5"></rect>
+        <g fill="none" stroke="#00FF99" stroke-linecap="round" stroke-linejoin="round" stroke-width="7">
+          <path d="M29 30V66"></path><path d="M29 30H44"></path><path d="M29 48H41"></path>
+          <path d="M49 66V30H58C64.075 30 69 34.925 69 41C69 47.075 64.075 52 58 52H49"></path>
+        </g>
+      </svg>
+      <span>Fuseprobe</span>
+    </a>
+    <nav class="site">
+      <a class="navlink" href="#features">Features</a>
+      <a class="navlink" href="#security">Security</a>
+      <a class="btn btn-primary" href="https://github.com/goAuD/Fuseprobe/releases">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <div class="wrap hero">
+    <p class="eyebrow">Desktop API client for Windows</p>
+    <h1>No Cloud. No Bloat. Just Requests.</h1>
+    <p class="lede">Fuseprobe is a local-first desktop API client for deliberate request work. A Tauri shell, a React interface, and a Rust request core. There is no workspace to join, no account to create, and no telemetry to opt out of.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/goAuD/Fuseprobe/releases">Download for Windows</a>
+      <a class="btn btn-ghost" href="https://github.com/goAuD/Fuseprobe">Read the source</a>
+    </div>
+    <div class="hero-meta">
+      <span>v3.0.5</span>
+      <span>Windows x64 installer</span>
+      <span>Tauri 2 + React + Rust</span>
+    </div>
+  </div>
+
+  <div class="wrap shot">
+    <figure>
+      <img src="fuseprobe.png" alt="The Fuseprobe workbench showing a request editor on the left and a formatted response with headers on the right." width="1600" height="1000" loading="lazy">
+      <figcaption>The workbench: request on one side, formatted response, headers and raw view on the other.</figcaption>
+    </figure>
+  </div>
+
+  <section id="stance">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">Positioning</span>
+        <h2>A focused request workbench, not a platform</h2>
+        <p>Fuseprobe does a narrow job properly. Knowing what it leaves out is as useful as knowing what it does.</p>
+      </div>
+      <div class="stance">
+        <div class="is">
+          <h3>What it does</h3>
+          <ul>
+            <li>Sends HTTP requests without any cloud service in the path</li>
+            <li>Inspects formatted, header and raw responses side by side</li>
+            <li>Tests auth and header combinations quickly</li>
+            <li>Keeps sensitive request activity off disk unless you allow it</li>
+            <li>Runs with strict security defaults on local machines</li>
+          </ul>
+        </div>
+        <div class="isnt">
+          <h3>What it is not</h3>
+          <ul>
+            <li>Not a cloud workspace</li>
+            <li>Not a team collaboration suite</li>
+            <li>Not a Postman clone</li>
+            <li>Not a browser tab pretending to be an app</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">Features</span>
+        <h2>What you get in the window</h2>
+      </div>
+      <div class="grid">
+        <div class="cell">
+          <h3>Offline first</h3>
+          <p>Runs locally with no cloud dependency. Close your network and the app still opens, still works, still holds your presets.</p>
+        </div>
+        <div class="cell">
+          <h3>Rust request core</h3>
+          <p>Request validation, policy enforcement, response classification and history redaction all live in a separate Rust crate rather than in the interface.</p>
+        </div>
+        <div class="cell">
+          <h3>Formatted response workflow</h3>
+          <p>Switch between the formatted body, the response headers and the raw payload without losing your place.</p>
+        </div>
+        <div class="cell">
+          <h3>Auth presets</h3>
+          <p>No Auth, Bearer, Basic, API Key header and API Key authorization, ready to switch between while you probe an endpoint.</p>
+        </div>
+        <div class="cell">
+          <h3>API templates</h3>
+          <p>Open-Meteo, Microsoft Graph, GitHub, JSONPlaceholder, HTTPBin and ReqRes are preloaded so there is something to send on first launch.</p>
+        </div>
+        <div class="cell">
+          <h3>Session-first history</h3>
+          <p>Request history stays in memory. It reaches disk only when you deliberately turn persistence on.</p>
+        </div>
+        <div class="cell">
+          <h3>Three languages</h3>
+          <p>English, German and Hungarian interface copy, including localized warnings and response metadata, with your choice remembered.</p>
+        </div>
+        <div class="cell">
+          <h3>Low-glare shell</h3>
+          <p>Calmer syntax colors, softer bright text and a denser first screen, tuned for looking at responses all day.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="security">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">Security defaults</span>
+        <h2>Strict on first launch, loosened only by you</h2>
+        <p>Every one of these is a deliberate product decision rather than a feature that has not been built yet. Each can be changed, and the risky ones ask you to confirm first.</p>
+      </div>
+
+      <div class="defaults">
+        <div class="def">
+          <p>Unsafe mode and local targets</p>
+          <span class="state">OFF</span>
+        </div>
+        <div class="def">
+          <p>localhost, private IP ranges, link-local targets and metadata-style endpoints</p>
+          <span class="state">BLOCKED</span>
+        </div>
+        <div class="def">
+          <p>Hostnames that cannot be resolved during request validation</p>
+          <span class="state">FAIL CLOSED</span>
+        </div>
+        <div class="def">
+          <p>History persistence to disk</p>
+          <span class="state">OFF</span>
+        </div>
+        <div class="def">
+          <p>Switching on a risky setting</p>
+          <span class="state">NEEDS CONFIRMATION</span>
+        </div>
+      </div>
+
+      <p class="aside">A hostname that fails to resolve does not quietly bypass the target policy. It fails closed, which is the behaviour you want when the thing you are probing is not where you expected it to be.</p>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">Install</span>
+        <h2>Get the Windows build</h2>
+        <p>The intended path is the release installer. Building from source is documented in the repository and is meant for contributors.</p>
+      </div>
+
+      <div class="dl">
+        <ol class="steps">
+          <li><p>Open <a href="https://github.com/goAuD/Fuseprobe/releases">GitHub Releases</a> and pick the latest tag.</p></li>
+          <li><p>Download the <code>Fuseprobe_*_x64-setup.exe</code> asset.</p></li>
+          <li><p>When a companion <code>*.sha256</code> asset is present, verify the installer hash before you pass the file on to anyone else.</p></li>
+          <li><p>Install, then launch Fuseprobe from the Start menu.</p></li>
+        </ol>
+
+        <div class="notice">
+          <h3>One thing to expect</h3>
+          <p>Windows installers are not code signed yet, so SmartScreen may warn about an unknown publisher on first run. The published <code>*.sha256</code> file is there so you can confirm you have the file that was actually built and released.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap foot">
+    <div class="foot-legal">
+      <p>Source-available for noncommercial use under PolyForm Noncommercial 1.0.0. Released tags up to and including v2.1.0 remain under their original MIT terms.</p>
+      <p>Copyright 2026 Viktor Halupka / goAuD.</p>
+    </div>
+    <div class="foot-links">
+      <a href="https://github.com/goAuD/Fuseprobe">Source</a>
+      <a href="https://github.com/goAuD/Fuseprobe/releases">Releases</a>
+      <a href="https://github.com/goAuD/Fuseprobe/blob/main/docs/usage-and-security.md">Usage and security</a>
+      <a href="https://github.com/goAuD/Fuseprobe/security/policy">Report a vulnerability</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
