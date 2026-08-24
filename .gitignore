@@ -52,3 +52,7 @@ skills.json
 *.cer
 
 /.sam/*
+# Staged into site/ at deploy time by .github/workflows/pages.yml.
+# Copies here are only for previewing the page locally.
+site/fuseprobe.png
+site/fuseprobe_social.png
