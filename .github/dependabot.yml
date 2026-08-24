@@ -15,6 +15,10 @@ updates:
     directory: /
     patterns:
       - "*"
+    # Hold back freshly published versions for a week so a compromised release
+    # has time to be caught upstream before Dependabot proposes it.
+    cooldown:
+      default-days: 7
     groups:
       cargo-security:
         applies-to: security-updates
@@ -26,6 +30,8 @@ updates:
     directory: /apps/desktop
     patterns:
       - "*"
+    cooldown:
+      default-days: 7
     groups:
       npm-security:
         applies-to: security-updates
@@ -37,6 +43,8 @@ updates:
     directory: /
     patterns:
       - "*"
+    cooldown:
+      default-days: 7
     groups:
       github-actions-security:
         applies-to: security-updates
