@@ -50,3 +50,5 @@ skills.json
 *.pfx
 *.crt
 *.cer
+
+/.sam/*
