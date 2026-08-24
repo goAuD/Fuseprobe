@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fuseprobe</title>
 <meta name="description" content="A local-first desktop API client for deliberate request work. Offline by default, strict by default, Windows installer.">
 
@@ -44,6 +44,13 @@ html { scroll-behavior: smooth; }
   * { animation: none !important; transition: none !important; }
 }
 
+/* Paints the overscroll area too, so a rubber band pull on iOS does not expose
+   a white strip above or below the page. */
+html {
+  background: var(--ground);
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background: var(--ground);
@@ -54,7 +61,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 1.5rem; }
+/* viewport-fit=cover lets the dark surface run under the notch and the home
+   indicator. These insets are what keep the actual content clear of both,
+   including landscape, where the notch eats into the left or right edge. */
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding-left: max(1.5rem, env(safe-area-inset-left));
+  padding-right: max(1.5rem, env(safe-area-inset-right));
+}
 
 h1, h2, h3, .ui {
   font-family: "Archivo", system-ui, -apple-system, sans-serif;
@@ -77,6 +92,9 @@ header.site {
   background: rgba(11, 15, 18, .82);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
+  /* Extends the blurred bar up behind the status bar instead of leaving a hard
+     edge below it. The bar's own contents stay below the inset. */
+  padding-top: env(safe-area-inset-top);
 }
 
 .bar {
@@ -86,7 +104,9 @@ header.site {
   height: 60px;
 }
 
-.logo { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--ink); }
+/* Vertical padding on the header, footer and nav links is load bearing: it is
+   what lifts each tap target past the 24px WCAG 2.5.8 minimum on touch. */
+.logo { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--ink); padding: .45rem 0; }
 .logo svg { width: 26px; height: 26px; display: block; }
 .logo span {
   font-family: "Archivo", system-ui, sans-serif;
@@ -106,6 +126,7 @@ nav.site a.navlink {
   text-transform: uppercase;
   color: var(--ink-mid);
   text-decoration: none;
+  padding: .6rem 0;
 }
 nav.site a.navlink:hover { color: var(--accent); }
 
@@ -184,6 +205,8 @@ nav.site a.navlink:hover { color: var(--accent); }
 }
 
 .shot img { display: block; width: 100%; height: auto; }
+
+.pan-hint { display: none; }
 
 .shot figcaption {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -356,7 +379,12 @@ code {
 .notice p { margin: 0; font-size: .95rem; color: var(--ink-mid); }
 
 /* ---------- footer ---------- */
-footer.site { border-top: 1px solid var(--line); padding: 3rem 0 4rem; }
+footer.site {
+  border-top: 1px solid var(--line);
+  padding-top: 3rem;
+  /* Clears the iOS home indicator, which otherwise sits over the link row. */
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+}
 
 .foot {
   display: flex;
@@ -366,7 +394,7 @@ footer.site { border-top: 1px solid var(--line); padding: 3rem 0 4rem; }
   align-items: flex-start;
 }
 
-.foot-links { display: flex; flex-wrap: wrap; gap: 1.4rem; }
+.foot-links { display: flex; flex-wrap: wrap; gap: .2rem 1.4rem; }
 
 .foot-links a {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -374,6 +402,7 @@ footer.site { border-top: 1px solid var(--line); padding: 3rem 0 4rem; }
   letter-spacing: .05em;
   text-decoration: none;
   color: var(--ink-mid);
+  padding: .55rem 0;
 }
 .foot-links a:hover { color: var(--accent); }
 
@@ -387,6 +416,12 @@ footer.site { border-top: 1px solid var(--line); padding: 3rem 0 4rem; }
   body { font-size: 16px; }
   .def { grid-template-columns: 1fr; gap: .6rem; }
   .state { justify-self: start; }
+
+  /* A 1600px desktop screenshot scaled to a phone is an unreadable smudge.
+     Hold it at a legible width and let the reader pan it instead. */
+  .shot-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+  .shot-scroll img { min-width: 40rem; }
+  .pan-hint { display: inline; color: var(--accent-dim); }
 }
 </style>
 </head>
@@ -432,8 +467,10 @@ footer.site { border-top: 1px solid var(--line); padding: 3rem 0 4rem; }
 
   <div class="wrap shot">
     <figure>
-      <img src="fuseprobe.png" alt="The Fuseprobe workbench showing a request editor on the left and a formatted response with headers on the right." width="1600" height="1000" loading="lazy">
-      <figcaption>The workbench: request on one side, formatted response, headers and raw view on the other.</figcaption>
+      <div class="shot-scroll">
+        <img src="fuseprobe.png" alt="The Fuseprobe workbench showing a request editor on the left and a formatted response with headers on the right." width="1600" height="1000" loading="lazy">
+      </div>
+      <figcaption>The workbench: request on one side, formatted response, headers and raw view on the other.<span class="pan-hint"> Drag to pan.</span></figcaption>
     </figure>
   </div>
 
