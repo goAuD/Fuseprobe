@@ -53,6 +53,9 @@ html {
 
 body {
   margin: 0;
+  /* Floor the layout so the page stops compressing instead of degrading without
+     limit. Below this the viewport scrolls rather than the design breaking. */
+  min-width: 320px;
   background: var(--ground);
   color: var(--ink);
   font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
@@ -150,7 +153,11 @@ nav.site a.navlink:hover { color: var(--accent); }
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ---------- hero ---------- */
-.hero { padding: 5.5rem 0 3rem; }
+/* Longhand, never the padding shorthand. These elements also carry .wrap, whose
+   horizontal padding is what keeps content off the screen edge and clear of the
+   notch. The shorthand has equal specificity and comes later, so it would reset
+   both sides to zero and the section would run edge to edge. */
+.hero { padding-top: 5.5rem; padding-bottom: 3rem; }
 
 .eyebrow {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -193,7 +200,7 @@ nav.site a.navlink:hover { color: var(--accent); }
 }
 
 /* ---------- shot ---------- */
-.shot { padding: 1.5rem 0 4.5rem; }
+.shot { padding-top: 1.5rem; padding-bottom: 4.5rem; }
 
 .shot figure {
   margin: 0;
@@ -245,7 +252,9 @@ section { padding: 4.5rem 0; border-top: 1px solid var(--line-soft); }
 .sec-head p { color: var(--ink-mid); margin: .9rem 0 0; }
 
 /* ---------- positioning ---------- */
-.stance { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 2.5rem; }
+/* min() caps the track at the container width. A bare minmax(17rem, 1fr) keeps
+   demanding 17rem even when less is available, pushing the page sideways. */
+.stance { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr)); gap: 2.5rem; }
 
 .stance h3 {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -275,7 +284,7 @@ section { padding: 4.5rem 0; border-top: 1px solid var(--line-soft); }
 .stance .isnt li { color: var(--ink-mid); }
 
 /* ---------- features ---------- */
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
 
 .cell { background: var(--surface); padding: 1.6rem 1.5rem 1.75rem; }
 
@@ -324,7 +333,7 @@ section { padding: 4.5rem 0; border-top: 1px solid var(--line-soft); }
 }
 
 /* ---------- download ---------- */
-.dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 2.5rem; align-items: start; }
+.dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: 2.5rem; align-items: start; }
 
 .steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1.1rem; }
 
@@ -412,7 +421,7 @@ footer.site {
 
 @media (max-width: 44rem) {
   nav.site a.navlink { display: none; }
-  .hero { padding: 3.5rem 0 2rem; }
+  .hero { padding-top: 3.5rem; padding-bottom: 2rem; }
   body { font-size: 16px; }
   .def { grid-template-columns: 1fr; gap: .6rem; }
   .state { justify-self: start; }
