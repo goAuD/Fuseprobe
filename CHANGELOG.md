@@ -37,7 +37,9 @@ is unchanged: no request-path behaviour, no security defaults, no UI copy.
 
 ### Security
 - all 19 open Dependabot alerts resolved by a lockfile refresh with no manifest change, since every flagged package was transitive: `quinn-proto` 0.11.14 to 0.11.17, `rustls-webpki` 0.103.12 to 0.103.15, `serde_with` 3.17.0 to 3.22.0, `undici` 7.25.0 to 7.29.0, `postcss` 8.5.15 to 8.5.26, `nanoid` 3.3.15 to 3.3.18
-- all three semgrep findings resolved (`dependabot-missing-cooldown`, CWE-829 / OWASP A08)
+- all three `dependabot-missing-cooldown` semgrep findings resolved (CWE-829 / OWASP A08)
+- landing page favicon moved from an inline `data:` URI to a relative reference, clearing a `missing-integrity` finding that the rule could not have been satisfied any other way
+- `glib` 0.18.5 recorded in `SECURITY.md` as an accepted risk: it enters through `gtk`, which is Tauri's Linux backend, and is absent from the Windows build graph that the release ships from
 - `tauri` 2.10.3 to 2.11.5, `vite` 8.0.16 to 8.2.2, plus the weekly Dependabot batches for `jsdom`, `typescript`, `@testing-library/jest-dom` and the pinned GitHub Actions
 
 ### Note

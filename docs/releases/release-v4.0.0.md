@@ -51,6 +51,8 @@ Two of these deserve context. Every npm alert arrived through a **devDependency*
 
 Dependabot now applies a **7-day cooldown** on all three ecosystems. Without one it proposes a version the day it is published, which is exactly the window in which a compromised release is most likely to slip through. This also resolved the three outstanding semgrep findings (`dependabot-missing-cooldown`, CWE-829 / OWASP A08).
 
+Two further findings were cleared before tagging. The landing page favicon moved from an inline `data:` URI to a relative reference: the `missing-integrity` rule matches any `<link>` carrying an `href`, and a `data:` URI cannot answer it because there is no fetch to verify. And `glib 0.18.5` is recorded in `SECURITY.md` as an accepted risk rather than patched, because it cannot be patched here and does not reach the product: it arrives through `gtk`, which is Tauri's Linux backend, and `cargo tree -i glib` prints nothing on `x86_64-pc-windows-msvc`, the only target this release ships for. The advisory is fixed in `glib 0.20`, but `gtk 0.18.2` requires `glib ^0.18`, so moving off it needs Tauri to adopt a newer GTK upstream.
+
 `tauri` moved 2.10.3 to 2.11.5 and `vite` 8.0.16 to 8.2.2 as part of the same refresh, alongside the weekly Dependabot batches for `jsdom`, `typescript`, `@testing-library/jest-dom` and the pinned GitHub Actions.
 
 ## Landing Page
