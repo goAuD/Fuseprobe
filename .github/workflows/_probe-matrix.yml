@@ -1,0 +1,26 @@
+name: probe-matrix
+
+on:
+  push:
+    branches:
+      - ci/speed-up-pipeline
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            action: Swatinem/rust-cache@v2
+          - os: windows-latest
+            action: Swatinem/rust-cache@v2
+          - os: windows-latest
+            action: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Probe
+        uses: ${{ matrix.action }}
