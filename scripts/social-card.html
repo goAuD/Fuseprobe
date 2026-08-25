@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fuseprobe social card</title>
+<!--
+  Source for assets/fuseprobe_social.png, the GitHub social preview and og:image.
+  Rendered at 1280x640, which is what GitHub asks for and what most platforms
+  crop cleanly. Regenerate with:
+
+      python scripts/render_social_card.py
+
+  Colours and shapes are lifted from the app itself rather than invented: the
+  panel and card fills, the 14px radius, the muted border, the text ramp and the
+  response syntax colours all come from apps/desktop/src/app.css.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground:      #0B0F12;
+    --panel:       #121619;
+    --card:        #0D1012;
+    --border:      rgba(255, 255, 255, .07);
+    --text:        #D7DDD8;
+    --text-2:      #A9B3AC;
+    --text-3:      #7F8782;
+    --accent:      #00FF99;
+    --accent-soft: #66DBA4;
+    --key:         #7ED7A9;
+    --radius:      14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: 1280px;
+    height: 640px;
+    background: var(--ground);
+    font-family: "Archivo", system-ui, sans-serif;
+    color: var(--text);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* A single soft bloom behind the mark, the same gesture the app uses to lift
+     its panels off the ground. Nothing else glows. */
+  .bloom {
+    position: absolute;
+    left: -170px;
+    top: -190px;
+    width: 780px;
+    height: 780px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 255, 153, .10) 0%, rgba(0, 255, 153, 0) 62%);
+  }
+
+  .frame {
+    position: relative;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 470px;
+    align-items: center;
+    gap: 56px;
+    padding: 68px 0 68px 76px;
+  }
+
+  /* ---- left ---- */
+  .brand { display: flex; align-items: center; gap: 18px; }
+  .brand svg { width: 60px; height: 60px; display: block; }
+  .brand .name {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -.022em;
+  }
+
+  h1 {
+    margin-top: 40px;
+    font-size: 66px;
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -.035em;
+  }
+
+  .lede {
+    margin-top: 26px;
+    font-size: 23px;
+    line-height: 1.45;
+    color: var(--text-2);
+    max-width: 30ch;
+    font-weight: 500;
+  }
+
+  /* margin-bottom clears the footer rule, which is pinned to the bottom edge. */
+  .chips { margin: 40px 0 8px; display: flex; gap: 10px; }
+  .chip {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: .04em;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 999px;
+    padding: 9px 16px;
+  }
+  .chip.lead { color: var(--accent); border-color: rgba(0, 255, 153, .28); }
+
+  /* ---- right: an abstraction of the response panel, bleeding off the edge ---- */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius) 0 0 var(--radius);
+    border-right: 0;
+    padding: 22px 0 26px 24px;
+    margin-right: -1px;
+    height: 452px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .55);
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+    padding-right: 24px;
+  }
+  .status {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    color: var(--accent);
+    background: rgba(0, 255, 153, .10);
+    border: 1px solid rgba(0, 255, 153, .26);
+    border-radius: 999px;
+    padding: 6px 13px;
+  }
+  .meta {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 14px;
+    color: var(--text-3);
+    letter-spacing: .04em;
+  }
+
+  pre {
+    margin-top: 20px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 16.5px;
+    line-height: 1.85;
+    color: var(--text-3);
+    white-space: pre;
+  }
+  .k { color: var(--key); }
+  .s { color: var(--accent-soft); }
+  .n { color: var(--text); }
+
+  /* ---- footer rule ---- */
+  .foot {
+    position: absolute;
+    left: 76px;
+    bottom: 40px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 14.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+</style>
+</head>
+<body>
+
+<div class="bloom"></div>
+
+<div class="frame">
+  <div>
+    <div class="brand">
+      <svg viewBox="0 0 96 96" fill="none" aria-hidden="true">
+        <rect x="6" y="6" width="84" height="84" rx="20" fill="#0B0F12"></rect>
+        <rect x="6.75" y="6.75" width="82.5" height="82.5" rx="19.25" stroke="#00FF99" stroke-opacity="0.22" stroke-width="1.5"></rect>
+        <g fill="none" stroke="#00FF99" stroke-linecap="round" stroke-linejoin="round" stroke-width="7">
+          <path d="M29 30V66"></path><path d="M29 30H44"></path><path d="M29 48H41"></path>
+          <path d="M49 66V30H58C64.075 30 69 34.925 69 41C69 47.075 64.075 52 58 52H49"></path>
+        </g>
+      </svg>
+      <span class="name">Fuseprobe</span>
+    </div>
+
+    <h1>No Cloud.<br>No Bloat.<br>Just Requests.</h1>
+
+    <p class="lede">A local-first desktop API client with a Rust request core.</p>
+
+    <div class="chips">
+      <span class="chip lead">Apache 2.0</span>
+      <span class="chip">Tauri 2</span>
+      <span class="chip">Windows</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <span class="status">200 OK</span>
+      <span class="meta">166 ms &middot; 325 B</span>
+    </div>
+<pre>{
+  <span class="k">"current"</span>: {
+    <span class="k">"interval"</span>: <span class="n">900</span>,
+    <span class="k">"temperature_2m"</span>: <span class="n">28.8</span>,
+    <span class="k">"time"</span>: <span class="s">"2026-08-25T17:15"</span>
+  },
+  <span class="k">"elevation"</span>: <span class="n">113</span>,
+  <span class="k">"timezone"</span>: <span class="s">"GMT"</span>
+}</pre>
+  </div>
+</div>
+
+<div class="foot">Offline by default &nbsp;&middot;&nbsp; Strict by default</div>
+
+</body>
+</html>
