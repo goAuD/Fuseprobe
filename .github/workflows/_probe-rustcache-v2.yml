@@ -1,0 +1,16 @@
+name: probe-rustcache-v2
+
+on:
+  push:
+    branches:
+      - ci/speed-up-pipeline
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: windows-latest
+    steps:
+      - name: Cache cargo registry and build output
+        uses: Swatinem/rust-cache@v2

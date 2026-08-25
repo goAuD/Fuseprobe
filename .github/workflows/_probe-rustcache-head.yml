@@ -1,0 +1,16 @@
+name: probe-rustcache-head
+
+on:
+  push:
+    branches:
+      - ci/speed-up-pipeline
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: windows-latest
+    steps:
+      - name: Cache cargo registry and build output
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # master HEAD
