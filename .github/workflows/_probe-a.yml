@@ -1,7 +1,9 @@
 name: probe-a
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - ci/speed-up-pipeline
 
 permissions:
   contents: read
