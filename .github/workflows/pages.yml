@@ -36,9 +36,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Stage shared image assets
-        # The site reuses the images that already live in assets/, so they are
-        # copied in at deploy time rather than duplicated in the repository.
-        run: cp assets/fuseprobe.png assets/fuseprobe_social.png site/
+        # The site reuses artwork that already lives in the repository, so it is
+        # copied in at deploy time rather than duplicated. The favicon is the
+        # canonical app mark, kept in one place so the two cannot drift.
+        run: |
+          cp assets/fuseprobe.png assets/fuseprobe_social.png site/
+          cp apps/desktop/public/fuseprobe-mark.svg site/favicon.svg
 
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
