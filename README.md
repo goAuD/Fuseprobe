@@ -8,12 +8,12 @@ Fuseprobe is a local-first desktop API client for deliberate request work. It ru
 ![Core](https://img.shields.io/badge/Core-Rust-00d9a3)
 ![UI](https://img.shields.io/badge/UI-React%20%2B%20Vite-11c7d9)
 ![Mode](https://img.shields.io/badge/Mode-Offline%20First-00b894)
-![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial-18b7a3)
+![License](https://img.shields.io/badge/License-Apache%202.0-00c48c)
 ![Platform](https://img.shields.io/badge/Release%20Candidate-Windows%20Verified-12c997)
 
 ![Fuseprobe Screenshot](assets/fuseprobe.png)
 
-Source-available for noncommercial use. Commercial use requires permission.
+Open source under the Apache License 2.0.
 
 ## Download for Windows
 
@@ -352,10 +352,11 @@ cargo test
 
 ## License
 
-Current branch and future versions are licensed under PolyForm Noncommercial 1.0.0.
+Licensed under the [Apache License 2.0](LICENSE). Use it commercially, modify it,
+and redistribute it, provided you keep the notices described in the license.
 
-`v2.1.0` and earlier released tags remain under their original MIT license terms.
+Apache 2.0 also grants an explicit patent licence and, separately, withholds any
+right to the Fuseprobe name and marks.
 
-See [COMMERCIAL-USE.md](COMMERCIAL-USE.md) for commercial-use notes.
-
-For commercial licensing or exceptions, open a GitHub issue.
+Earlier releases keep the terms they shipped with: `v2.1.0` and earlier are MIT,
+and `v3.0.0` through `v3.0.5` are PolyForm Noncommercial 1.0.0. See [NOTICE](NOTICE).

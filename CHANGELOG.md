@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- license changed from PolyForm Noncommercial 1.0.0 to Apache License 2.0, making Fuseprobe open source rather than source-available; commercial use no longer requires permission
+- `NOTICE` added, recording copyright and the terms each earlier release line shipped under
+- `COMMERCIAL-USE.md` removed, since it documented a restriction that no longer exists
+
+### Note
+- relicensing is not retroactive: `v2.1.0` and earlier remain MIT, and `v3.0.0` through `v3.0.5` remain PolyForm Noncommercial 1.0.0
+
 ---
 
 ## [3.0.5] - 2026-04-20
