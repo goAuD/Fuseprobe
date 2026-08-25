@@ -9,18 +9,19 @@ permissions:
   contents: read
 
 jobs:
-  probe:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            action: Swatinem/rust-cache@v2
-          - os: windows-latest
-            action: Swatinem/rust-cache@v2
-          - os: windows-latest
-            action: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-    runs-on: ${{ matrix.os }}
+  rustcache-ubuntu:
+    runs-on: ubuntu-latest
     steps:
       - name: Probe
-        uses: ${{ matrix.action }}
+        uses: Swatinem/rust-cache@v2
+  rustcache-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Probe
+        uses: Swatinem/rust-cache@v2
+  actionscache-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Probe
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+
