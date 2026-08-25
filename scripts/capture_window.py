@@ -13,7 +13,7 @@ Three problems with hand captured screenshots that this avoids.
 
 **Colour.** The Windows Snipping Tool applies its own colour handling and shifts
 every channel, which is invisible until you compare against the palette and
-obvious once you do. On a dark surface like Fuseprobe's #0B0F12 ground the result
+obvious once you do. On a dark surface like Fuseprobe's the result
 looks washed out. `--expect` turns that into a check rather than a hope: it
 compares the most common colour in the capture against the value you name and
 exits non-zero if they differ. Note that a plain screen grab is not the problem
@@ -62,9 +62,14 @@ PW_RENDERFULLCONTENT = 0x00000002
 # 7px wide. This attribute reports the bounds the user actually sees.
 DWMWA_EXTENDED_FRAME_BOUNDS = 9
 
-# Fuseprobe's ground token. A capture whose dominant colour is not this has been
-# through something that changed it.
-DEFAULT_EXPECTED_GROUND = "#0B0F12"
+# The app's dominant surface, and therefore what a correct capture's most common
+# pixel is. It comes from --color-card in apps/desktop/src/app.css, which is
+# rgba(13, 16, 18, 0.96) and composites to exactly this.
+#
+# Deliberately NOT #0B0F12. That is the mark tile in the brand notes, and it is a
+# tempting wrong answer: it barely appears in a window capture, so defaulting to
+# it made this check fail on captures that were in fact perfect.
+DEFAULT_EXPECTED_GROUND = "#0D1012"
 
 
 def make_dpi_aware() -> None:
