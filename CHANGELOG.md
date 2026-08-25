@@ -9,13 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [4.0.0] - 2026-08-25
+
+`4.0.0` is a licensing and project-infrastructure release. The application code
+is unchanged: no request-path behaviour, no security defaults, no UI copy.
+
 ### Changed
-- license changed from PolyForm Noncommercial 1.0.0 to Apache License 2.0, making Fuseprobe open source rather than source-available; commercial use no longer requires permission
-- `NOTICE` added, recording copyright and the terms each earlier release line shipped under
-- `COMMERCIAL-USE.md` removed, since it documented a restriction that no longer exists
+- **license changed from PolyForm Noncommercial 1.0.0 to Apache License 2.0.** Fuseprobe is now open source rather than source-available, and commercial use no longer requires permission. Apache 2.0 was chosen over MIT for its explicit patent grant and its withholding of trademark rights, which keeps the Fuseprobe name protected while the code is free
+- `README` badge, summary line and license section rewritten to match
+- Dependabot now applies a 7-day `cooldown` on all three ecosystems, so a freshly published version is not proposed the day it appears, which is the window in which a compromised release is most likely to slip through
+
+### Added
+- `NOTICE`, recording copyright and the terms each earlier release line shipped under
+- `SECURITY.md`, giving the public repository a private vulnerability disclosure path for the first time
+- public landing page at https://goaud.github.io/Fuseprobe/, served from `site/` and deployed by a new `Deploy Pages` workflow
+- `.github/workflows/semgrep.yml`, which runs `semgrep ci` with the existing `SEMGREP_APP_TOKEN` and uploads SARIF, so findings appear in the repository Security tab next to CodeQL rather than only on semgrep.dev
+- `scripts/capture_window.py`, which captures a window through `PrintWindow` with `PW_RENDERFULLCONTENT` instead of a screen grabber, and reports the darkest channel values so a washed-out capture is caught before it ships
+- `apps/desktop/e2e/site.layout.spec.ts`, fourteen Playwright assertions guarding the landing page against the CSS cascade regressions that reached it twice
+
+### Fixed
+- landing page hero and screenshot no longer run edge to edge on mobile. `.hero` and `.shot` set the `padding` shorthand while also carrying `.wrap`, which zeroed the horizontal padding that keeps content off the screen edge
+- landing page respects iOS safe areas, so the header extends behind the status bar while its contents stay clear of it, and the footer clears the home indicator
+- landing page tap targets outside running prose now meet the 24px WCAG 2.5.8 minimum; footer and navigation links were 20px
+- landing page holds a 320px layout floor instead of compressing without limit, which also required capping three `auto-fit` grid tracks with `min(<size>, 100%)`
+
+### Security
+- all 19 open Dependabot alerts resolved by a lockfile refresh with no manifest change, since every flagged package was transitive: `quinn-proto` 0.11.14 to 0.11.17, `rustls-webpki` 0.103.12 to 0.103.15, `serde_with` 3.17.0 to 3.22.0, `undici` 7.25.0 to 7.29.0, `postcss` 8.5.15 to 8.5.26, `nanoid` 3.3.15 to 3.3.18
+- all three semgrep findings resolved (`dependabot-missing-cooldown`, CWE-829 / OWASP A08)
+- `tauri` 2.10.3 to 2.11.5, `vite` 8.0.16 to 8.2.2, plus the weekly Dependabot batches for `jsdom`, `typescript`, `@testing-library/jest-dom` and the pinned GitHub Actions
 
 ### Note
 - relicensing is not retroactive: `v2.1.0` and earlier remain MIT, and `v3.0.0` through `v3.0.5` remain PolyForm Noncommercial 1.0.0
+- the Windows installer remains unsigned, so SmartScreen may still warn about an unknown publisher
 
 ---
 

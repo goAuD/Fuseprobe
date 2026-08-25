@@ -349,6 +349,9 @@ cargo test
 - [release-v3.0.1.md](docs/releases/release-v3.0.1.md)
 - [release-v3.0.2.md](docs/releases/release-v3.0.2.md)
 - [release-v3.0.3.md](docs/releases/release-v3.0.3.md)
+- [release-v3.0.4.md](docs/releases/release-v3.0.4.md)
+- [release-v3.0.5.md](docs/releases/release-v3.0.5.md)
+- [release-v4.0.0.md](docs/releases/release-v4.0.0.md)
 
 ## License
 
