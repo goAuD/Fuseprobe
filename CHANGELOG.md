@@ -13,8 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.0.0] - 2026-08-25
 
-`4.0.0` is a licensing and project-infrastructure release. The application code
-is unchanged: no request-path behaviour, no security defaults, no UI copy.
+`4.0.0` relicenses the project and ships the fixes from a white-box security
+audit. The audit changed request-path behaviour: five defects were found and
+fixed, two of them making public security claims false.
 
 ### Changed
 - **license changed from PolyForm Noncommercial 1.0.0 to Apache License 2.0.** Fuseprobe is now open source rather than source-available, and commercial use no longer requires permission. Apache 2.0 was chosen over MIT for its explicit patent grant and its withholding of trademark rights, which keeps the Fuseprobe name protected while the code is free
@@ -36,6 +37,14 @@ is unchanged: no request-path behaviour, no security defaults, no UI copy.
 - landing page holds a 320px layout floor instead of compressing without limit, which also required capping three `auto-fit` grid tracks with `min(<size>, 100%)`
 
 ### Security
+- **white-box security audit, five defects found and fixed.** Two made a documented claim false:
+  - IPv4-mapped IPv6 addresses bypassed the target policy entirely. `http://[::ffff:169.254.169.254]/` was allowed while `http://169.254.169.254/` was blocked, so cloud metadata was reachable with default settings. The embedded address is now unmapped and classified as IPv4
+  - DNS rebinding reproduced. Validation resolved the host, then the connection resolved it again with nothing tying the two together. A single resolution is now pinned through a per-request cache wired into the HTTP client's resolver, so the connection opens against the address that was validated
+  - `100.64.0.0/10` (RFC 6598 carrier NAT) and `0.0.0.0/8` were treated as public and are now blocked
+  - redirect hops were never re-checked against the target policy; every hop is now revalidated, and the ten hop limit is unchanged
+  - confirmation for risky settings existed only in the interface. The backend now enforces it and rejects an unconfirmed change
+- `user:password@` credentials in a URL no longer survive into stored history or displayed URLs
+- the client's resolver now fails closed if it is ever asked for a host the target policy did not approve, rather than resolving it
 - all 19 open Dependabot alerts resolved by a lockfile refresh with no manifest change, since every flagged package was transitive: `quinn-proto` 0.11.14 to 0.11.17, `rustls-webpki` 0.103.12 to 0.103.15, `serde_with` 3.17.0 to 3.22.0, `undici` 7.25.0 to 7.29.0, `postcss` 8.5.15 to 8.5.26, `nanoid` 3.3.15 to 3.3.18
 - all three `dependabot-missing-cooldown` semgrep findings resolved (CWE-829 / OWASP A08)
 - landing page favicon moved from an inline `data:` URI to a relative reference, clearing a `missing-integrity` finding that the rule could not have been satisfied any other way

@@ -6,7 +6,9 @@ Release date: 2026-08-25
 
 `v4.0.0` is a licensing and project-infrastructure release. **Fuseprobe is now open source under the Apache License 2.0**, where previous `v3.x` releases were source-available for noncommercial use only. Commercial use no longer requires permission.
 
-The major version reflects the licensing change, not a change in the software. The application code is untouched by this release: no request-path behaviour, no security defaults, no UI copy, no localization changes. Everything else here is repository and distribution work that accumulated since `v3.0.5`: a public landing page, a security policy, security scanning that reports where you can see it, and the resolution of every open dependency alert.
+The release also carries the results of a white-box security audit of the request path. Five defects were found and fixed, and two of them made a claim this project makes publicly false. That work is described in its own section below, and it is the reason to install this version rather than only a reason to relicense.
+
+The rest is repository and distribution work accumulated since `v3.0.5`: a public landing page, a security policy, security scanning that reports where you can see it, and the resolution of every open dependency alert.
 
 ## Highlights
 
@@ -17,6 +19,93 @@ The major version reflects the licensing change, not a change in the software. T
 - **Semgrep findings now reach GitHub code scanning.** `SEMGREP_APP_TOKEN` had been in repository secrets since 11 August with no workflow referencing it, so findings existed only on semgrep.dev. A new workflow runs `semgrep ci` with the token and uploads SARIF, putting findings next to CodeQL.
 - **All 19 open Dependabot alerts resolved**, and all three semgrep findings with them.
 - **New screenshot capture script** at `scripts/capture_window.py`, replacing hand-captured images that a screen grabber had washed out.
+
+## Security Audit
+
+A white-box audit of the request path was carried out on the application by its
+copyright holder, to find and fix defects before users met them. Five were
+confirmed and all five are fixed in this release.
+
+Two of them made a claim this project makes publicly false, which is the reason
+this section leads the release rather than trailing it.
+
+### The target policy could be bypassed by rewriting the address
+
+`is_unsafe_ipv6` classified addresses by asking whether they were loopback,
+unique-local or link-local. `Ipv6Addr::is_loopback` matches only `::1`, so
+`::ffff:127.0.0.1` is the same destination written differently and was not
+recognised. The same held for the mapped forms of RFC1918 and link-local.
+
+| Target | Before | After |
+|---|---|---|
+| `http://127.0.0.1/` | blocked | blocked |
+| `http://[::ffff:127.0.0.1]/` | **allowed** | blocked |
+| `http://169.254.169.254/` | blocked | blocked |
+| `http://[::ffff:169.254.169.254]/` | **allowed** | blocked |
+| `http://[::ffff:10.0.0.1]/` | **allowed** | blocked |
+
+The metadata row is the serious one: cloud instance metadata was reachable with
+default settings. The embedded address is now unmapped and classified as IPv4.
+`metadata.goog` joins the reserved names.
+
+### DNS rebinding reproduced
+
+Validation resolved the hostname and inspected the addresses. `execute_request`
+then connected, and the HTTP client resolved the name **a second time**, with
+nothing tying the two lookups together. A DNS server answering the first query
+with a public address and the second with a loopback address defeated the check
+entirely.
+
+The fix is architectural rather than a patch. The name is resolved once, the
+validated addresses are held in a per-request cache, and that cache is wired into
+the HTTP client's own resolver. Every connection the client opens, including each
+redirect hop, goes to an address that was validated.
+
+The resolver additionally fails closed: if it is ever asked for a host the policy
+did not approve, it refuses instead of resolving. Under an active policy that
+should be unreachable, and the point of the change is not to depend on that being
+true.
+
+### Carrier NAT space was treated as public
+
+`100.64.0.0/10` is RFC 6598 shared address space, used routinely inside cloud and
+Kubernetes networks, so it is reachable internal surface in exactly the
+environments this policy protects. It is now blocked, along with `0.0.0.0/8`.
+
+Four other ranges (`192.0.0.0/24`, `198.18.0.0/15`, `224.0.0.0/4`, `240.0.0.0/4`)
+were considered and deliberately left reachable rather than blocked reflexively.
+
+### Redirects were never re-checked
+
+Following a redirect applied only a hop counter. A permitted public URL could
+redirect to a blocked destination and the policy was consulted exactly once, at
+the start. Every hop is now revalidated against the same policy, and the ten hop
+limit is unchanged.
+
+This sat behind a setting that is off by default, which lowered its severity
+without making it correct.
+
+### Confirmation for risky settings was drawn, not enforced
+
+The interface asked for confirmation before switching on a risky setting. The
+backend did not require it, so the guarantee held only for callers that chose to
+honour it. Confirmation is now enforced where the setting is written, and an
+unconfirmed change is rejected.
+
+### Also fixed
+
+`user:password@` credentials embedded in a URL survived into stored history and
+into displayed URLs. They are now stripped.
+
+### What the audit did not find
+
+Four of the five public security claims were checked and needed no change:
+unresolvable hostnames already failed closed, history already stayed in memory
+until persistence was enabled, and disabling persistence already removed the file
+rather than merely stopping new writes. Those were confirmed by observation
+rather than by reading the code, and are covered by tests.
+
+Every fix ships with a regression test that was demonstrated to fail before it.
 
 ## Licensing Detail
 
