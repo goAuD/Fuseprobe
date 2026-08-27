@@ -22,8 +22,10 @@ pub fn redact_url(input: &str) -> String {
         return input.to_string();
     };
 
+    strip_userinfo(&mut parsed);
+
     if parsed.query().is_none() {
-        return input.to_string();
+        return parsed.to_string();
     }
 
     let redacted_query = parsed
@@ -57,6 +59,7 @@ pub fn redact_url_for_history(input: &str) -> String {
     };
 
     parsed.set_fragment(None);
+    strip_userinfo(&mut parsed);
 
     if parsed.query().is_none() {
         return parsed.to_string();
@@ -74,6 +77,21 @@ pub fn redact_url_for_history(input: &str) -> String {
 
     parsed.set_query(Some(&redacted_query));
     parsed.to_string()
+}
+
+/// Removes `user:password@` userinfo from the URL authority so stored or
+/// displayed URLs never carry embedded credentials (audit finding C).
+///
+/// `Url::set_username(Some(""))` fails when a password is present with an
+/// empty username (e.g. `http://:secret@example.com/`), so the password is
+/// cleared first and the username afterwards.
+fn strip_userinfo(parsed: &mut Url) {
+    if parsed.username().is_empty() && parsed.password().is_none() {
+        return;
+    }
+
+    let _ = parsed.set_password(None);
+    let _ = parsed.set_username("");
 }
 
 fn encode_form_component(value: &str, is_key: bool) -> String {
@@ -97,5 +115,62 @@ fn encode_form_component(value: &str, is_key: bool) -> String {
             .split_once('=')
             .map(|(_, encoded)| encoded.to_string())
             .unwrap_or(serialized)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{redact_url, redact_url_for_history};
+
+    #[test]
+    fn strips_embedded_userinfo_from_displayed_urls() {
+        assert_eq!(
+            redact_url("https://user:hunter2@example.com/api?token=abc"),
+            "https://example.com/api?token=%2A%2A%2A"
+        );
+        assert_eq!(
+            redact_url("https://user:hunter2@example.com/api"),
+            "https://example.com/api"
+        );
+    }
+
+    #[test]
+    fn strips_embedded_userinfo_from_history_urls() {
+        assert_eq!(
+            redact_url_for_history("http://admin:secret@example.com/users?page=2#top"),
+            "http://example.com/users?page=%2A%2A%2A"
+        );
+        assert_eq!(
+            redact_url_for_history("http://:password-only@example.com/"),
+            "http://example.com/"
+        );
+    }
+
+    #[test]
+    fn leaves_urls_without_userinfo_structurally_unchanged() {
+        assert_eq!(
+            redact_url_for_history("http://example.com/users"),
+            "http://example.com/users"
+        );
+        assert_eq!(
+            redact_url("http://example.com/users?page=2"),
+            "http://example.com/users?page=2"
+        );
+    }
+
+    #[test]
+    fn redacts_sensitive_query_values_in_displayed_urls() {
+        assert_eq!(
+            redact_url("https://example.com/api?api_key=abc123&ok=1"),
+            "https://example.com/api?api_key=%2A%2A%2A&ok=1"
+        );
+    }
+
+    #[test]
+    fn drops_fragments_and_redacts_all_query_names_for_history() {
+        assert_eq!(
+            redact_url_for_history("https://example.com/api?ok=1#profile"),
+            "https://example.com/api?ok=%2A%2A%2A"
+        );
     }
 }

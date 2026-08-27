@@ -79,12 +79,51 @@ it("updates security settings through the desktop bridge", async () => {
     });
   });
 
-  expect(mockedUpdateSecuritySettings).toHaveBeenCalledWith({
+  expect(mockedUpdateSecuritySettings).toHaveBeenCalledWith(
+    {
+      allowUnsafeTargets: true,
+      persistHistory: false,
+    },
+    undefined,
+  );
+  expect(result.current.settings.allowUnsafeTargets).toBe(true);
+  expect(result.current.settings.persistHistory).toBe(false);
+});
+
+it("passes the backend confirmation flag through to the bridge", async () => {
+  mockedLoadSecuritySettings.mockResolvedValue({
+    allowUnsafeTargets: false,
+    persistHistory: false,
+  });
+  mockedUpdateSecuritySettings.mockResolvedValue({
     allowUnsafeTargets: true,
     persistHistory: false,
   });
+
+  const { result } = renderHook(() => useSecuritySettings());
+
+  await waitFor(() => {
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  await act(async () => {
+    await result.current.updateSettings(
+      {
+        allowUnsafeTargets: true,
+        persistHistory: false,
+      },
+      true,
+    );
+  });
+
+  expect(mockedUpdateSecuritySettings).toHaveBeenCalledWith(
+    {
+      allowUnsafeTargets: true,
+      persistHistory: false,
+    },
+    true,
+  );
   expect(result.current.settings.allowUnsafeTargets).toBe(true);
-  expect(result.current.settings.persistHistory).toBe(false);
 });
 
 it("captures bridge update failures as hook error state", async () => {

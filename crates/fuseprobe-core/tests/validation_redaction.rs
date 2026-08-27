@@ -45,6 +45,28 @@ fn rejects_domains_that_cannot_be_resolved_during_validation() {
     assert!(error.contains("unable to resolve the target host"));
 }
 
+// Audit area A3: the URL parser normalizes numeric IPv4 shorthands (decimal,
+// hex) into IP literals before classification, so `http://2130706433/` cannot
+// smuggle 127.0.0.1 past a check that only inspects textual hostnames.
+#[test]
+fn classifies_numeric_ipv4_shorthands_as_ip_literals() {
+    let loopback_decimal = validate_url("http://2130706433/").unwrap_err();
+    assert!(loopback_decimal.contains("Unsafe mode"));
+
+    let loopback_hex = validate_url("http://0x7f000001/").unwrap_err();
+    assert!(loopback_hex.contains("Unsafe mode"));
+}
+
+// Audit area A3: trailing dots and case variants are normalized before the
+// reserved-name check runs, so `localhost.` cannot bypass it.
+#[test]
+fn classifies_trailing_dot_and_case_variant_reserved_names() {
+    assert!(validate_url("http://localhost./").is_err());
+    assert!(validate_url("http://LOCALHOST/").is_err());
+    assert!(validate_url("http://Metadata.Google.Internal/").is_err());
+    assert!(validate_url("http://metadata.goog/").is_err());
+}
+
 #[test]
 fn redacts_sensitive_query_values() {
     let redacted = redact_url("https://api.example.com?token=abc123&safe=yes&api_key=secret");

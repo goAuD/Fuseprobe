@@ -142,10 +142,14 @@ fn map_request_error_code(error: &str) -> String {
         return "request_timeout".to_string();
     }
 
-    if error.starts_with(
+    if error.contains(
         "Connection failed: unable to resolve the target host during security validation.",
     ) {
         return "request_unresolvable_host".to_string();
+    }
+
+    if error.contains("Redirect blocked by target policy") {
+        return "request_unsafe_target".to_string();
     }
 
     if error.starts_with("Connection failed: the target was allowed") {
@@ -168,6 +172,26 @@ mod tests {
         assert_eq!(
             map_request_error_code(
                 "Connection failed: unable to resolve the target host during security validation."
+            ),
+            "request_unresolvable_host"
+        );
+    }
+
+    #[test]
+    fn maps_redirect_policy_blocks_to_the_unsafe_target_code() {
+        assert_eq!(
+            map_request_error_code(
+                "Request failed: error following redirect for url `http://example.com/`: Redirect blocked by target policy: Local and private targets are blocked by default. Enable Unsafe mode / Local targets to allow them."
+            ),
+            "request_unsafe_target"
+        );
+    }
+
+    #[test]
+    fn maps_dns_failures_on_redirect_hops_to_the_unresolvable_code() {
+        assert_eq!(
+            map_request_error_code(
+                "Request failed: error following redirect for url `http://example.com/`: Redirect blocked by target policy: Connection failed: unable to resolve the target host during security validation."
             ),
             "request_unresolvable_host"
         );

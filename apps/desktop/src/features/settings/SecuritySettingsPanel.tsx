@@ -214,7 +214,9 @@ export default function SecuritySettingsPanel() {
     setConfirmTarget(null);
     setPendingSetting(key);
     try {
-      await updateSettings({ ...settings, [key]: true });
+      // The backend gates risky transitions on this explicit confirmation
+      // flag; the modal alone is not the security boundary.
+      await updateSettings({ ...settings, [key]: true }, true);
     } catch {
       // The hook captures the user-facing error state.
     } finally {

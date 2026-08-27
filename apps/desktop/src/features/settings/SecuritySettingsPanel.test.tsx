@@ -44,10 +44,13 @@ it("prompts for confirmation before enabling unsafe local targets", async () => 
   fireEvent.click(screen.getByRole("button", { name: "OK" }));
 
   await waitFor(() => {
-    expect(updateSettings).toHaveBeenCalledWith({
-      allowUnsafeTargets: true,
-      persistHistory: false,
-    });
+    expect(updateSettings).toHaveBeenCalledWith(
+      {
+        allowUnsafeTargets: true,
+        persistHistory: false,
+      },
+      true,
+    );
   });
 });
 
@@ -145,10 +148,13 @@ it("prompts for confirmation before enabling history persistence", async () => {
   fireEvent.click(screen.getByRole("button", { name: "OK" }));
 
   await waitFor(() => {
-    expect(updateSettings).toHaveBeenCalledWith({
-      allowUnsafeTargets: false,
-      persistHistory: true,
-    });
+    expect(updateSettings).toHaveBeenCalledWith(
+      {
+        allowUnsafeTargets: false,
+        persistHistory: true,
+      },
+      true,
+    );
   });
 });
 

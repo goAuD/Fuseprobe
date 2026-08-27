@@ -32,6 +32,7 @@ export type CommandErrorCode =
   | "settings_unavailable"
   | "settings_save_unavailable"
   | "settings_save_failed"
+  | "settings_confirmation_required"
   | "persistence_warning_unavailable";
 
 export type RequestPolicyCode = "redirects_disabled";

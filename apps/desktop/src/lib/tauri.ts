@@ -41,6 +41,10 @@ export async function loadSecuritySettings(): Promise<SecuritySettings> {
 
 export async function updateSecuritySettings(
   settings: SecuritySettings,
+  confirmation?: boolean,
 ): Promise<SecuritySettings> {
-  return await invoke<SecuritySettings>("update_security_settings", { settings });
+  return await invoke<SecuritySettings>("update_security_settings", {
+    settings,
+    confirmation: confirmation ?? null,
+  });
 }

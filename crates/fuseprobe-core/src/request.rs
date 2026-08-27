@@ -1,11 +1,14 @@
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, HashMap},
     io::Read,
+    net::{IpAddr, SocketAddr},
+    sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
 
 use reqwest::{
     blocking::{Client, Response},
+    dns::{Addrs, Name, Resolve, Resolving},
     header::{HeaderMap, HeaderName, HeaderValue},
     redirect::Policy,
     Method,
@@ -13,7 +16,14 @@ use reqwest::{
 use serde_json::Value;
 use url::Url;
 
-use crate::{format_response_body, redact_url, validate_url_with_unsafe_targets};
+use crate::{
+    format_response_body,
+    network_policy::{validate_and_resolve_target, HostResolver, SystemHostResolver},
+    redact_url,
+    validation::validate_url_structure,
+};
+
+const MAX_REDIRECT_HOPS: usize = 10;
 
 pub const DEFAULT_MAX_RESPONSE_BYTES: usize = 1024 * 1024;
 pub const DEFAULT_MAX_REQUEST_BODY_BYTES: usize = 256 * 1024;
@@ -66,16 +76,50 @@ pub fn execute_request(
     headers_text: &str,
     options: &RequestOptions,
 ) -> Result<ExecutedResponse, String> {
-    validate_url_with_unsafe_targets(url, options.allow_unsafe_targets)?;
+    execute_request_with_resolver(
+        method,
+        url,
+        payload,
+        headers_text,
+        options,
+        Arc::new(SystemHostResolver),
+    )
+}
+
+/// Executes the request with an injectable hostname resolver.
+///
+/// The first resolution happens inside target validation and its result is
+/// stored in a per-request cache; the HTTP client resolves names through that
+/// cache, so the connection (and any redirect hop to the same host) reuses the
+/// exact address the policy validated instead of re-resolving the hostname.
+/// This closes the validate/re-resolve DNS-rebinding window (audit finding A1).
+pub fn execute_request_with_resolver(
+    method: &str,
+    url: &str,
+    payload: &str,
+    headers_text: &str,
+    options: &RequestOptions,
+    resolver: Arc<dyn HostResolver>,
+) -> Result<ExecutedResponse, String> {
+    let parsed_url = validate_url_structure(url)?;
     validate_input_sizes(payload, headers_text, options)?;
 
     let method = parse_method(method)?;
     let json_payload = parse_json_payload(payload)?;
     let headers = parse_headers(headers_text)?;
-    let client = build_client(options)?;
+
+    let cache = Arc::new(ResolvedTargetCache::new());
+    let validating_resolver = CachedHostResolver::new(Arc::clone(&cache), Arc::clone(&resolver));
+    validate_and_resolve_target(
+        &parsed_url,
+        options.allow_unsafe_targets,
+        &validating_resolver,
+    )?;
+
+    let client = build_client(options, &cache, &resolver)?;
     let started_at = Instant::now();
 
-    let mut request = client.request(method, url).headers(headers);
+    let mut request = client.request(method, parsed_url.clone()).headers(headers);
     if let Some(json_payload) = json_payload.as_ref() {
         request = request.json(json_payload);
     }
@@ -137,9 +181,125 @@ fn validate_input_sizes(
     Ok(())
 }
 
-fn build_client(options: &RequestOptions) -> Result<Client, String> {
+/// Addresses the target policy already validated for a hostname.
+///
+/// The HTTP client resolves names through this cache, so every connection it
+/// opens goes to the exact address that was validated (DNS-rebinding pinning).
+#[derive(Default)]
+struct ResolvedTargetCache {
+    entries: Mutex<HashMap<String, Vec<IpAddr>>>,
+}
+
+impl ResolvedTargetCache {
+    fn new() -> Self {
+        Self::default()
+    }
+
+    fn key(host: &str) -> String {
+        host.trim_end_matches('.').to_ascii_lowercase()
+    }
+
+    fn get(&self, host: &str) -> Option<Vec<IpAddr>> {
+        let entries = self.entries.lock().ok()?;
+        entries.get(&Self::key(host)).cloned()
+    }
+
+    fn store(&self, host: &str, addresses: Vec<IpAddr>) {
+        if let Ok(mut entries) = self.entries.lock() {
+            entries.insert(Self::key(host), addresses);
+        }
+    }
+}
+
+/// `HostResolver` that consults (and populates) the validated-address cache.
+struct CachedHostResolver {
+    cache: Arc<ResolvedTargetCache>,
+    fallback: Arc<dyn HostResolver>,
+}
+
+impl CachedHostResolver {
+    fn new(cache: Arc<ResolvedTargetCache>, fallback: Arc<dyn HostResolver>) -> Self {
+        Self { cache, fallback }
+    }
+}
+
+impl HostResolver for CachedHostResolver {
+    fn resolve(&self, host: &str, port: u16) -> Result<Vec<IpAddr>, String> {
+        if let Some(addresses) = self.cache.get(host) {
+            return Ok(addresses);
+        }
+
+        let addresses = self.fallback.resolve(host, port)?;
+        self.cache.store(host, addresses.clone());
+        Ok(addresses)
+    }
+}
+
+/// reqwest DNS resolver backed by the validated-address cache.
+///
+/// Cache misses fall back to the supplied resolver so Unsafe mode keeps
+/// working without prior validation. Resolved addresses use port 0; reqwest
+/// replaces it with the URL port (or the scheme default).
+struct ValidatedDnsResolver {
+    cache: Arc<ResolvedTargetCache>,
+    fallback: Arc<dyn HostResolver>,
+}
+
+impl Resolve for ValidatedDnsResolver {
+    fn resolve(&self, name: Name) -> Resolving {
+        let cache = Arc::clone(&self.cache);
+        let fallback = Arc::clone(&self.fallback);
+        let host = name.as_str().to_string();
+
+        Box::pin(async move {
+            if let Some(addresses) = cache.get(&host) {
+                return Ok(to_addrs(addresses));
+            }
+
+            let addresses = fallback
+                .resolve(&host, 0)
+                .map_err(|error| -> Box<dyn std::error::Error + Send + Sync> { error.into() })?;
+            cache.store(&host, addresses.clone());
+            Ok(to_addrs(addresses))
+        })
+    }
+}
+
+fn to_addrs(addresses: Vec<IpAddr>) -> Addrs {
+    Box::new(
+        addresses
+            .into_iter()
+            .map(|address| SocketAddr::new(address, 0)),
+    )
+}
+
+fn build_client(
+    options: &RequestOptions,
+    cache: &Arc<ResolvedTargetCache>,
+    resolver: &Arc<dyn HostResolver>,
+) -> Result<Client, String> {
     let redirect_policy = if options.follow_redirects {
-        Policy::limited(10)
+        let allow_unsafe_targets = options.allow_unsafe_targets;
+        let redirect_cache = Arc::clone(cache);
+        let redirect_resolver = Arc::clone(resolver);
+
+        // Each redirect hop is revalidated against the same target policy as
+        // the original request (audit finding A2); validated resolutions are
+        // cached so the hop connects to what was just validated.
+        Policy::custom(move |attempt| {
+            // `previous()` includes the original URL, so `> MAX` allows the
+            // same 10 redirects as the previous `Policy::limited(10)`.
+            if attempt.previous().len() > MAX_REDIRECT_HOPS {
+                return attempt.error(format!("Redirect limit of {MAX_REDIRECT_HOPS} exceeded"));
+            }
+
+            let hop_resolver =
+                CachedHostResolver::new(Arc::clone(&redirect_cache), Arc::clone(&redirect_resolver));
+            match validate_and_resolve_target(attempt.url(), allow_unsafe_targets, &hop_resolver) {
+                Ok(_) => attempt.follow(),
+                Err(error) => attempt.error(format!("Redirect blocked by target policy: {error}")),
+            }
+        })
     } else {
         Policy::none()
     };
@@ -147,6 +307,10 @@ fn build_client(options: &RequestOptions) -> Result<Client, String> {
     Client::builder()
         .timeout(Duration::from_secs(options.timeout_seconds))
         .redirect(redirect_policy)
+        .dns_resolver(Arc::new(ValidatedDnsResolver {
+            cache: Arc::clone(cache),
+            fallback: Arc::clone(resolver),
+        }))
         .build()
         .map_err(|error| format!("Failed to build HTTP client: {error}"))
 }
@@ -308,7 +472,42 @@ fn is_local_target_url(url: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::format_connection_failure;
+    use super::{
+        format_connection_failure, CachedHostResolver, ResolvedTargetCache,
+    };
+    use crate::network_policy::HostResolver;
+    use std::net::{IpAddr, Ipv4Addr};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+
+    struct CountingResolver {
+        addresses: Vec<IpAddr>,
+        calls: AtomicUsize,
+    }
+
+    impl CountingResolver {
+        fn new(addresses: Vec<IpAddr>) -> Self {
+            Self {
+                addresses,
+                calls: AtomicUsize::new(0),
+            }
+        }
+    }
+
+    impl HostResolver for CountingResolver {
+        fn resolve(&self, _host: &str, _port: u16) -> Result<Vec<IpAddr>, String> {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            Ok(self.addresses.clone())
+        }
+    }
+
+    struct PanickingResolver;
+
+    impl HostResolver for PanickingResolver {
+        fn resolve(&self, _host: &str, _port: u16) -> Result<Vec<IpAddr>, String> {
+            panic!("cached hosts must not trigger a new lookup");
+        }
+    }
 
     #[test]
     fn local_connection_failure_message_is_explicit() {
@@ -330,5 +529,50 @@ mod tests {
 
         assert!(message.contains("unable to reach the target"));
         assert!(!message.contains("target was allowed"));
+    }
+
+    #[test]
+    fn validated_cache_pinning_skips_new_lookups_for_cached_hosts() {
+        let cache = Arc::new(ResolvedTargetCache::new());
+        cache.store(
+            "Fuseprobe-Pinned.Test",
+            vec![IpAddr::V4(Ipv4Addr::new(203, 0, 113, 7))],
+        );
+
+        let resolver = CachedHostResolver::new(Arc::clone(&cache), Arc::new(PanickingResolver));
+
+        // Casing and a trailing dot must hit the same normalized cache entry.
+        let addresses = resolver
+            .resolve("FUSEPROBE-PINNED.test.", 443)
+            .expect("cached addresses should resolve without a lookup");
+
+        assert_eq!(addresses, vec![IpAddr::V4(Ipv4Addr::new(203, 0, 113, 7))]);
+    }
+
+    #[test]
+    fn validated_cache_stores_the_first_lookup_for_reuse() {
+        let cache = Arc::new(ResolvedTargetCache::new());
+        let fallback = Arc::new(CountingResolver::new(vec![IpAddr::V4(Ipv4Addr::new(
+            203, 0, 113, 9,
+        ))]));
+        let resolver = CachedHostResolver::new(
+            Arc::clone(&cache),
+            Arc::clone(&fallback) as Arc<dyn HostResolver>,
+        );
+
+        let first = resolver
+            .resolve("fuseprobe-first.test", 80)
+            .expect("first lookup should succeed");
+        let second = resolver
+            .resolve("fuseprobe-first.test", 80)
+            .expect("second lookup should succeed");
+
+        assert_eq!(first, second);
+        assert_eq!(second, vec![IpAddr::V4(Ipv4Addr::new(203, 0, 113, 9))]);
+        assert_eq!(
+            fallback.calls.load(Ordering::SeqCst),
+            1,
+            "the second resolve must be served from the validated cache"
+        );
     }
 }
