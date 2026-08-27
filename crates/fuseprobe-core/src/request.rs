@@ -183,6 +183,9 @@ fn validate_input_sizes(
 
 /// Addresses the target policy already validated for a hostname.
 ///
+const UNVALIDATED_HOST_MESSAGE: &str =
+    "Connection blocked: the host was not approved by the target policy.";
+
 /// The HTTP client resolves names through this cache, so every connection it
 /// opens goes to the exact address that was validated (DNS-rebinding pinning).
 #[derive(Default)]
@@ -237,30 +240,55 @@ impl HostResolver for CachedHostResolver {
 
 /// reqwest DNS resolver backed by the validated-address cache.
 ///
-/// Cache misses fall back to the supplied resolver so Unsafe mode keeps
-/// working without prior validation. Resolved addresses use port 0; reqwest
-/// replaces it with the URL port (or the scheme default).
+/// Resolved addresses use port 0; reqwest replaces it with the URL port (or the
+/// scheme default).
+///
+/// A cache miss means this resolver was asked for a host the target policy never
+/// approved. While the policy is active that should be unreachable, since
+/// `execute_request` validates and caches before the client is built and the
+/// redirect policy does the same for every hop. Rather than rest on that
+/// argument, a miss under an active policy fails closed. Unsafe mode has no
+/// policy to satisfy, so it resolves normally.
 struct ValidatedDnsResolver {
     cache: Arc<ResolvedTargetCache>,
     fallback: Arc<dyn HostResolver>,
+    allow_unsafe_targets: bool,
+}
+
+impl ValidatedDnsResolver {
+    /// What to do when the cache holds no entry for `host`.
+    ///
+    /// Kept separate from the async `resolve` so the decision is directly
+    /// testable without an executor.
+    fn resolve_uncached(&self, host: &str) -> Result<Vec<IpAddr>, String> {
+        if !self.allow_unsafe_targets {
+            return Err(UNVALIDATED_HOST_MESSAGE.to_string());
+        }
+
+        let addresses = self.fallback.resolve(host, 0)?;
+        self.cache.store(host, addresses.clone());
+        Ok(addresses)
+    }
 }
 
 impl Resolve for ValidatedDnsResolver {
     fn resolve(&self, name: Name) -> Resolving {
-        let cache = Arc::clone(&self.cache);
-        let fallback = Arc::clone(&self.fallback);
+        let resolver = ValidatedDnsResolver {
+            cache: Arc::clone(&self.cache),
+            fallback: Arc::clone(&self.fallback),
+            allow_unsafe_targets: self.allow_unsafe_targets,
+        };
         let host = name.as_str().to_string();
 
         Box::pin(async move {
-            if let Some(addresses) = cache.get(&host) {
+            if let Some(addresses) = resolver.cache.get(&host) {
                 return Ok(to_addrs(addresses));
             }
 
-            let addresses = fallback
-                .resolve(&host, 0)
-                .map_err(|error| -> Box<dyn std::error::Error + Send + Sync> { error.into() })?;
-            cache.store(&host, addresses.clone());
-            Ok(to_addrs(addresses))
+            resolver
+                .resolve_uncached(&host)
+                .map(to_addrs)
+                .map_err(|error| -> Box<dyn std::error::Error + Send + Sync> { error.into() })
         })
     }
 }
@@ -310,6 +338,7 @@ fn build_client(
         .dns_resolver(Arc::new(ValidatedDnsResolver {
             cache: Arc::clone(cache),
             fallback: Arc::clone(resolver),
+            allow_unsafe_targets: options.allow_unsafe_targets,
         }))
         .build()
         .map_err(|error| format!("Failed to build HTTP client: {error}"))
@@ -473,7 +502,8 @@ fn is_local_target_url(url: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        format_connection_failure, CachedHostResolver, ResolvedTargetCache,
+        format_connection_failure, CachedHostResolver, ResolvedTargetCache, ValidatedDnsResolver,
+        UNVALIDATED_HOST_MESSAGE,
     };
     use crate::network_policy::HostResolver;
     use std::net::{IpAddr, Ipv4Addr};
@@ -507,6 +537,43 @@ mod tests {
         fn resolve(&self, _host: &str, _port: u16) -> Result<Vec<IpAddr>, String> {
             panic!("cached hosts must not trigger a new lookup");
         }
+    }
+
+    /// A cache miss means the target policy never approved this host. While the
+    /// policy is active that should be unreachable, so it must fail rather than
+    /// quietly resolve, which is what it did before.
+    #[test]
+    fn unvalidated_host_is_refused_while_the_policy_is_active() {
+        let resolver = ValidatedDnsResolver {
+            cache: Arc::new(ResolvedTargetCache::new()),
+            fallback: Arc::new(CountingResolver::new(vec![IpAddr::V4(Ipv4Addr::new(
+                127, 0, 0, 1,
+            ))])),
+            allow_unsafe_targets: false,
+        };
+
+        let error = resolver
+            .resolve_uncached("attacker.test")
+            .expect_err("an unvalidated host must not resolve");
+
+        assert_eq!(error, UNVALIDATED_HOST_MESSAGE);
+    }
+
+    /// Unsafe mode has no policy to satisfy, so the same miss resolves normally.
+    #[test]
+    fn unvalidated_host_still_resolves_in_unsafe_mode() {
+        let resolver = ValidatedDnsResolver {
+            cache: Arc::new(ResolvedTargetCache::new()),
+            fallback: Arc::new(CountingResolver::new(vec![IpAddr::V4(Ipv4Addr::new(
+                127, 0, 0, 1,
+            ))])),
+            allow_unsafe_targets: true,
+        };
+
+        assert_eq!(
+            resolver.resolve_uncached("local.test"),
+            Ok(vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))])
+        );
     }
 
     #[test]
