@@ -10,6 +10,16 @@ pub fn validate_url_with_unsafe_targets(
     input: &str,
     allow_unsafe_targets: bool,
 ) -> Result<(), String> {
+    let parsed = validate_url_structure(input)?;
+    validate_target_policy(&parsed, allow_unsafe_targets)?;
+    Ok(())
+}
+
+/// Structural validation only (no target policy): parse, scheme, whitespace,
+/// host labels, and credentials. Callers must still run the target policy via
+/// `validate_target_policy` or `validate_and_resolve_target` before trusting
+/// the URL.
+pub(crate) fn validate_url_structure(input: &str) -> Result<Url, String> {
     let trimmed = input.trim();
     if trimmed.is_empty() {
         return Err("URL cannot be empty".into());
@@ -59,7 +69,5 @@ pub fn validate_url_with_unsafe_targets(
         }
     }
 
-    validate_target_policy(&parsed, allow_unsafe_targets)?;
-
-    Ok(())
+    Ok(parsed)
 }

@@ -52,12 +52,15 @@ export function useSecuritySettings() {
     };
   }, [strings.hooks.failedToLoadSecuritySettings]);
 
-  async function updateSettings(nextSettings: SecuritySettings) {
+  async function updateSettings(
+    nextSettings: SecuritySettings,
+    confirmation?: boolean,
+  ) {
     setError(null);
 
     try {
       const updatedSettings =
-        await updateSecuritySettingsFromBridge(nextSettings);
+        await updateSecuritySettingsFromBridge(nextSettings, confirmation);
       setSettings(updatedSettings);
       setError(null);
       return updatedSettings;

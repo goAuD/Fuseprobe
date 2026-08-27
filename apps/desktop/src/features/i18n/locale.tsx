@@ -309,6 +309,8 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
         settings_unavailable: "Security settings are unavailable.",
         settings_save_unavailable: "Local settings storage is unavailable.",
         settings_save_failed: "Failed to save security settings.",
+        settings_confirmation_required:
+          "Enabling risky security settings requires explicit confirmation.",
         persistence_warning_unavailable: "Persistence warning state is unavailable.",
       },
       warnings: {
@@ -507,6 +509,8 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
         settings_unavailable: "Die Sicherheitseinstellungen sind nicht verfügbar.",
         settings_save_unavailable: "Der lokale Settings-Speicher ist nicht verfügbar.",
         settings_save_failed: "Die Sicherheitseinstellungen konnten nicht gespeichert werden.",
+        settings_confirmation_required:
+          "Das Aktivieren riskanter Sicherheitseinstellungen erfordert eine ausdrückliche Bestätigung.",
         persistence_warning_unavailable: "Der Zustand der Persistenzwarnung ist nicht verfügbar.",
       },
       warnings: {
@@ -705,6 +709,8 @@ const LOCALE_STRINGS: Record<LocaleCode, LocaleStrings> = {
         settings_unavailable: "A biztonsági beállítások nem érhetők el.",
         settings_save_unavailable: "A helyi beállítástár nem érhető el.",
         settings_save_failed: "Nem sikerült menteni a biztonsági beállításokat.",
+        settings_confirmation_required:
+          "A kockázatos biztonsági beállítások engedélyezéséhez explicit megerősítés szükséges.",
         persistence_warning_unavailable: "A perzisztencia-warning állapot nem érhető el.",
       },
       warnings: {
