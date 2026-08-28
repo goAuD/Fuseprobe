@@ -21,10 +21,16 @@ The intended end-user install path is the release installer, not a source build.
 
 - download the latest Windows installer from [GitHub Releases](https://github.com/goAuD/Fuseprobe/releases)
 - use the `Fuseprobe_*_x64-setup.exe` asset
-- when a companion `*.sha256` asset is present, verify the installer hash before distributing it further
+- verify the installer against the `*.sha256` published beside it, before you run it
 - install it, then launch Fuseprobe from the installed shortcut or Start menu
 
-Current Windows installers are not code-signed yet, so SmartScreen may still show an unknown publisher warning.
+```powershell
+Get-FileHash -Algorithm SHA256 .\Fuseprobe_4.0.0_x64-setup.exe
+```
+
+**Windows will warn you the first time you run this.** The installer is not code signed, so SmartScreen shows an unknown publisher dialog. That is a reputation check rather than a malware detection: SmartScreen has no history for a new unsigned file, and every release starts from zero because each build has a different hash.
+
+Code signing is a cost decision, not an oversight. It proves who published the file, it does not make the application safer, and the checksum above already covers tampering.
 
 If you only want to use Fuseprobe, stop here. The source-build path below is for contributors and local development.
 
