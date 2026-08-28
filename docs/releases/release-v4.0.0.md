@@ -185,7 +185,17 @@ Local package artifact:
 
 ## Install Note
 
-For Windows users, the intended delivery path is the release `*-setup.exe` asset attached to the GitHub Release, plus the matching `*.sha256` file when published.
+For Windows users, the intended delivery path is the release `*-setup.exe` asset attached to the GitHub Release, plus the matching `*.sha256` file.
+
+**Windows will warn you the first time you run this.** The installer is not code signed, so SmartScreen shows an "unknown publisher" dialog. This is a reputation check, not a malware detection: SmartScreen has no history for a new unsigned file, and every release starts from zero because each build has a different hash.
+
+If you would rather verify than trust, every release ships a `*.sha256` next to the installer. Compare it before you run anything:
+
+```powershell
+Get-FileHash -Algorithm SHA256 .\Fuseprobe_4.0.0_x64-setup.exe
+```
+
+Code signing is a cost decision, not an oversight. It proves who published the file, it does not make the application safer, and the checksum above already covers tampering.
 
 ## Maintainer Verification
 
